@@ -53,6 +53,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let activationManager: ActivationManager
 
     override init() {
+        UserDefaults.standard.register(defaults: [
+            AppSettingsKey.forwardCLIErrors: true
+        ])
+
         let cli = CLI()
         let windowCounter = WindowCounter()
         let activationManager = ActivationManager()
@@ -106,31 +110,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        log.info("Application launched")
-
-        log.info("Registering notification manager...")
         NotificationManager.shared.registerDelegate()
 
-        log.info("Starting socket server...")
         self.server.start()
 
-        log.info("Updating CLI status...")
-        self.cli.updateStatusOnLaunch { status in
+        Task { @MainActor in
+            let status = await self.cli.refreshStatus()
             if case .error(_) = status {
-                Task { @MainActor in
-                    self.installationWindow.open()
-                }
+                self.installationWindow.open()
             }
         }
     }
 
     func applicationDidResignActive(_ notification: Notification) {
-        log.trace("Application became inactive")
         switcherWindow.hide()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        log.info("Application is about to terminate")
         server.stop()
     }
 }

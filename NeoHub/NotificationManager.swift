@@ -1,6 +1,13 @@
+import NeoHubLib
 import UserNotifications
 
 typealias NotificationMeta = [String: String]
+
+enum AppSettingsKey {
+    static let forwardCLIErrors = "ForwardCLIErrorToGUI"
+}
+
+private let cliErrorCategoryId = "CLI_ERROR"
 
 extension NotificationMeta {
     init(userInfo: [AnyHashable: Any]) {
@@ -14,33 +21,60 @@ extension NotificationMeta {
     }
 
     var userInfo: [AnyHashable: Any] {
-        var info: [AnyHashable: Any] = [:]
-        for (key, value) in self {
-            info[key] = value
-        }
-        return info
+        Dictionary(uniqueKeysWithValues: map { ($0.key, $0.value) })
     }
 }
 
-protocol NotificationProtocol: Sendable {
-    static var id: String { get }
+enum NotificationKind: CaseIterable {
+    case failedToLaunchServer
+    case failedToHandleRequestFromCLI
+    case failedToRunEditorProcess
+    case failedToGetRunningEditorApp
+    case failedToActivateEditorApp
 
-    static var title: String { get }
-    static var body: String { get }
+    var id: String {
+        switch self {
+        case .failedToLaunchServer:
+            return "FAILED_TO_LAUNCH_SERVER"
+        case .failedToHandleRequestFromCLI:
+            return "FAILED_TO_HANDLE_REQUEST_FROM_CLI"
+        case .failedToRunEditorProcess:
+            return "FAILED_TO_RUN_EDITOR_PROCESS"
+        case .failedToGetRunningEditorApp:
+            return "FAILED_TO_GET_RUNNING_EDITOR_APP"
+        case .failedToActivateEditorApp:
+            return "FAILED_TO_ACTIVATE_EDITOR_APP"
+        }
+    }
 
-    static var actions: [NotificationAction.Type] { get }
-    static var category: UNNotificationCategory { get }
+    var title: String {
+        switch self {
+        case .failedToLaunchServer:
+            return "Failed to launch the NeoHub server"
+        case .failedToHandleRequestFromCLI, .failedToRunEditorProcess:
+            return "Failed to open Neovide"
+        case .failedToGetRunningEditorApp, .failedToActivateEditorApp:
+            return "Failed to activate Neovide"
+        }
+    }
 
-    var meta: NotificationMeta? { get }
+    var body: String {
+        switch self {
+        case .failedToLaunchServer:
+            return "NeoHub won't be able to function properly. Please, create an issue in the GitHub repo."
+        case .failedToHandleRequestFromCLI, .failedToRunEditorProcess:
+            return "Please create an issue in the GitHub repo."
+        case .failedToGetRunningEditorApp:
+            return "Requested Neovide instance is not running."
+        case .failedToActivateEditorApp:
+            return "Please create an issue in GitHub repo."
+        }
+    }
 
-    func send()
-}
-
-extension NotificationProtocol {
-    static var category: UNNotificationCategory {
+    var category: UNNotificationCategory {
         UNNotificationCategory(
-            identifier: Self.id,
-            actions: Self.actions.map { action in action.built },
+            identifier: id,
+            actions: [ReportAction.built],
             intentIdentifiers: [],
             hiddenPreviewsBodyPlaceholder: "",
             options: .customDismissAction
@@ -81,14 +115,15 @@ final class NotificationManager: NSObject {
     }
 
     static func registerCategories() {
-        // Probably, I should have gone with a simple enum so the compiler could generate all cases for me
-        let categories = Set([
-            FailedToLaunchServerNotification.category,
-            FailedToHandleRequestFromCLINotification.category,
-            FailedToRunEditorProcessNotification.category,
-            FailedToGetRunningEditorAppNotification.category,
-            FailedToActivateEditorAppNotification.category,
-        ])
+        let cliErrorCategory = UNNotificationCategory(
+            identifier: cliErrorCategoryId,
+            actions: [ReportAction.built],
+            intentIdentifiers: [],
+            hiddenPreviewsBodyPlaceholder: "",
+            options: .customDismissAction
+        )
+        let categories = Set(NotificationKind.allCases.map { $0.category })
+            .union([cliErrorCategory])
 
         UNUserNotificationCenter.current().setNotificationCategories(categories)
     }
@@ -105,19 +140,17 @@ final class NotificationManager: NSObject {
         switch self.status {
         case .unknown:
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
-                DispatchQueue.main.async {
+                MainThread.run {
                     switch (granted, error) {
                     case (true, nil):
-                        log.info("Notification permission granted")
                         self.status = .granted
                         completion(true)
                     case (true, .some(let error)):
-                        log.info("Notification permission granted")
                         log.notice("There was an error during notification authorization request. \(error)")
                         self.status = .granted
                         completion(true)
                     case (false, let error):
-                        log.info("Notification permission not granted. Details: \(String(describing: error))")
+                        log.info("Notification permission not granted. \(String(describing: error))")
                         self.status = .rejected
                         completion(false)
                     }
@@ -130,29 +163,35 @@ final class NotificationManager: NSObject {
         }
     }
 
-    fileprivate func sendNotification(notification: NotificationProtocol) {
-        log.debug("Sending notification")
+    nonisolated static func send(kind: NotificationKind, error: ReportableError) {
+        Task { @MainActor in
+            NotificationManager.shared.sendOnMain(kind: kind, error: error)
+        }
+    }
+
+    nonisolated static func sendCLIError(_ report: CLIErrorReport) {
+        guard UserDefaults.standard.bool(forKey: AppSettingsKey.forwardCLIErrors) else {
+            return
+        }
+        Task { @MainActor in
+            NotificationManager.shared.sendCLIErrorOnMain(report)
+        }
+    }
+
+    private func sendOnMain(kind: NotificationKind, error: ReportableError) {
+        let meta = ReportAction(error: error).meta
 
         self.requestAuthorization { granted in
             guard granted else {
-                log.debug("Notifications are not authorized")
                 return
             }
 
             let content = UNMutableNotificationContent()
 
-            let Notification = type(of: notification)
-
-            content.categoryIdentifier = Notification.id
-
-            content.title = Notification.title
-            content.body = Notification.body
-
-            if let meta = notification.meta {
-                content.userInfo = meta.userInfo
-            }
-
-            log.debug("Notification content: \(content)")
+            content.categoryIdentifier = kind.id
+            content.title = kind.title
+            content.body = kind.body
+            content.userInfo = meta.userInfo
 
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
 
@@ -165,8 +204,44 @@ final class NotificationManager: NSObject {
             UNUserNotificationCenter.current().add(request) { error in
                 if let error {
                     log.error("Error scheduling notification: \(error)")
-                } else {
-                    log.debug("Notification scheduled")
+                }
+            }
+        }
+    }
+
+    private func sendCLIErrorOnMain(_ report: CLIErrorReport) {
+        var meta: [String: String] = ["source": "cli"]
+        if let detail = report.detail {
+            meta["detail"] = detail
+        }
+        if let code = report.code {
+            meta["code"] = String(code)
+        }
+
+        let reportable = ReportableError(report.message, meta: meta)
+        let actionMeta = ReportAction(error: reportable).meta
+
+        self.requestAuthorization { granted in
+            guard granted else {
+                return
+            }
+
+            let content = UNMutableNotificationContent()
+            content.categoryIdentifier = cliErrorCategoryId
+            content.title = "CLI Error"
+            content.body = report.message
+            content.userInfo = actionMeta.userInfo
+
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: trigger
+            )
+
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error {
+                    log.error("Error scheduling notification: \(error)")
                 }
             }
         }
@@ -176,7 +251,6 @@ final class NotificationManager: NSObject {
 extension NotificationManager: UNUserNotificationCenterDelegate {
     func registerDelegate() {
         UNUserNotificationCenter.current().delegate = self
-        log.info("Notification manager delegate registered")
     }
 
     nonisolated func userNotificationCenter(
@@ -245,115 +319,5 @@ struct ReportAction: NotificationAction {
             title: self.title,
             error: self.error
         )
-    }
-}
-
-struct FailedToLaunchServerNotification: NotificationProtocol {
-    static let id = "FAILED_TO_LAUNCH_SERVER"
-
-    static let title = "Failed to launch the NeoHub server"
-    static let body = "NeoHub won't be able to function properly. Please, create an issue in the GitHub repo."
-
-    static let actions: [NotificationAction.Type] = [ReportAction.self]
-
-    var meta: NotificationMeta?
-
-    init(error: ReportableError) {
-        let action = ReportAction(error: error)
-        self.meta = action.meta
-    }
-
-    func send() {
-        Task { @MainActor in
-            NotificationManager.shared.sendNotification(notification: self)
-        }
-    }
-}
-
-struct FailedToHandleRequestFromCLINotification: NotificationProtocol {
-    static let id = "FAILED_TO_HANDLE_REQUEST_FROM_CLI"
-
-    static let title = "Failed to open Neovide"
-    static let body = "Please create an issue in the GitHub repo."
-
-    static let actions: [NotificationAction.Type] = [ReportAction.self]
-
-    var meta: NotificationMeta?
-
-    init(error: ReportableError) {
-        let action = ReportAction(error: error)
-        self.meta = action.meta
-    }
-
-    func send() {
-        Task { @MainActor in
-            NotificationManager.shared.sendNotification(notification: self)
-        }
-    }
-}
-
-struct FailedToRunEditorProcessNotification: NotificationProtocol {
-    static let id = "FAILED_TO_RUN_EDITOR_PROCESS"
-
-    static let title = "Failed to open Neovide"
-    static let body = "Please create an issue in the GitHub repo."
-
-    static let actions: [NotificationAction.Type] = [ReportAction.self]
-
-    var meta: NotificationMeta?
-
-    init(error: ReportableError) {
-        let action = ReportAction(error: error)
-        self.meta = action.meta
-    }
-
-    func send() {
-        Task { @MainActor in
-            NotificationManager.shared.sendNotification(notification: self)
-        }
-    }
-}
-
-struct FailedToGetRunningEditorAppNotification: NotificationProtocol {
-    static let id = "FAILED_TO_GET_RUNNING_EDITOR_APP"
-
-    static let title = "Failed to activate Neovide"
-    static let body = "Requested Neovide instance is not running."
-
-    static let actions: [NotificationAction.Type] = [ReportAction.self]
-
-    var meta: NotificationMeta?
-
-    init(error: ReportableError) {
-        let action = ReportAction(error: error)
-        self.meta = action.meta
-    }
-
-    func send() {
-        Task { @MainActor in
-            NotificationManager.shared.sendNotification(notification: self)
-        }
-    }
-}
-
-struct FailedToActivateEditorAppNotification: NotificationProtocol {
-    static let id = "FAILED_TO_ACTIVATE_EDITOR_APP"
-
-    static let title = "Failed to activate Neovide"
-    static let body = "Please create an issue in GitHub repo."
-
-    static let actions: [NotificationAction.Type] = [ReportAction.self]
-
-    var meta: NotificationMeta?
-
-    init(error: ReportableError) {
-        let action = ReportAction(error: error)
-        self.meta = action.meta
-    }
-
-    func send() {
-        Task { @MainActor in
-            NotificationManager.shared.sendNotification(notification: self)
-        }
     }
 }

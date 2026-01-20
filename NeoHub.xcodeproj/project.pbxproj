@@ -21,28 +21,23 @@
 		FA2EADAB2AED589F000F8F7A /* NeoHubLib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* NeoHubLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FA2EADB02AED58C6000F8F7A /* Shared.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EADAF2AED58C6000F8F7A /* Shared.swift */; };
 		FA2EADB12AED65A6000F8F7A /* NeoHubLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* NeoHubLib.framework */; };
-		FA30F21E2AEEB6F9004EC6E9 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F21D2AEEB6F9004EC6E9 /* NIO */; };
-		FA30F2202AEEB70A004EC6E9 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F21F2AEEB70A004EC6E9 /* NIO */; };
 		FA30F2282AEED1E7004EC6E9 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */; };
 		FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */; };
 		FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */; };
 		FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3937162AF291A5001D9105 /* SettingsView.swift */; };
 		FA39371D2AF3A7CC001D9105 /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA39371C2AF3A7CC001D9105 /* Shell.swift */; };
-		FA3937222AF41D84001D9105 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = FA3937212AF41D84001D9105 /* LaunchAtLogin */; };
 		FA54EB702AF4FD84001AE449 /* neohub in Embed CLI */ = {isa = PBXBuildFile; fileRef = FA2AE45D2AEB9CA000D24008 /* neohub */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		FA54EB722AF5033D001AE449 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB712AF5033D001AE449 /* CLI.swift */; };
 		FA54EB742AF53ED9001AE449 /* RegularWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB732AF53ED9001AE449 /* RegularWindow.swift */; };
 		FA54EB762AF654D7001AE449 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB752AF654D7001AE449 /* AboutView.swift */; };
 		FA54EB792AF6AE06001AE449 /* InstallationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB782AF6AE06001AE449 /* InstallationView.swift */; };
 		FA54EB7C2AF6E3E8001AE449 /* SettingsGroupModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB7B2AF6E3E8001AE449 /* SettingsGroupModifier.swift */; };
-		FA54EB7F2AF789D4001AE449 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = FA54EB7E2AF789D4001AE449 /* Logging */; };
 		FA54EB812AF789F6001AE449 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB802AF789F6001AE449 /* Logger.swift */; };
 		FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB822AF7A381001AE449 /* NotificationManager.swift */; };
-		FA54EB852AF7CB7E001AE449 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = FA54EB842AF7CB7E001AE449 /* Logging */; };
 		FA54EB872AF7CB97001AE449 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB862AF7CB97001AE449 /* Logger.swift */; };
 		FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB8C2AF7F689001AE449 /* BugReporter.swift */; };
 		FA54EB8F2AF8ACDB001AE449 /* ActivationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB8E2AF8ACDB001AE449 /* ActivationManager.swift */; };
-		FA54EB942AF90B52001AE449 /* LoggingSyslog in Frameworks */ = {isa = PBXBuildFile; productRef = FA54EB932AF90B52001AE449 /* LoggingSyslog */; };
+		FA7B1C1A2C5B123400000001 /* MainThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B1C1A2C5B123400000002 /* MainThread.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -132,6 +127,7 @@
 		FA54EB7B2AF6E3E8001AE449 /* SettingsGroupModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsGroupModifier.swift; sourceTree = "<group>"; };
 		FA54EB802AF789F6001AE449 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		FA54EB822AF7A381001AE449 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		FA7B1C1A2C5B123400000002 /* MainThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainThread.swift; sourceTree = "<group>"; };
 		FA54EB862AF7CB97001AE449 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		FA54EB8C2AF7F689001AE449 /* BugReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BugReporter.swift; sourceTree = "<group>"; };
 		FA54EB8E2AF8ACDB001AE449 /* ActivationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationManager.swift; sourceTree = "<group>"; };
@@ -143,12 +139,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FA30F21E2AEEB6F9004EC6E9 /* NIO in Frameworks */,
-				FA54EB942AF90B52001AE449 /* LoggingSyslog in Frameworks */,
 				FA2EADAA2AED589F000F8F7A /* NeoHubLib.framework in Frameworks */,
-				FA3937222AF41D84001D9105 /* LaunchAtLogin in Frameworks */,
 				FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */,
-				FA54EB7F2AF789D4001AE449 /* Logging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -156,9 +148,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FA30F2202AEEB70A004EC6E9 /* NIO in Frameworks */,
 				FA2EAD9A2AED3906000F8F7A /* ArgumentParser in Frameworks */,
-				FA54EB852AF7CB7E001AE449 /* Logging in Frameworks */,
 				FA2EADB12AED65A6000F8F7A /* NeoHubLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -209,6 +199,7 @@
 				FA54EB732AF53ED9001AE449 /* RegularWindow.swift */,
 				FA54EB8E2AF8ACDB001AE449 /* ActivationManager.swift */,
 				FA54EB822AF7A381001AE449 /* NotificationManager.swift */,
+				FA7B1C1A2C5B123400000002 /* MainThread.swift */,
 				FA54EB8C2AF7F689001AE449 /* BugReporter.swift */,
 				FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */,
 				FA2AE44E2AEB980800D24008 /* Assets.xcassets */,
@@ -308,11 +299,7 @@
 			);
 			name = NeoHub;
 			packageProductDependencies = (
-				FA30F21D2AEEB6F9004EC6E9 /* NIO */,
 				FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */,
-				FA3937212AF41D84001D9105 /* LaunchAtLogin */,
-				FA54EB7E2AF789D4001AE449 /* Logging */,
-				FA54EB932AF90B52001AE449 /* LoggingSyslog */,
 			);
 			productName = NeoHub;
 			productReference = FA2AE4472AEB980700D24008 /* NeoHub.app */;
@@ -334,8 +321,6 @@
 			name = NeoHubCLI;
 			packageProductDependencies = (
 				FA2EAD992AED3906000F8F7A /* ArgumentParser */,
-				FA30F21F2AEEB70A004EC6E9 /* NIO */,
-				FA54EB842AF7CB7E001AE449 /* Logging */,
 			);
 			productName = NeoHubCLI;
 			productReference = FA2AE45D2AEB9CA000D24008 /* neohub */;
@@ -395,9 +380,6 @@
 				FA2EAD982AED3906000F8F7A /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 				FA30F21C2AEEB6F8004EC6E9 /* XCRemoteSwiftPackageReference "swift-nio" */,
 				FA30F22D2AEF828A004EC6E9 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
-				FA3937202AF41D84001D9105 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
-				FA54EB7D2AF789D4001AE449 /* XCRemoteSwiftPackageReference "swift-log" */,
-				FA54EB922AF90B52001AE449 /* XCRemoteSwiftPackageReference "swift-log-syslog" */,
 			);
 			productRefGroup = FA2AE4482AEB980700D24008 /* Products */;
 			projectDirPath = "";
@@ -468,6 +450,7 @@
 				FA54EB812AF789F6001AE449 /* Logger.swift in Sources */,
 				FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */,
 				FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */,
+				FA7B1C1A2C5B123400000001 /* MainThread.swift in Sources */,
 				FA54EB8F2AF8ACDB001AE449 /* ActivationManager.swift in Sources */,
 				FA2EAD972AED0C8B000F8F7A /* EditorStore.swift in Sources */,
 				FA54EB792AF6AE06001AE449 /* InstallationView.swift in Sources */,
@@ -639,6 +622,7 @@
 		FA2AE4572AEB980800D24008 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -652,6 +636,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				EXCLUDED_ARCHS = x86_64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NeoHub/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NeoHub;
@@ -661,18 +646,20 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.1;
+				MARKETING_VERSION = 0.2.4a;
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alex35mil.NeoHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
 		FA2AE4582AEB980800D24008 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -686,6 +673,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				EXCLUDED_ARCHS = x86_64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NeoHub/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NeoHub;
@@ -695,24 +683,27 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.1;
+				MARKETING_VERSION = 0.2.4a;
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alex35mil.NeoHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
 		FA2AE4622AEB9CA000D24008 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				CODE_SIGN_ENTITLEMENTS = NeoHubCLI/NeoHubCLI.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = SL42XX68Z7;
 				ENABLE_HARDENED_RUNTIME = YES;
+				EXCLUDED_ARCHS = x86_64;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -727,19 +718,22 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.alex35mil.NeoHub.CLI;
 				PRODUCT_NAME = neohub;
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
 		FA2AE4632AEB9CA000D24008 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				CODE_SIGN_ENTITLEMENTS = NeoHubCLI/NeoHubCLI.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = SL42XX68Z7;
 				ENABLE_HARDENED_RUNTIME = YES;
+				EXCLUDED_ARCHS = x86_64;
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@executable_path/../Frameworks",
@@ -750,7 +744,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.alex35mil.NeoHub.CLI;
 				PRODUCT_NAME = neohub;
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -782,7 +777,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -816,7 +812,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -872,44 +869,12 @@
 				minimumVersion = 1.7.0;
 			};
 		};
-		FA30F21C2AEEB6F8004EC6E9 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-nio.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.92.2;
-			};
-		};
 		FA30F22D2AEF828A004EC6E9 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.4.0;
-			};
-		};
-		FA3937202AF41D84001D9105 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.0;
-			};
-		};
-		FA54EB7D2AF789D4001AE449 /* XCRemoteSwiftPackageReference "swift-log" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-log.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.9.1;
-			};
-		};
-		FA54EB922AF90B52001AE449 /* XCRemoteSwiftPackageReference "swift-log-syslog" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ianpartridge/swift-log-syslog.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -920,40 +885,10 @@
 			package = FA2EAD982AED3906000F8F7A /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
 			productName = ArgumentParser;
 		};
-		FA30F21D2AEEB6F9004EC6E9 /* NIO */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FA30F21C2AEEB6F8004EC6E9 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIO;
-		};
-		FA30F21F2AEEB70A004EC6E9 /* NIO */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FA30F21C2AEEB6F8004EC6E9 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIO;
-		};
 		FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FA30F22D2AEF828A004EC6E9 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
-		};
-		FA3937212AF41D84001D9105 /* LaunchAtLogin */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FA3937202AF41D84001D9105 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;
-			productName = LaunchAtLogin;
-		};
-		FA54EB7E2AF789D4001AE449 /* Logging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FA54EB7D2AF789D4001AE449 /* XCRemoteSwiftPackageReference "swift-log" */;
-			productName = Logging;
-		};
-		FA54EB842AF7CB7E001AE449 /* Logging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FA54EB7D2AF789D4001AE449 /* XCRemoteSwiftPackageReference "swift-log" */;
-			productName = Logging;
-		};
-		FA54EB932AF90B52001AE449 /* LoggingSyslog */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FA54EB922AF90B52001AE449 /* XCRemoteSwiftPackageReference "swift-log-syslog" */;
-			productName = LoggingSyslog;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

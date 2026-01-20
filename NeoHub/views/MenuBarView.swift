@@ -41,19 +41,17 @@ struct MenuBarView: View {
             case .error(reason: .notInstalled):
                 Divider()
                 Button("⚠️ Install CLI") {
-                    cli.perform(.install) { result, status in
-                        Task { @MainActor in
-                            Self.showCLIInstallationAlert(with: (result, status))
-                        }
+                    Task { @MainActor in
+                        let response = await cli.run(.install)
+                        Self.showCLIInstallationAlert(with: response)
                     }
                 }
             case .error(reason: .versionMismatch):
                 Divider()
                 Button("⚠️ Update CLI") {
-                    cli.perform(.install) { result, status in
-                        Task { @MainActor in
-                            Self.showCLIInstallationAlert(with: (result, status))
-                        }
+                    Task { @MainActor in
+                        let response = await cli.run(.install)
+                        Self.showCLIInstallationAlert(with: response)
                     }
                 }
             case .error(reason: .unexpectedError(_)):

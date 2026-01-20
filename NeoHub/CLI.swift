@@ -41,23 +41,13 @@ enum CLIInstallationError: Error {
 final class CLI: ObservableObject {
     @Published private(set) var status: CLIStatus = .ok
 
-    func updateStatusOnLaunch(_ cb: @Sendable @escaping (CLIStatus) -> Void) {
-        Task.detached {
-            log.info("Getting the CLI status...")
+    func refreshStatus() async -> CLIStatus {
+        let status = await Task.detached {
+            Self.getStatus()
+        }.value
 
-            let status = Self.getStatus()
-
-            log.info("CLI status: \(status)")
-
-            await MainActor.run {
-                if case .ok = status {
-                    cb(status)
-                } else {
-                    self.status = status
-                    cb(status)
-                }
-            }
-        }
+        self.status = status
+        return status
     }
 
     nonisolated static func getStatus() -> CLIStatus {
@@ -84,11 +74,8 @@ final class CLI: ObservableObject {
         }
     }
 
-    func perform(
-        _ operation: CLIOperation,
-        andThen callback: @Sendable @escaping (Result<Void, CLIInstallationError>, CLIStatus) -> Void
-    ) {
-        Task.detached(priority: .background) {
+    func run(_ operation: CLIOperation) async -> (Result<Void, CLIInstallationError>, CLIStatus) {
+        let outcome = await Task.detached(priority: .background) {
             let script =
                 switch operation {
                 case .install:
@@ -97,20 +84,13 @@ final class CLI: ObservableObject {
                     "do shell script \"rm \(Bin.destination) && rm -rf \(Lib.destination)\" with administrator privileges"
                 }
             let result = CLI.runAppleScript(script)
+            let status = result.isSuccess ? CLI.getStatus() : nil
+            return (result, status)
+        }.value
 
-            let status =
-                switch result {
-                case .success():
-                    CLI.getStatus()
-                case .failure(_):
-                    await MainActor.run { self.status }
-                }
-
-            await MainActor.run {
-                self.status = status
-                callback(result, status)
-            }
-        }
+        let status = outcome.1 ?? self.status
+        self.status = status
+        return (outcome.0, status)
     }
 
     nonisolated private static func getVersion() -> Result<String, Error> {
@@ -180,5 +160,14 @@ final class CLI: ObservableObject {
             }
         }
         return result
+    }
+}
+
+private extension Result where Success == Void, Failure == CLIInstallationError {
+    var isSuccess: Bool {
+        if case .success = self {
+            return true
+        }
+        return false
     }
 }

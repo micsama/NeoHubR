@@ -298,8 +298,6 @@ struct SwitcherEmptyView: View {
             Button("Close") { switcherWindow.hide() }.focused($focused)
         }
         .onAppear {
-            log.trace("SwitcherEmptyView: appears")
-
             self.focused = true
 
             self.keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -321,9 +319,7 @@ struct SwitcherEmptyView: View {
             }
         }
         .onDisappear {
-            log.trace("SwitcherEmptyView: disappears")
             if let monitor = keyboard.monitor {
-                log.trace("SwitcherEmptyView: removing monitor")
                 NSEvent.removeMonitor(monitor)
             }
         }
@@ -403,8 +399,6 @@ struct SwitcherListView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
-            log.trace("SwitcherListView: appears")
-
             self.focused = true
 
             self.keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -452,9 +446,7 @@ struct SwitcherListView: View {
             }
         }
         .onDisappear {
-            log.trace("SwitcherListView: disappears")
             if let monitor = keyboard.monitor {
-                log.trace("SwitcherListView: removing monitor")
                 NSEvent.removeMonitor(monitor)
             }
         }

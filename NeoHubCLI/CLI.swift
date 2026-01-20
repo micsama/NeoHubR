@@ -7,6 +7,7 @@ let APP_BUNDLE_ID = "com.alex35mil.NeoHub.CLI"
 enum CLIError: Error {
     case failedToGetBin(Error)
     case failedToCommunicateWithNeoHub(SendError)
+    case manual(String)
 }
 
 extension CLIError: LocalizedError {
@@ -24,6 +25,27 @@ extension CLIError: LocalizedError {
                 Failed to communicate with NeoHub.
                 \(error.localizedDescription)
                 """
+        case .manual(let message):
+            return message
+        }
+    }
+}
+
+extension CLIError {
+    var report: CLIErrorReport {
+        switch self {
+        case .failedToGetBin(let error):
+            return CLIErrorReport(
+                message: "Failed to get a path to Neovide binary.",
+                detail: error.localizedDescription
+            )
+        case .failedToCommunicateWithNeoHub(let error):
+            return CLIErrorReport(
+                message: "Failed to communicate with NeoHub.",
+                detail: error.localizedDescription
+            )
+        case .manual(let message):
+            return CLIErrorReport(message: message)
         }
     }
 }
@@ -33,7 +55,7 @@ struct CLI: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "neohub",
         abstract: "A CLI interface to NeoHub. Launch new or activate already running Neovide instance.",
-        version: "0.2.1"
+        version: "0.2.4a"
     )
 
     @Argument(help: "Optional path passed to Neovide.")
@@ -46,7 +68,15 @@ struct CLI: ParsableCommand {
     @Option(parsing: .remaining, help: "Options passed to Neovide")
     var opts: [String] = []
 
+    @Option(help: "Send a CLI error message to the GUI for testing.")
+    var error: String?
+
     mutating func run() {
+        if let error {
+            Self.sendErrorReport(.manual(error))
+            Self.exit(withError: CLIError.manual(error))
+        }
+
         let wd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 
         let bin: URL
@@ -54,6 +84,7 @@ struct CLI: ParsableCommand {
         case .success(let path):
             bin = URL(fileURLWithPath: path)
         case .failure(let error):
+            Self.sendErrorReport(.failedToGetBin(error))
             Self.exit(withError: CLIError.failedToGetBin(error))
         }
 
@@ -73,35 +104,22 @@ struct CLI: ParsableCommand {
             opts: self.opts,
             env: env
         )
-
-        log.debug(
-            """
-
-            ====================== OUTGOING REQUEST ======================
-            wd: \(req.wd)
-            bin: \(req.bin)
-            name: \(req.name ?? "-")
-            path: \(req.path ?? "-")
-            opts: \(req.opts)
-            """
-        )
-        log.trace("env: \(req.env)")
-        log.debug(
-            """
-
-            =================== END OF OUTGOING REQUEST ==================
-            """
-        )
+        let message = IPCMessage.run(req)
 
         let client = SocketClient()
-        let result = client.send(req)
+        let result = client.send(message)
 
         switch result {
         case .success(let res):
-            log.debug("Response: \(res ?? "-")")
             Self.exit(withError: nil)
         case .failure(let error):
+            Self.sendErrorReport(.failedToCommunicateWithNeoHub(error))
             Self.exit(withError: CLIError.failedToCommunicateWithNeoHub(error))
         }
+    }
+
+    private static func sendErrorReport(_ error: CLIError) {
+        let message = IPCMessage.cliError(error.report)
+        let _ = SocketClient().send(message)
     }
 }

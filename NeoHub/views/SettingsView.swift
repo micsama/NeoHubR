@@ -9,6 +9,7 @@ struct SettingsView: View {
 
     @State var runningCLIAction: Bool = false
     @State private var launchAtLoginEnabled: Bool = false
+    @AppStorage(AppSettingsKey.forwardCLIErrors) private var forwardCLIErrors = true
 
     var body: some View {
         VStack(spacing: 20) {
@@ -73,6 +74,12 @@ struct SettingsView: View {
             .settingsGroup()
             Text("CLI").font(.title)
             VStack(spacing: 20) {
+                HStack {
+                    Text("Show CLI errors in app")
+                    Spacer()
+                    Toggle("", isOn: $forwardCLIErrors)
+                        .toggleStyle(SwitchToggleStyle())
+                }
                 switch cli.status {
                 case .ok:
                     VStack(spacing: 10) {
@@ -90,10 +97,9 @@ struct SettingsView: View {
                     VStack(spacing: 10) {
                         Button("Uninstall") {
                             self.runningCLIAction = true
-                            cli.perform(.uninstall) { _, _ in
-                                Task { @MainActor in
-                                    self.runningCLIAction = false
-                                }
+                            Task { @MainActor in
+                                _ = await cli.run(.uninstall)
+                                self.runningCLIAction = false
                             }
                         }
                         .buttonStyle(LinkButtonStyle())
@@ -116,10 +122,9 @@ struct SettingsView: View {
                     VStack(spacing: 10) {
                         Button("Install") {
                             self.runningCLIAction = true
-                            cli.perform(.install) { _, _ in
-                                Task { @MainActor in
-                                    self.runningCLIAction = false
-                                }
+                            Task { @MainActor in
+                                _ = await cli.run(.install)
+                                self.runningCLIAction = false
                             }
                         }
                         .disabled(self.runningCLIAction)
@@ -141,10 +146,9 @@ struct SettingsView: View {
                     VStack(spacing: 20) {
                         Button("Update") {
                             self.runningCLIAction = true
-                            cli.perform(.install) { _, _ in
-                                Task { @MainActor in
-                                    self.runningCLIAction = false
-                                }
+                            Task { @MainActor in
+                                _ = await cli.run(.install)
+                                self.runningCLIAction = false
                             }
                         }
                         .disabled(self.runningCLIAction)
@@ -152,10 +156,9 @@ struct SettingsView: View {
                         Divider()
                         Button("Uninstall") {
                             self.runningCLIAction = true
-                            cli.perform(.uninstall) { _, _ in
-                                Task { @MainActor in
-                                    self.runningCLIAction = false
-                                }
+                            Task { @MainActor in
+                                _ = await cli.run(.uninstall)
+                                self.runningCLIAction = false
                             }
                         }
                         .buttonStyle(LinkButtonStyle())
