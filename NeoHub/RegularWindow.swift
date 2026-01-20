@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 final class WindowCounter {
     private var counter: UInt8
 
@@ -21,9 +22,9 @@ final class WindowCounter {
     }
 }
 
-final class RegularWindow<Content: View> {
+@MainActor
+final class RegularWindow<Content: View>: NSObject {
     var window: NSWindow?
-    var observer: NSObjectProtocol?
 
     let title: String?
     let width: CGFloat
@@ -36,6 +37,7 @@ final class RegularWindow<Content: View> {
         self.width = width
         self.content = content
         self.windowCounter = windowCounter
+        super.init()
     }
 
     func open() {
@@ -65,13 +67,12 @@ final class RegularWindow<Content: View> {
         NSApp.activate(ignoringOtherApps: true)
 
         // When window gets closed, reverting the app to the accessory type
-        self.observer = NotificationCenter.default.addObserver(
-            forName: NSWindow.willCloseNotification,
-            object: window,
-            queue: nil
-        ) { [weak self] notification in
-            self?.onClose(notification)
-        }
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleWindowClose(_:)),
+            name: NSWindow.willCloseNotification,
+            object: window
+        )
 
         self.window = window
 
@@ -88,7 +89,7 @@ final class RegularWindow<Content: View> {
         }
     }
 
-    private func onClose(_ notification: Notification) {
+    @objc private func handleWindowClose(_ notification: Notification) {
         if windowCounter.now == 1 {
             NSApp.setActivationPolicy(.accessory)
         }
@@ -97,15 +98,15 @@ final class RegularWindow<Content: View> {
     }
 
     private func cleanUp() {
-        self.window = nil
-        if let observer = self.observer {
-            NotificationCenter.default.removeObserver(observer)
+        if let window = self.window {
+            NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: window)
         }
+        self.window = nil
     }
 
-    deinit { self.cleanUp() }
 }
 
+@MainActor
 final class RegularWindowRef<Content: View> {
     private var window: RegularWindow<Content>?
 

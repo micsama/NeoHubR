@@ -18,7 +18,6 @@ struct MenuBarIcon: View {
     }
 }
 
-
 struct MenuBarView: View {
     @ObservedObject var cli: CLI
     @ObservedObject var editorStore: EditorStore
@@ -39,25 +38,29 @@ struct MenuBarView: View {
                 }
             }
             switch cli.status {
-                case .error(reason:.notInstalled):
-                    Divider()
-                    Button("⚠️ Install CLI") {
-                        cli.perform(.install) { result, status in
+            case .error(reason: .notInstalled):
+                Divider()
+                Button("⚠️ Install CLI") {
+                    cli.perform(.install) { result, status in
+                        Task { @MainActor in
                             Self.showCLIInstallationAlert(with: (result, status))
                         }
                     }
-                case .error(reason: .versionMismatch):
-                    Divider()
-                    Button("⚠️ Update CLI") {
-                        cli.perform(.install) { result, status in
+                }
+            case .error(reason: .versionMismatch):
+                Divider()
+                Button("⚠️ Update CLI") {
+                    cli.perform(.install) { result, status in
+                        Task { @MainActor in
                             Self.showCLIInstallationAlert(with: (result, status))
                         }
                     }
-                case .error(reason: .unexpectedError(_)):
-                    Divider()
-                    Button("❗ CLI Error") { settingsWindow.open() }
-                case .ok:
-                    EmptyView()
+                }
+            case .error(reason: .unexpectedError(_)):
+                Divider()
+                Button("❗ CLI Error") { settingsWindow.open() }
+            case .ok:
+                EmptyView()
             }
             Divider()
             Button("Settings") { settingsWindow.open() }
@@ -68,54 +71,56 @@ struct MenuBarView: View {
         }
     }
 
-    static func showCLIInstallationAlert(with response: (result: Result<Void, CLIInstallationError>, status: CLIStatus)) {
+    @MainActor
+    static func showCLIInstallationAlert(with response: (result: Result<Void, CLIInstallationError>, status: CLIStatus))
+    {
         switch response.result {
-            case .success(()):
-                let alert = NSAlert()
+        case .success(()):
+            let alert = NSAlert()
 
-                alert.messageText = "Boom!"
-                alert.informativeText = "The CLI is ready to roll 🚀"
-                alert.alertStyle = .informational
-                alert.addButton(withTitle: "OK")
+            alert.messageText = "Boom!"
+            alert.informativeText = "The CLI is ready to roll 🚀"
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "OK")
 
-                alert.runModal()
+            alert.runModal()
 
-            case .failure(.userCanceledOperation): ()
+        case .failure(.userCanceledOperation): ()
 
-            case .failure(.failedToCreateAppleScript):
-                let alert = NSAlert()
+        case .failure(.failedToCreateAppleScript):
+            let alert = NSAlert()
 
-                alert.messageText = "Oh no!"
-                alert.informativeText = "There was an issue during installation."
-                alert.alertStyle = .critical
-                alert.addButton(withTitle: "Report")
-                alert.addButton(withTitle: "Dismiss")
+            alert.messageText = "Oh no!"
+            alert.informativeText = "There was an issue during installation."
+            alert.alertStyle = .critical
+            alert.addButton(withTitle: "Report")
+            alert.addButton(withTitle: "Dismiss")
 
-                switch alert.runModal() {
-                    case .alertFirstButtonReturn:
-                        let error = ReportableError("Failed to build installation Apple Script")
-                        BugReporter.report(error)
-                    default: ()
-                }
+            switch alert.runModal() {
+            case .alertFirstButtonReturn:
+                let error = ReportableError("Failed to build installation Apple Script")
+                BugReporter.report(error)
+            default: ()
+            }
 
-            case .failure(.failedToExecuteAppleScript(error: let error)):
-                let alert = NSAlert()
+        case .failure(.failedToExecuteAppleScript(error: let error)):
+            let alert = NSAlert()
 
-                alert.messageText = "Oh no!"
-                alert.informativeText = "There was an issue during installation."
-                alert.alertStyle = .critical
-                alert.addButton(withTitle: "Report")
-                alert.addButton(withTitle: "Dismiss")
+            alert.messageText = "Oh no!"
+            alert.informativeText = "There was an issue during installation."
+            alert.alertStyle = .critical
+            alert.addButton(withTitle: "Report")
+            alert.addButton(withTitle: "Dismiss")
 
-                switch alert.runModal() {
-                    case .alertFirstButtonReturn:
-                        let error = ReportableError(
-                            "Failed to execute installation Apple Script",
-                            meta: error as? [String: Any]
-                        )
-                        BugReporter.report(error)
-                    default: ()
-                }
+            switch alert.runModal() {
+            case .alertFirstButtonReturn:
+                let error = ReportableError(
+                    "Failed to execute installation Apple Script",
+                    meta: error.mapValues { $0 as Any }
+                )
+                BugReporter.report(error)
+            default: ()
+            }
         }
     }
 }

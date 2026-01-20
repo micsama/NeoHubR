@@ -1,5 +1,5 @@
-import SwiftUI
 import KeyboardShortcuts
+import SwiftUI
 
 struct Key {
     static let ESC: UInt16 = 53
@@ -39,9 +39,9 @@ struct Layout {
 
     static let resultsContainerHeight: CGFloat = CGFloat(
         windowHeight
-        - (searchFieldVerticalPadding * 2 + searchFieldFontSize)
-        - (bottomBarVerticalPadding * 2 + bottomBarFontSize + bottomBarButtonVerticalPadding * 2)
-        - 16 // magic number b/c I didn't consider something in the calculation above
+            - (searchFieldVerticalPadding * 2 + searchFieldFontSize)
+            - (bottomBarVerticalPadding * 2 + bottomBarFontSize + bottomBarButtonVerticalPadding * 2)
+            - 16  // magic number b/c I didn't consider something in the calculation above
     )
 }
 
@@ -124,20 +124,20 @@ final class SwitcherWindow: ObservableObject {
             let editor = editors.first!
             let application = NSRunningApplication(processIdentifier: editor.processIdentifier)
             switch NSWorkspace.shared.frontmostApplication {
-                case .some(let app):
-                    if app.processIdentifier == editor.processIdentifier {
-                        application?.hide()
-                    } else {
-                        activationManager.setActivationTarget(
-                            currentApp: app,
-                            switcherWindow: self.selfRef,
-                            editors: editors
-                        )
-                        application?.activate()
-                    }
-                case .none:
-                    let application = NSRunningApplication(processIdentifier: editor.processIdentifier)
+            case .some(let app):
+                if app.processIdentifier == editor.processIdentifier {
                     application?.hide()
+                } else {
+                    activationManager.setActivationTarget(
+                        currentApp: app,
+                        switcherWindow: self.selfRef,
+                        editors: editors
+                    )
+                    application?.activate()
+                }
+            case .none:
+                let application = NSRunningApplication(processIdentifier: editor.processIdentifier)
+                application?.hide()
             }
         } else {
             self.toggle()
@@ -151,24 +151,24 @@ final class SwitcherWindow: ObservableObject {
             let editor = editors.first!
 
             switch NSWorkspace.shared.frontmostApplication {
-                case .some(let app):
-                    if app.processIdentifier == editor.processIdentifier {
-                        activationManager.activateTarget()
-                        activationManager.setActivationTarget(
-                            currentApp: app,
-                            switcherWindow: self.selfRef,
-                            editors: editors
-                        )
-                    } else {
-                        activationManager.setActivationTarget(
-                            currentApp: app,
-                            switcherWindow: self.selfRef,
-                            editors: editors
-                        )
-                        editor.activate()
-                    }
-                case .none:
+            case .some(let app):
+                if app.processIdentifier == editor.processIdentifier {
+                    activationManager.activateTarget()
+                    activationManager.setActivationTarget(
+                        currentApp: app,
+                        switcherWindow: self.selfRef,
+                        editors: editors
+                    )
+                } else {
+                    activationManager.setActivationTarget(
+                        currentApp: app,
+                        switcherWindow: self.selfRef,
+                        editors: editors
+                    )
                     editor.activate()
+                }
+            case .none:
+                editor.activate()
             }
         } else {
             self.toggle()
@@ -241,32 +241,32 @@ struct SwitcherView: View {
         let editors = editorStore.getEditors()
 
         switch editors.count {
-            case 0:
-                return .noEditors
-            case 1:
-                return .oneEditor
-            default:
-                return .manyEditors
+        case 0:
+            return .noEditors
+        case 1:
+            return .oneEditor
+        default:
+            return .manyEditors
         }
     }
 
     var body: some View {
         Group {
             switch state {
-                case .noEditors:
-                    SwitcherEmptyView(
-                        switcherWindow: self.switcherWindow,
-                        settingsWindow: self.settingsWindow
-                    )
-                case .oneEditor, .manyEditors:
-                    SwitcherListView(
-                        editorStore: self.editorStore,
-                        switcherWindow: self.switcherWindow,
-                        settingsWindow: self.settingsWindow,
-                        activationManager: self.activationManager
-                    )
-                case .none:
-                    EmptyView()
+            case .noEditors:
+                SwitcherEmptyView(
+                    switcherWindow: self.switcherWindow,
+                    settingsWindow: self.settingsWindow
+                )
+            case .oneEditor, .manyEditors:
+                SwitcherListView(
+                    editorStore: self.editorStore,
+                    switcherWindow: self.switcherWindow,
+                    settingsWindow: self.settingsWindow,
+                    activationManager: self.activationManager
+                )
+            case .none:
+                EmptyView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -304,23 +304,23 @@ struct SwitcherEmptyView: View {
 
             self.keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 switch event.keyCode {
-                    case Key.ESC:
-                        switcherWindow.hide()
-                        return nil
-                    case Key.COMMA where event.modifierFlags.contains(.command):
-                        switcherWindow.hide()
-                        settingsWindow.open()
-                        return nil
-                    case Key.W where event.modifierFlags.contains(.command):
-                        switcherWindow.hide()
-                        return nil
-                    default:
-                        break
+                case Key.ESC:
+                    switcherWindow.hide()
+                    return nil
+                case Key.COMMA where event.modifierFlags.contains(.command):
+                    switcherWindow.hide()
+                    settingsWindow.open()
+                    return nil
+                case Key.W where event.modifierFlags.contains(.command):
+                    switcherWindow.hide()
+                    return nil
+                default:
+                    break
                 }
                 return event
             }
         }
-        .onDisappear() {
+        .onDisappear {
             log.trace("SwitcherEmptyView: disappears")
             if let monitor = keyboard.monitor {
                 log.trace("SwitcherEmptyView: removing monitor")
@@ -409,49 +409,49 @@ struct SwitcherListView: View {
 
             self.keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 switch event.keyCode {
-                    case Key.ARROW_UP:
-                        if selectedIndex > 0 {
-                            selectedIndex -= 1
-                        }
-                        return nil
-                    case Key.ARROW_DOWN:
-                        if selectedIndex < self.filterEditors().count - 1 {
-                            selectedIndex += 1
-                        }
-                        return nil
-                    case Key.TAB:
-                        selectedIndex = (selectedIndex + 1) % self.filterEditors().count
-                        return nil
-                    case Key.ENTER:
-                        let editors = self.filterEditors()
-                        if editors.indices.contains(selectedIndex) {
-                            let editor = editors[selectedIndex]
-                            editor.activate()
-                        }
-                        return nil
-                    case Key.BACKSPACE where event.modifierFlags.contains(.command):
-                        self.quitSelectedEditor()
-                        return nil
-                    case Key.ESC:
-                        switcherWindow.hide()
-                        return nil
-                    case Key.COMMA where event.modifierFlags.contains(.command):
-                        switcherWindow.hide()
-                        settingsWindow.open()
-                        return nil
-                    case Key.W where event.modifierFlags.contains(.command):
-                        switcherWindow.hide()
-                        return nil
-                    case Key.Q where event.modifierFlags.contains(.command):
-                        self.quitAllEditors()
-                        return nil
-                    default:
-                        break
+                case Key.ARROW_UP:
+                    if selectedIndex > 0 {
+                        selectedIndex -= 1
+                    }
+                    return nil
+                case Key.ARROW_DOWN:
+                    if selectedIndex < self.filterEditors().count - 1 {
+                        selectedIndex += 1
+                    }
+                    return nil
+                case Key.TAB:
+                    selectedIndex = (selectedIndex + 1) % self.filterEditors().count
+                    return nil
+                case Key.ENTER:
+                    let editors = self.filterEditors()
+                    if editors.indices.contains(selectedIndex) {
+                        let editor = editors[selectedIndex]
+                        editor.activate()
+                    }
+                    return nil
+                case Key.BACKSPACE where event.modifierFlags.contains(.command):
+                    self.quitSelectedEditor()
+                    return nil
+                case Key.ESC:
+                    switcherWindow.hide()
+                    return nil
+                case Key.COMMA where event.modifierFlags.contains(.command):
+                    switcherWindow.hide()
+                    settingsWindow.open()
+                    return nil
+                case Key.W where event.modifierFlags.contains(.command):
+                    switcherWindow.hide()
+                    return nil
+                case Key.Q where event.modifierFlags.contains(.command):
+                    self.quitAllEditors()
+                    return nil
+                default:
+                    break
                 }
                 return event
             }
         }
-        .onDisappear() {
+        .onDisappear {
             log.trace("SwitcherListView: disappears")
             if let monitor = keyboard.monitor {
                 log.trace("SwitcherListView: removing monitor")
@@ -463,8 +463,8 @@ struct SwitcherListView: View {
     func filterEditors() -> [Editor] {
         editorStore.getEditors(sortedFor: .switcher).filter { editor in
             searchText.isEmpty
-            || editor.name.contains(searchText)
-            || editor.displayPath.localizedCaseInsensitiveContains(searchText)
+                || editor.name.contains(searchText)
+                || editor.displayPath.localizedCaseInsensitiveContains(searchText)
         }
     }
 

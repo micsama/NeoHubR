@@ -1,8 +1,28 @@
 import UserNotifications
 
-typealias NotificationMeta = [AnyHashable: Any]
+typealias NotificationMeta = [String: String]
 
-protocol NotificationProtocol {
+extension NotificationMeta {
+    init(userInfo: [AnyHashable: Any]) {
+        var meta: NotificationMeta = [:]
+        for (key, value) in userInfo {
+            if let key = key as? String, let value = value as? String {
+                meta[key] = value
+            }
+        }
+        self = meta
+    }
+
+    var userInfo: [AnyHashable: Any] {
+        var info: [AnyHashable: Any] = [:]
+        for (key, value) in self {
+            info[key] = value
+        }
+        return info
+    }
+}
+
+protocol NotificationProtocol: Sendable {
     static var id: String { get }
 
     static var title: String { get }
@@ -28,7 +48,7 @@ extension NotificationProtocol {
     }
 }
 
-protocol NotificationAction {
+protocol NotificationAction: Sendable {
     static var id: String { get }
     static var button: String { get }
 
@@ -51,6 +71,7 @@ extension NotificationAction {
     }
 }
 
+@MainActor
 final class NotificationManager: NSObject {
     static let shared = NotificationManager()
 
@@ -66,7 +87,7 @@ final class NotificationManager: NSObject {
             FailedToHandleRequestFromCLINotification.category,
             FailedToRunEditorProcessNotification.category,
             FailedToGetRunningEditorAppNotification.category,
-            FailedToActivateEditorAppNotification.category
+            FailedToActivateEditorAppNotification.category,
         ])
 
         UNUserNotificationCenter.current().setNotificationCategories(categories)
@@ -80,32 +101,32 @@ final class NotificationManager: NSObject {
 
     private var status: AuthStatus = .unknown
 
-    private func requestAuthorization(completion: @escaping (Bool) -> Void) {
+    private func requestAuthorization(completion: @Sendable @escaping (Bool) -> Void) {
         switch self.status {
-            case .unknown:
-                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
-                    DispatchQueue.main.async {
-                        switch (granted, error) {
-                            case (true, nil):
-                                log.info("Notification permission granted")
-                                self.status = .granted
-                                completion(true)
-                            case (true, .some(let error)):
-                                log.info("Notification permission granted")
-                                log.notice("There was an error during notification authorization request. \(error)")
-                                self.status = .granted
-                                completion(true)
-                            case (false, let error):
-                                log.info("Notification permission not granted. Details: \(String(describing: error))")
-                                self.status = .rejected
-                                completion(false)
-                        }
+        case .unknown:
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+                DispatchQueue.main.async {
+                    switch (granted, error) {
+                    case (true, nil):
+                        log.info("Notification permission granted")
+                        self.status = .granted
+                        completion(true)
+                    case (true, .some(let error)):
+                        log.info("Notification permission granted")
+                        log.notice("There was an error during notification authorization request. \(error)")
+                        self.status = .granted
+                        completion(true)
+                    case (false, let error):
+                        log.info("Notification permission not granted. Details: \(String(describing: error))")
+                        self.status = .rejected
+                        completion(false)
                     }
                 }
-            case .granted:
-                completion(true)
-            case .rejected:
-                completion(false)
+            }
+        case .granted:
+            completion(true)
+        case .rejected:
+            completion(false)
         }
     }
 
@@ -128,7 +149,7 @@ final class NotificationManager: NSObject {
             content.body = Notification.body
 
             if let meta = notification.meta {
-                content.userInfo = meta
+                content.userInfo = meta.userInfo
             }
 
             log.debug("Notification content: \(content)")
@@ -158,26 +179,30 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
         log.info("Notification manager delegate registered")
     }
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                willPresent notification: UNNotification,
-                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
         completionHandler([.banner, .sound])
     }
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                didReceive response: UNNotificationResponse,
-                                withCompletionHandler completionHandler: @escaping () -> Void) {
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
         switch response.actionIdentifier {
-            case ReportAction.id:
-                let meta = response.notification.request.content.userInfo
-                if let action = ReportAction(from: meta) {
-                    DispatchQueue.global().async {
-                        action.run()
-                    }
+        case ReportAction.id:
+            let meta = NotificationMeta(userInfo: response.notification.request.content.userInfo)
+            if let action = ReportAction(from: meta) {
+                DispatchQueue.global().async {
+                    action.run()
                 }
-                break
-            default:
-                break
+            }
+            break
+        default:
+            break
         }
 
         completionHandler()
@@ -204,8 +229,9 @@ struct ReportAction: NotificationAction {
     }
 
     init?(from meta: NotificationMeta) {
-        guard let title = meta["REPORT_TITLE"] as? String,
-              let error = meta["REPORT_ERROR"] as? String else {
+        guard let title = meta["REPORT_TITLE"],
+            let error = meta["REPORT_ERROR"]
+        else {
             log.warning("Failed to get metadata from notification. Meta: \(meta)")
             return nil
         }
@@ -238,7 +264,9 @@ struct FailedToLaunchServerNotification: NotificationProtocol {
     }
 
     func send() {
-        NotificationManager.shared.sendNotification(notification: self)
+        Task { @MainActor in
+            NotificationManager.shared.sendNotification(notification: self)
+        }
     }
 }
 
@@ -258,7 +286,9 @@ struct FailedToHandleRequestFromCLINotification: NotificationProtocol {
     }
 
     func send() {
-        NotificationManager.shared.sendNotification(notification: self)
+        Task { @MainActor in
+            NotificationManager.shared.sendNotification(notification: self)
+        }
     }
 }
 
@@ -278,7 +308,9 @@ struct FailedToRunEditorProcessNotification: NotificationProtocol {
     }
 
     func send() {
-        NotificationManager.shared.sendNotification(notification: self)
+        Task { @MainActor in
+            NotificationManager.shared.sendNotification(notification: self)
+        }
     }
 }
 
@@ -298,7 +330,9 @@ struct FailedToGetRunningEditorAppNotification: NotificationProtocol {
     }
 
     func send() {
-        NotificationManager.shared.sendNotification(notification: self)
+        Task { @MainActor in
+            NotificationManager.shared.sendNotification(notification: self)
+        }
     }
 }
 
@@ -318,6 +352,8 @@ struct FailedToActivateEditorAppNotification: NotificationProtocol {
     }
 
     func send() {
-        NotificationManager.shared.sendNotification(notification: self)
+        Task { @MainActor in
+            NotificationManager.shared.sendNotification(notification: self)
+        }
     }
 }

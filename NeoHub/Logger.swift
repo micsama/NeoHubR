@@ -60,9 +60,9 @@ struct AppLogger {
 
 private let defaultLevel: LogLevel = {
     #if DEBUG
-    return .debug
+        return .debug
     #else
-    return .info
+        return .info
     #endif
 }()
 

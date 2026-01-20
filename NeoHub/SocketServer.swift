@@ -1,8 +1,8 @@
 import Foundation
-import Network
 import NeoHubLib
+import Network
 
-final class SocketServer {
+final class SocketServer: @unchecked Sendable {
     let store: EditorStore
 
     private let queue = DispatchQueue(label: "neohub.ipc.server")
@@ -28,14 +28,14 @@ final class SocketServer {
 
                 listener.stateUpdateHandler = { state in
                     switch state {
-                        case .ready:
-                            log.info("Bound to the \(Socket.addr) socket")
-                        case .failed(let error):
-                            let report = ReportableError("Failed to start the socket server", error: error)
-                            log.critical("\(report)")
-                            FailedToLaunchServerNotification(error: report).send()
-                        default:
-                            break
+                    case .ready:
+                        log.info("Bound to the \(Socket.addr) socket")
+                    case .failed(let error):
+                        let report = ReportableError("Failed to start the socket server", error: error)
+                        log.critical("\(report)")
+                        FailedToLaunchServerNotification(error: report).send()
+                    default:
+                        break
                     }
                 }
 
@@ -76,7 +76,7 @@ final class SocketServer {
     }
 }
 
-private final class ConnectionHandler {
+private final class ConnectionHandler: @unchecked Sendable {
     private let store: EditorStore
     private let connection: NWConnection
     private let queue: DispatchQueue
@@ -95,25 +95,26 @@ private final class ConnectionHandler {
         connection.stateUpdateHandler = { [weak self] state in
             guard let self else { return }
             switch state {
-                case .ready:
-                    log.trace("IPC connection ready")
-                    self.receiveNext()
-                case .failed(let error):
-                    log.error("IPC connection failed: \(error)")
-                    self.connection.cancel()
-                    self.onFinish?()
-                case .cancelled:
-                    log.trace("IPC connection cancelled")
-                    self.onFinish?()
-                default:
-                    break
+            case .ready:
+                log.trace("IPC connection ready")
+                self.receiveNext()
+            case .failed(let error):
+                log.error("IPC connection failed: \(error)")
+                self.connection.cancel()
+                self.onFinish?()
+            case .cancelled:
+                log.trace("IPC connection cancelled")
+                self.onFinish?()
+            default:
+                break
             }
         }
         connection.start(queue: queue)
     }
 
     private func receiveNext() {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { [weak self] data, _, isComplete, error in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) {
+            [weak self] data, _, isComplete, error in
             guard let self else { return }
             if let data {
                 log.trace("Incoming data from the CLI")
@@ -208,14 +209,16 @@ private final class ConnectionHandler {
 
     private func sendResponse(_ response: String) {
         let data = Data(response.utf8)
-        connection.send(content: data, completion: .contentProcessed { [weak self] error in
-            if let error {
-                log.error("IPC send error: \(error)")
-            } else {
-                log.trace("Response sent")
-            }
-            self?.connection.cancel()
-            self?.onFinish?()
-        })
+        connection.send(
+            content: data,
+            completion: .contentProcessed { [weak self] error in
+                if let error {
+                    log.error("IPC send error: \(error)")
+                } else {
+                    log.trace("Response sent")
+                }
+                self?.connection.cancel()
+                self?.onFinish?()
+            })
     }
 }

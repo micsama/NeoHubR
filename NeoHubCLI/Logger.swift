@@ -65,22 +65,22 @@ private func writeToStderr(_ message: String) {
 
 private func parseLogLevel(_ value: String) -> LogLevel? {
     switch value.lowercased() {
-        case "trace": return .trace
-        case "debug": return .debug
-        case "info": return .info
-        case "warn", "warning": return .warning
-        case "error": return .error
-        case "critical", "fault": return .critical
-        default: return nil
+    case "trace": return .trace
+    case "debug": return .debug
+    case "info": return .info
+    case "warn", "warning": return .warning
+    case "error": return .error
+    case "critical", "fault": return .critical
+    default: return nil
     }
 }
 
 private func bootstrapLogger() -> AppLogger {
     let level =
-    switch ProcessInfo.processInfo.environment[envVar] {
+        switch ProcessInfo.processInfo.environment[envVar] {
         case .some(let value): parseLogLevel(value) ?? defaultLevel
         case .none: defaultLevel
-    }
+        }
 
     return AppLogger(subsystem: APP_BUNDLE_ID, category: "cli", level: level)
 }

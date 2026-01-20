@@ -23,7 +23,8 @@ struct Shell {
                 return .success(result)
             } else {
                 let errorData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-                let errorOutput = String(data: errorData, encoding: .utf8)!.trimmingCharacters(in: .whitespacesAndNewlines)
+                let errorOutput = String(data: errorData, encoding: .utf8)!.trimmingCharacters(
+                    in: .whitespacesAndNewlines)
 
                 let error = NSError(
                     domain: "NeoHubCLI",
@@ -31,9 +32,9 @@ struct Shell {
                     userInfo: [
                         NSLocalizedDescriptionKey:
                             """
-                            Exit code: \(process.terminationStatus)
-                            Output: \(errorOutput != "" ? errorOutput : "-")
-                            """
+                        Exit code: \(process.terminationStatus)
+                        Output: \(errorOutput != "" ? errorOutput : "-")
+                        """
                     ]
                 )
                 return .failure(error)

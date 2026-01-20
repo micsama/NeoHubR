@@ -32,8 +32,7 @@ final class ActivationManager {
     ) {
         let nextActivationTarget = currentApp.flatMap { app in
             if app.bundleIdentifier == APP_BUNDLE_ID {
-                if
-                    let currentWindow = NSApplication.shared.mainWindow,
+                if let currentWindow = NSApplication.shared.mainWindow,
                     let nonSwitcherWindow = NonSwitcherWindow(currentWindow, switcherWindow: switcherWindow)
                 {
                     return ActivationTarget.neohub(nonSwitcherWindow)
@@ -54,10 +53,10 @@ final class ActivationManager {
 
     public func activateTarget() {
         switch self.activationTarget {
-            case nil: ()
-            case .neohub(let window): window.activate()
-            case .neovide(let editor): editor.activate()
-            case .other(let app): app.activate()
+        case nil: ()
+        case .neohub(let window): window.activate()
+        case .neovide(let editor): editor.activate()
+        case .other(let app): app.activate()
         }
     }
 }
