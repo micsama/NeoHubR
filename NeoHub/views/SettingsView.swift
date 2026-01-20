@@ -1,6 +1,6 @@
 import SwiftUI
-import LaunchAtLogin
 import KeyboardShortcuts
+import ServiceManagement
 
 struct SettingsView: View {
     static let defaultWidth: CGFloat = 400
@@ -8,6 +8,7 @@ struct SettingsView: View {
     @ObservedObject var cli: CLI
 
     @State var runningCLIAction: Bool = false
+    @State private var launchAtLoginEnabled: Bool = false
 
     var body: some View {
         VStack(spacing: 20) {
@@ -23,7 +24,20 @@ struct SettingsView: View {
                 HStack {
                     Text("Launch at Login")
                     Spacer()
-                    LaunchAtLogin.Toggle("").toggleStyle(SwitchToggleStyle())
+                    Toggle("", isOn: $launchAtLoginEnabled)
+                        .toggleStyle(SwitchToggleStyle())
+                        .onChange(of: launchAtLoginEnabled) { newValue in
+                            do {
+                                if newValue {
+                                    try SMAppService.mainApp.register()
+                                } else {
+                                    try SMAppService.mainApp.unregister()
+                                }
+                            } catch {
+                                log.error("Failed to update launch at login: \(error)")
+                                launchAtLoginEnabled = isLaunchAtLoginEnabled()
+                            }
+                        }
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 10)
@@ -161,6 +175,13 @@ struct SettingsView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 40)
         .frame(maxWidth: .infinity)
+        .onAppear {
+            launchAtLoginEnabled = isLaunchAtLoginEnabled()
+        }
     }
 
+    private func isLaunchAtLoginEnabled() -> Bool {
+        let status = SMAppService.mainApp.status
+        return status == .enabled || status == .requiresApproval
+    }
 }
