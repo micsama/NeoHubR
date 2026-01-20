@@ -4,7 +4,7 @@ public struct Socket {
     public static let addr = "/tmp/neohub.sock"
 }
 
-public struct RunRequest: Codable {
+public struct RunRequest: Codable, Sendable {
     public let wd: URL
     public let bin: URL
     public let name: String?

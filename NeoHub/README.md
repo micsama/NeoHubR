@@ -17,7 +17,7 @@
 - 激活目标管理：`ActivationManager.swift`
   - 记录/恢复前台应用与窗口（用于切换器隐藏后的回切）。
 - IPC：`SocketServer.swift`
-  - SwiftNIO 监听 `/tmp/neohub.sock`，接收 CLI 请求并调用 `EditorStore.runEditor`。
+  - 使用 Network.framework 监听 `/tmp/neohub.sock`，接收 CLI 请求并调用 `EditorStore.runEditor`。
 - CLI 安装管理：`CLI.swift`
   - 通过 AppleScript 复制二进制与框架到 `/usr/local`。
 - 窗口体系：`RegularWindow.swift` + `views/`
