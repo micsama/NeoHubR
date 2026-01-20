@@ -4,7 +4,7 @@ import NeoHubLib
 import SwiftUI
 
 @MainActor
-final class EditorStore: ObservableObject, @unchecked Sendable {
+final class EditorStore: ObservableObject {
     @Published private var editors: [EditorID: Editor]
 
     let switcherWindow: SwitcherWindowRef
@@ -58,6 +58,7 @@ final class EditorStore: ObservableObject, @unchecked Sendable {
     }
 
     func runEditor(request: RunRequest) {
+        MainThread.assert()
         let editorID =
             switch request.path {
             case nil, "":
@@ -163,6 +164,7 @@ final class EditorStore: ObservableObject, @unchecked Sendable {
     }
 
     func restartActiveEditor() {
+        MainThread.assert()
         guard let activeApp = NSWorkspace.shared.frontmostApplication else {
             return
         }
@@ -214,6 +216,7 @@ final class EditorStore: ObservableObject, @unchecked Sendable {
     }
 
     func quitAllEditors() async {
+        MainThread.assert()
         for (_, editor) in self.editors {
             editor.quit()
         }

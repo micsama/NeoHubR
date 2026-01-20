@@ -179,37 +179,18 @@ final class NotificationManager: NSObject {
     }
 
     private func sendOnMain(kind: NotificationKind, error: ReportableError) {
+        MainThread.assert()
         let meta = ReportAction(error: error).meta
-
-        self.requestAuthorization { granted in
-            guard granted else {
-                return
-            }
-
-            let content = UNMutableNotificationContent()
-
-            content.categoryIdentifier = kind.id
-            content.title = kind.title
-            content.body = kind.body
-            content.userInfo = meta.userInfo
-
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-
-            let request = UNNotificationRequest(
-                identifier: UUID().uuidString,
-                content: content,
-                trigger: trigger
-            )
-
-            UNUserNotificationCenter.current().add(request) { error in
-                if let error {
-                    log.error("Error scheduling notification: \(error)")
-                }
-            }
-        }
+        scheduleNotification(
+            categoryId: kind.id,
+            title: kind.title,
+            body: kind.body,
+            meta: meta
+        )
     }
 
     private func sendCLIErrorOnMain(_ report: CLIErrorReport) {
+        MainThread.assert()
         var meta: [String: String] = ["source": "cli"]
         if let detail = report.detail {
             meta["detail"] = detail
@@ -220,17 +201,31 @@ final class NotificationManager: NSObject {
 
         let reportable = ReportableError(report.message, meta: meta)
         let actionMeta = ReportAction(error: reportable).meta
+        scheduleNotification(
+            categoryId: cliErrorCategoryId,
+            title: "CLI Error",
+            body: report.message,
+            meta: actionMeta
+        )
+    }
 
+    private func scheduleNotification(
+        categoryId: String,
+        title: String,
+        body: String,
+        meta: NotificationMeta
+    ) {
+        MainThread.assert()
         self.requestAuthorization { granted in
             guard granted else {
                 return
             }
 
             let content = UNMutableNotificationContent()
-            content.categoryIdentifier = cliErrorCategoryId
-            content.title = "CLI Error"
-            content.body = report.message
-            content.userInfo = actionMeta.userInfo
+            content.categoryIdentifier = categoryId
+            content.title = title
+            content.body = body
+            content.userInfo = meta.userInfo
 
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
             let request = UNNotificationRequest(
