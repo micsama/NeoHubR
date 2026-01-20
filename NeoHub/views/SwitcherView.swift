@@ -37,14 +37,39 @@ struct Layout {
 }
 
 struct GlassPalette {
-    static let textPrimary = Color.white.opacity(0.94)
-    static let textSecondary = Color.white.opacity(0.65)
     static let tint = Color(red: 0.25, green: 0.82, blue: 0.82)
-    static let rowBackground = Color.white.opacity(0.14)
-    static let rowSelected = Color.white.opacity(0.22)
-    static let stroke = Color.white.opacity(0.2)
-    static let border = Color.white.opacity(0.25)
-    static let searchBackground = Color.white.opacity(0.18)
+
+    static func textPrimary(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.92) : Color.black.opacity(0.88)
+    }
+
+    static func textSecondary(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.62) : Color.black.opacity(0.55)
+    }
+
+    static func rowBackground(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.14) : Color.white.opacity(0.5)
+    }
+
+    static func rowSelected(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.26) : Color.white.opacity(0.7)
+    }
+
+    static func stroke(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.08)
+    }
+
+    static func border(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.2) : Color.black.opacity(0.1)
+    }
+
+    static func searchBackground(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.16) : Color.white.opacity(0.65)
+    }
+
+    static func ambientShade(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.black.opacity(0.1) : Color.white.opacity(0.15)
+    }
 }
 
 struct LegacyPalette {
@@ -367,11 +392,16 @@ struct GlassSwitcherRoot: View {
     let settingsWindow: RegularWindow<SettingsView>
     let activationManager: ActivationManager
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         ZStack {
             GlassBackgroundView()
             RoundedRectangle(cornerRadius: Layout.windowCornerRadius)
-                .stroke(GlassPalette.border, lineWidth: 1)
+                .fill(GlassPalette.ambientShade(for: colorScheme))
+                .blendMode(.softLight)
+            RoundedRectangle(cornerRadius: Layout.windowCornerRadius)
+                .stroke(GlassPalette.border(for: colorScheme), lineWidth: 1)
             Group {
                 switch state {
                 case .noEditors:
@@ -458,12 +488,13 @@ struct GlassSwitcherEmptyView: View {
 
     @StateObject private var keyboard = KeyboardEventHandler()
     @FocusState private var focused: Bool
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(GlassPalette.rowBackground)
+                    .fill(GlassPalette.rowBackground(for: colorScheme))
                     .frame(width: 68, height: 68)
                 Image(systemName: "sparkles.rectangle.stack")
                     .font(.system(size: 28, weight: .semibold))
@@ -471,7 +502,7 @@ struct GlassSwitcherEmptyView: View {
             }
             Text("No running Neovide instances")
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(GlassPalette.textSecondary)
+                .foregroundColor(GlassPalette.textSecondary(for: colorScheme))
             HStack(spacing: 10) {
                 Button("Settings") {
                     switcherWindow.hide()
@@ -690,6 +721,7 @@ struct GlassSwitcherListView: View {
     @State private var selectedIndex: Int = 0
 
     @FocusState private var focused: Bool
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         let editors = filterEditors()
@@ -698,11 +730,11 @@ struct GlassSwitcherListView: View {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(GlassPalette.textSecondary)
+                    .foregroundColor(GlassPalette.textSecondary(for: colorScheme))
                 TextField("Search", text: $searchText)
                     .font(.system(size: Layout.searchFieldFontSize, weight: .medium))
                     .textFieldStyle(PlainTextFieldStyle())
-                    .foregroundColor(GlassPalette.textPrimary)
+                    .foregroundColor(GlassPalette.textPrimary(for: colorScheme))
                     .focused($focused)
                     .onChange(of: searchText) { _ in
                         selectedIndex = 0
@@ -712,7 +744,7 @@ struct GlassSwitcherListView: View {
             .frame(height: Layout.searchFieldHeight)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(GlassPalette.searchBackground)
+                    .fill(GlassPalette.searchBackground(for: colorScheme))
             )
 
             ScrollView(.vertical) {
@@ -724,31 +756,51 @@ struct GlassSwitcherListView: View {
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 18, height: 18)
-                                    .foregroundColor(GlassPalette.textSecondary)
+                                    .foregroundColor(GlassPalette.textSecondary(for: colorScheme))
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(editor.name)
                                         .font(.system(size: Layout.resultsFontSize, weight: .semibold))
-                                        .foregroundColor(GlassPalette.textPrimary)
+                                        .foregroundColor(GlassPalette.textPrimary(for: colorScheme))
+                                        .shadow(
+                                            color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.08),
+                                            radius: 1,
+                                            x: 0,
+                                            y: 1
+                                        )
                                     Text(editor.displayPath)
                                         .font(.system(size: 12, weight: .medium))
-                                        .foregroundColor(GlassPalette.textSecondary)
+                                        .foregroundColor(GlassPalette.textSecondary(for: colorScheme))
                                 }
                                 Spacer()
                                 Image(systemName: "arrow.up.right.circle.fill")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(
-                                        selectedIndex == index ? GlassPalette.tint : GlassPalette.textSecondary
+                                        selectedIndex == index
+                                            ? GlassPalette.tint
+                                            : GlassPalette.textSecondary(for: colorScheme)
                                     )
                             }
                             .padding(.vertical, Layout.rowVerticalPadding)
                             .padding(.horizontal, Layout.rowHorizontalPadding)
                             .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(selectedIndex == index ? GlassPalette.rowSelected : GlassPalette.rowBackground)
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(
+                                            selectedIndex == index
+                                                ? GlassPalette.rowSelected(for: colorScheme)
+                                                : GlassPalette.rowBackground(for: colorScheme)
+                                        )
+                                    if selectedIndex == index {
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(GlassPalette.tint.opacity(0.5), lineWidth: 1)
+                                            .shadow(color: GlassPalette.tint.opacity(0.45), radius: 8, x: 0, y: 0)
+                                            .blendMode(.screen)
+                                    }
+                                }
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .stroke(GlassPalette.stroke, lineWidth: 1)
+                                    .stroke(GlassPalette.stroke(for: colorScheme), lineWidth: 1)
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -767,6 +819,7 @@ struct GlassSwitcherListView: View {
             .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .animation(.spring(response: 0.28, dampingFraction: 0.82), value: selectedIndex)
         .onAppear {
             focused = true
             keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -784,16 +837,22 @@ struct GlassSwitcherListView: View {
         switch event.keyCode {
         case Key.ARROW_UP:
             if selectedIndex > 0 {
-                selectedIndex -= 1
+                withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
+                    selectedIndex -= 1
+                }
             }
             return nil
         case Key.ARROW_DOWN:
             if selectedIndex < filterEditors().count - 1 {
-                selectedIndex += 1
+                withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
+                    selectedIndex += 1
+                }
             }
             return nil
         case Key.TAB:
-            selectedIndex = (selectedIndex + 1) % max(filterEditors().count, 1)
+            withAnimation(.spring(response: 0.26, dampingFraction: 0.78)) {
+                selectedIndex = (selectedIndex + 1) % max(filterEditors().count, 1)
+            }
             return nil
         case Key.ENTER:
             if editors.indices.contains(selectedIndex) {
@@ -864,20 +923,21 @@ struct GlassBottomBarButton: View {
     let action: () -> Void
 
     @State private var hovering = false
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Text(text)
-                    .foregroundColor(GlassPalette.textSecondary)
+                    .foregroundColor(GlassPalette.textSecondary(for: colorScheme))
                 HStack(spacing: 4) {
                     ForEach(shortcut, id: \.self) { key in
                         Text(String(key))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .font(.system(size: Layout.shortcutFontSize, design: .monospaced))
-                            .foregroundColor(GlassPalette.textSecondary)
-                            .background(GlassPalette.rowBackground)
+                            .foregroundColor(GlassPalette.textSecondary(for: colorScheme))
+                            .background(GlassPalette.rowBackground(for: colorScheme))
                             .cornerRadius(4)
                     }
                 }
@@ -886,11 +946,15 @@ struct GlassBottomBarButton: View {
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(hovering ? GlassPalette.rowSelected : GlassPalette.rowBackground)
+                    .fill(
+                        hovering
+                            ? GlassPalette.rowSelected(for: colorScheme)
+                            : GlassPalette.rowBackground(for: colorScheme)
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(GlassPalette.stroke, lineWidth: 1)
+                    .stroke(GlassPalette.stroke(for: colorScheme), lineWidth: 1)
             )
         }
         .font(.system(size: Layout.footerFontSize, weight: .medium))
@@ -907,30 +971,54 @@ struct GlassBottomBarButton: View {
 @available(macOS 26, *)
 struct GlassPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundColor(.black.opacity(configuration.isPressed ? 0.7 : 0.9))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(GlassPalette.tint)
-            .cornerRadius(10)
-            .opacity(configuration.isPressed ? 0.85 : 1.0)
+        GlassPrimaryButton(configuration: configuration)
     }
 }
 
 @available(macOS 26, *)
 struct GlassGhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
+        GlassGhostButton(configuration: configuration)
+    }
+}
+
+@available(macOS 26, *)
+private struct GlassPrimaryButton: View {
+    let configuration: ButtonStyle.Configuration
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        configuration.label
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(
+                colorScheme == .dark
+                    ? Color.black.opacity(configuration.isPressed ? 0.7 : 0.9)
+                    : Color.black.opacity(configuration.isPressed ? 0.6 : 0.85)
+            )
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(GlassPalette.tint.opacity(colorScheme == .dark ? 0.95 : 0.85))
+            .cornerRadius(10)
+            .opacity(configuration.isPressed ? 0.85 : 1.0)
+    }
+}
+
+@available(macOS 26, *)
+private struct GlassGhostButton: View {
+    let configuration: ButtonStyle.Configuration
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
         configuration.label
             .font(.system(size: 12, weight: .medium))
-            .foregroundColor(GlassPalette.textPrimary)
+            .foregroundColor(GlassPalette.textPrimary(for: colorScheme))
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(GlassPalette.rowBackground)
+            .background(GlassPalette.rowBackground(for: colorScheme))
             .cornerRadius(10)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(GlassPalette.stroke, lineWidth: 1)
+                    .stroke(GlassPalette.stroke(for: colorScheme), lineWidth: 1)
             )
             .opacity(configuration.isPressed ? 0.8 : 1.0)
     }
