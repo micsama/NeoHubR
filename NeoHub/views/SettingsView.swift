@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State var runningCLIAction: Bool = false
     @State private var launchAtLoginEnabled: Bool = false
     @AppStorage(AppSettingsKey.forwardCLIErrors) private var forwardCLIErrors = true
+    @AppStorage(AppSettingsKey.useGlassSwitcherUI) private var useGlassSwitcherUI = false
 
     var body: some View {
         VStack(spacing: 20) {
@@ -62,6 +63,15 @@ struct SettingsView: View {
                 .padding(.vertical, 10)
 
                 Divider().padding(.horizontal)
+
+                HStack {
+                    Text("Use Liquid Glass Switcher (macOS 26)")
+                    Spacer()
+                    Toggle("", isOn: $useGlassSwitcherUI)
+                        .toggleStyle(SwitchToggleStyle())
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 10)
 
                 HStack {
                     Text("Restart Active Editor")

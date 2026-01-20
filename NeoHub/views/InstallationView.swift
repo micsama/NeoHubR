@@ -83,7 +83,7 @@ struct InstallationView: View {
                             .lineLimit(4)
                             .fixedSize(horizontal: false, vertical: true)
                         Text(
-                            "After successful installation, the `neohub` command should become available in your shell. Use it instead of `neovide` to launch editors."
+                            "After successful installation, the `neohub` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed."
                         )
                         .multilineTextAlignment(.center)
                         .lineLimit(4)

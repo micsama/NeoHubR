@@ -5,6 +5,7 @@ typealias NotificationMeta = [String: String]
 
 enum AppSettingsKey {
     static let forwardCLIErrors = "ForwardCLIErrorToGUI"
+    static let useGlassSwitcherUI = "UseGlassSwitcherUI"
 }
 
 private let cliErrorCategoryId = "CLI_ERROR"

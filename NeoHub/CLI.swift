@@ -6,15 +6,6 @@ private struct Bin {
     static let destination = "/usr/local/bin/neohub"
 }
 
-private struct Lib {
-    static let source = Bundle.main.bundlePath + "/Contents/Frameworks/NeoHubLib.framework"
-    static let destination = "/usr/local/lib/NeoHubLib.framework"
-
-    static var parent: String {
-        return URL(fileURLWithPath: destination).deletingLastPathComponent().path
-    }
-}
-
 enum CLIOperation {
     case install
     case uninstall
@@ -53,7 +44,7 @@ final class CLI: ObservableObject {
     nonisolated static func getStatus() -> CLIStatus {
         let fs = FileManager.default
 
-        let installed = fs.fileExists(atPath: Bin.destination) && fs.fileExists(atPath: Lib.destination)
+        let installed = fs.fileExists(atPath: Bin.destination)
 
         if !installed {
             return .error(reason: .notInstalled)
@@ -79,9 +70,9 @@ final class CLI: ObservableObject {
             let script =
                 switch operation {
                 case .install:
-                    "do shell script \"mkdir -p \(Lib.parent) && cp -Rf \(Lib.source) \(Lib.destination) && cp -f \(Bin.source) \(Bin.destination)\" with administrator privileges"
+                    "do shell script \"cp -f \(Bin.source) \(Bin.destination)\" with administrator privileges"
                 case .uninstall:
-                    "do shell script \"rm \(Bin.destination) && rm -rf \(Lib.destination)\" with administrator privileges"
+                    "do shell script \"rm \(Bin.destination)\" with administrator privileges"
                 }
             let result = CLI.runAppleScript(script)
             let status = result.isSuccess ? CLI.getStatus() : nil
