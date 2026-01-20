@@ -17,10 +17,9 @@
 		FA2EAD9A2AED3906000F8F7A /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = FA2EAD992AED3906000F8F7A /* ArgumentParser */; };
 		FA2EADA62AED589F000F8F7A /* NeoHubLib.docc in Sources */ = {isa = PBXBuildFile; fileRef = FA2EADA52AED589F000F8F7A /* NeoHubLib.docc */; };
 		FA2EADA72AED589F000F8F7A /* NeoHubLib.h in Headers */ = {isa = PBXBuildFile; fileRef = FA2EADA42AED589F000F8F7A /* NeoHubLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		FA2EADAA2AED589F000F8F7A /* NeoHubLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* NeoHubLib.framework */; };
-		FA2EADAB2AED589F000F8F7A /* NeoHubLib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* NeoHubLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FA2EADAA2AED589F000F8F7A /* libNeoHubLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* libNeoHubLib.a */; };
 		FA2EADB02AED58C6000F8F7A /* Shared.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EADAF2AED58C6000F8F7A /* Shared.swift */; };
-		FA2EADB12AED65A6000F8F7A /* NeoHubLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* NeoHubLib.framework */; };
+		FA2EADB12AED65A6000F8F7A /* libNeoHubLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* libNeoHubLib.a */; };
 		FA30F2282AEED1E7004EC6E9 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */; };
 		FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */; };
 		FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */; };
@@ -74,17 +73,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		FA2AE4A42AEBDA1D00D24008 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				FA2EADAB2AED589F000F8F7A /* NeoHubLib.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		FAA5D7372AEEB074002DF3F8 /* Embed CLI */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
@@ -112,7 +100,7 @@
 		FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketServer.swift; sourceTree = "<group>"; };
 		FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketClient.swift; sourceTree = "<group>"; };
 		FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorStore.swift; sourceTree = "<group>"; };
-		FA2EADA22AED589F000F8F7A /* NeoHubLib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NeoHubLib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA2EADA22AED589F000F8F7A /* libNeoHubLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libNeoHubLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA2EADA42AED589F000F8F7A /* NeoHubLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NeoHubLib.h; sourceTree = "<group>"; };
 		FA2EADA52AED589F000F8F7A /* NeoHubLib.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = NeoHubLib.docc; sourceTree = "<group>"; };
 		FA2EADAF2AED58C6000F8F7A /* Shared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared.swift; sourceTree = "<group>"; };
@@ -139,7 +127,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FA2EADAA2AED589F000F8F7A /* NeoHubLib.framework in Frameworks */,
+				FA2EADAA2AED589F000F8F7A /* libNeoHubLib.a in Frameworks */,
 				FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -149,7 +137,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA2EAD9A2AED3906000F8F7A /* ArgumentParser in Frameworks */,
-				FA2EADB12AED65A6000F8F7A /* NeoHubLib.framework in Frameworks */,
+				FA2EADB12AED65A6000F8F7A /* libNeoHubLib.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -181,7 +169,7 @@
 			children = (
 				FA2AE4472AEB980700D24008 /* NeoHub.app */,
 				FA2AE45D2AEB9CA000D24008 /* neohub */,
-				FA2EADA22AED589F000F8F7A /* NeoHubLib.framework */,
+				FA2EADA22AED589F000F8F7A /* libNeoHubLib.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -287,7 +275,6 @@
 				FA2AE4432AEB980700D24008 /* Sources */,
 				FA2AE4442AEB980700D24008 /* Frameworks */,
 				FA2AE4452AEB980700D24008 /* Resources */,
-				FA2AE4A42AEBDA1D00D24008 /* Embed Frameworks */,
 				FA54EB772AF678AA001AE449 /* Set Build Version */,
 				FAA5D7372AEEB074002DF3F8 /* Embed CLI */,
 			);
@@ -343,8 +330,8 @@
 			packageProductDependencies = (
 			);
 			productName = NeoHubLib;
-			productReference = FA2EADA22AED589F000F8F7A /* NeoHubLib.framework */;
-			productType = "com.apple.product-type.framework";
+			productReference = FA2EADA22AED589F000F8F7A /* libNeoHubLib.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
 
@@ -645,7 +632,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.4d;
+				MARKETING_VERSION = 0.2.4f;
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alex35mil.NeoHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -682,7 +669,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.4d;
+				MARKETING_VERSION = 0.2.4f;
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alex35mil.NeoHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";

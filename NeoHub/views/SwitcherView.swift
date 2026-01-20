@@ -18,31 +18,66 @@ private final class KeyboardEventHandler: ObservableObject {
 }
 
 struct Layout {
-    static let windowWidth: Int = 600
-    static let windowHeight: Int = 320
-    static let titleOriginalHight: Int = 28
-    static let titleAdjustment: Int = titleOriginalHight - searchFieldVerticalPadding
-    static let horisontalPadding: Int = 20
-    static let searchFieldFontSize: Int = 20
-    static let resultsFontSize: Int = 16
-    static let searchFieldVerticalPadding: Int = 20
-    static let resultItemOuterPadding: Int = 6
-    static let resultItemInnerPadding: CGFloat = CGFloat(horisontalPadding - resultItemOuterPadding)
-    static let resultsBottomPadding: Int = 20
-    static let bottomBarVerticalPadding: Int = 6
-    static let bottomBarHorizontalPadding: CGFloat = CGFloat(horisontalPadding - bottomBarButtonTrailingPadding)
-    static let bottomBarFontSize: Int = 12
-    static let bottomBarShortcutFontSize: Int = bottomBarFontSize + 3
-    static let bottomBarButtonVerticalPadding: Int = 2
-    static let bottomBarButtonLeadingPadding: Int = 8
-    static let bottomBarButtonTrailingPadding: Int = 2
+    static let windowWidth: Int = 720
+    static let windowHeight: Int = 380
+    static let titlebarHeight: Int = 28
+    static let contentTopInset: Int = 14
+    static let titleAdjustment: Int = titlebarHeight - contentTopInset
+    static let windowCornerRadius: CGFloat = 18
+    static let windowContentPadding: CGFloat = 18
+    static let searchFieldFontSize: CGFloat = 16
+    static let searchFieldHeight: CGFloat = 36
+    static let resultsFontSize: CGFloat = 15
+    static let rowVerticalPadding: CGFloat = 9
+    static let rowHorizontalPadding: CGFloat = 12
+    static let listSpacing: CGFloat = 8
+    static let footerSpacing: CGFloat = 10
+    static let footerFontSize: CGFloat = 12
+    static let shortcutFontSize: CGFloat = 12
+}
 
-    static let resultsContainerHeight: CGFloat = CGFloat(
-        windowHeight
-            - (searchFieldVerticalPadding * 2 + searchFieldFontSize)
-            - (bottomBarVerticalPadding * 2 + bottomBarFontSize + bottomBarButtonVerticalPadding * 2)
-            - 16  // magic number b/c I didn't consider something in the calculation above
-    )
+struct GlassPalette {
+    static let textPrimary = Color.white.opacity(0.94)
+    static let textSecondary = Color.white.opacity(0.65)
+    static let tint = Color(red: 0.25, green: 0.82, blue: 0.82)
+    static let rowBackground = Color.white.opacity(0.14)
+    static let rowSelected = Color.white.opacity(0.22)
+    static let stroke = Color.white.opacity(0.2)
+    static let border = Color.white.opacity(0.25)
+    static let searchBackground = Color.white.opacity(0.18)
+}
+
+struct LegacyPalette {
+    static let textPrimary = Color.primary
+    static let textSecondary = Color.secondary
+    static let rowSelected = Color.accentColor.opacity(0.12)
+    static let border = Color.black.opacity(0.12)
+    static let background = Color(NSColor.windowBackgroundColor).opacity(0.96)
+    static let rowBackground = Color(NSColor.controlBackgroundColor).opacity(0.85)
+}
+
+struct LegacyBackground: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: Layout.windowCornerRadius)
+            .fill(LegacyPalette.background)
+            .overlay(
+                RoundedRectangle(cornerRadius: Layout.windowCornerRadius)
+                    .stroke(LegacyPalette.border, lineWidth: 1)
+            )
+    }
+}
+
+@available(macOS 26, *)
+struct GlassBackgroundView: NSViewRepresentable {
+    func makeNSView(context _: Context) -> NSGlassEffectView {
+        let view = NSGlassEffectView()
+        view.cornerRadius = Layout.windowCornerRadius
+        return view
+    }
+
+    func updateNSView(_ nsView: NSGlassEffectView, context _: Context) {
+        nsView.cornerRadius = Layout.windowCornerRadius
+    }
 }
 
 @MainActor
@@ -82,6 +117,7 @@ final class SwitcherWindow: ObservableObject {
         )
 
         window.contentView = NSHostingView(rootView: contentView)
+        window.backgroundColor = .clear
 
         window.setFrameAutosaveName(APP_NAME)
         window.isReleasedWhenClosed = false
@@ -99,6 +135,9 @@ final class SwitcherWindow: ObservableObject {
         let titleAdjustment = CGFloat(Layout.titleAdjustment)
         window.contentView!.frame = window.contentView!.frame.offsetBy(dx: 0, dy: titleAdjustment)
         window.contentView!.frame.size.height -= titleAdjustment
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = Layout.windowCornerRadius
+        window.contentView?.layer?.masksToBounds = true
 
         window.isMovableByWindowBackground = true
 
@@ -220,6 +259,12 @@ final class SwitcherWindow: ObservableObject {
     }
 }
 
+enum SwitcherState {
+    case noEditors
+    case oneEditor
+    case manyEditors
+}
+
 struct SwitcherView: View {
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
@@ -227,13 +272,9 @@ struct SwitcherView: View {
     let settingsWindow: RegularWindow<SettingsView>
     let activationManager: ActivationManager
 
-    private enum State {
-        case noEditors
-        case oneEditor
-        case manyEditors
-    }
+    @AppStorage(AppSettingsKey.useGlassSwitcherUI) private var useGlassSwitcherUI = false
 
-    private var state: State? {
+    private var state: SwitcherState? {
         if switcherWindow.isHidden() {
             return nil
         }
@@ -251,56 +292,139 @@ struct SwitcherView: View {
     }
 
     var body: some View {
-        Group {
-            switch state {
-            case .noEditors:
-                SwitcherEmptyView(
-                    switcherWindow: self.switcherWindow,
-                    settingsWindow: self.settingsWindow
+        if useGlassSwitcherUI {
+            if #available(macOS 26, *) {
+                GlassSwitcherRoot(
+                    state: state,
+                    editorStore: editorStore,
+                    switcherWindow: switcherWindow,
+                    settingsWindow: settingsWindow,
+                    activationManager: activationManager
                 )
-            case .oneEditor, .manyEditors:
-                SwitcherListView(
-                    editorStore: self.editorStore,
-                    switcherWindow: self.switcherWindow,
-                    settingsWindow: self.settingsWindow,
-                    activationManager: self.activationManager
+            } else {
+                LegacySwitcherRoot(
+                    state: state,
+                    editorStore: editorStore,
+                    switcherWindow: switcherWindow,
+                    settingsWindow: settingsWindow,
+                    activationManager: activationManager
                 )
-            case .none:
-                EmptyView()
             }
+        } else {
+            LegacySwitcherRoot(
+                state: state,
+                editorStore: editorStore,
+                switcherWindow: switcherWindow,
+                settingsWindow: settingsWindow,
+                activationManager: activationManager
+            )
         }
+    }
+}
+
+struct LegacySwitcherRoot: View {
+    let state: SwitcherState?
+    @ObservedObject var editorStore: EditorStore
+    @ObservedObject var switcherWindow: SwitcherWindow
+
+    let settingsWindow: RegularWindow<SettingsView>
+    let activationManager: ActivationManager
+
+    var body: some View {
+        ZStack {
+            LegacyBackground()
+            Group {
+                switch state {
+                case .noEditors:
+                    LegacySwitcherEmptyView(
+                        switcherWindow: switcherWindow,
+                        settingsWindow: settingsWindow
+                    )
+                case .oneEditor, .manyEditors:
+                    LegacySwitcherListView(
+                        editorStore: editorStore,
+                        switcherWindow: switcherWindow,
+                        settingsWindow: settingsWindow,
+                        activationManager: activationManager
+                    )
+                case .none:
+                    EmptyView()
+                }
+            }
+            .padding(Layout.windowContentPadding)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: Layout.windowCornerRadius))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
-struct SwitcherEmptyView: View {
+@available(macOS 26, *)
+struct GlassSwitcherRoot: View {
+    let state: SwitcherState?
+    @ObservedObject var editorStore: EditorStore
+    @ObservedObject var switcherWindow: SwitcherWindow
+
+    let settingsWindow: RegularWindow<SettingsView>
+    let activationManager: ActivationManager
+
+    var body: some View {
+        ZStack {
+            GlassBackgroundView()
+            RoundedRectangle(cornerRadius: Layout.windowCornerRadius)
+                .stroke(GlassPalette.border, lineWidth: 1)
+            Group {
+                switch state {
+                case .noEditors:
+                    GlassSwitcherEmptyView(
+                        switcherWindow: switcherWindow,
+                        settingsWindow: settingsWindow
+                    )
+                case .oneEditor, .manyEditors:
+                    GlassSwitcherListView(
+                        editorStore: editorStore,
+                        switcherWindow: switcherWindow,
+                        settingsWindow: settingsWindow,
+                        activationManager: activationManager
+                    )
+                case .none:
+                    EmptyView()
+                }
+            }
+            .padding(Layout.windowContentPadding)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: Layout.windowCornerRadius))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct LegacySwitcherEmptyView: View {
     @ObservedObject var switcherWindow: SwitcherWindow
 
     let settingsWindow: RegularWindow<SettingsView>
 
     @StateObject private var keyboard = KeyboardEventHandler()
-
     @FocusState private var focused: Bool
 
     var body: some View {
-        VStack(alignment: .center, spacing: 26) {
-            Image(systemName: "exclamationmark.shield.fill")
-                .font(.system(size: 70))
-                .foregroundColor(.gray)
-            VStack(spacing: 6) {
-                Text("No Neovide instances in NeoHub")
-                    .font(.system(size: 20))
-                    .foregroundColor(.gray)
-                Text("Use CLI to launch some")
-                    .font(.system(size: 12))
-                    .foregroundColor(.gray)
+        VStack(spacing: 12) {
+            Image(systemName: "sparkles.rectangle.stack")
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundColor(LegacyPalette.textSecondary)
+            Text("No Neovide instances")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(LegacyPalette.textSecondary)
+            HStack(spacing: 10) {
+                Button("Settings") {
+                    switcherWindow.hide()
+                    settingsWindow.open()
+                }
+                Button("Close") { switcherWindow.hide() }
+                    .focused($focused)
             }
-            Button("Close") { switcherWindow.hide() }.focused($focused)
         }
         .onAppear {
-            self.focused = true
-
-            self.keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            focused = true
+            keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 switch event.keyCode {
                 case Key.ESC:
                     switcherWindow.hide()
@@ -326,7 +450,68 @@ struct SwitcherEmptyView: View {
     }
 }
 
-struct SwitcherListView: View {
+@available(macOS 26, *)
+struct GlassSwitcherEmptyView: View {
+    @ObservedObject var switcherWindow: SwitcherWindow
+
+    let settingsWindow: RegularWindow<SettingsView>
+
+    @StateObject private var keyboard = KeyboardEventHandler()
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(GlassPalette.rowBackground)
+                    .frame(width: 68, height: 68)
+                Image(systemName: "sparkles.rectangle.stack")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundColor(GlassPalette.tint)
+            }
+            Text("No running Neovide instances")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(GlassPalette.textSecondary)
+            HStack(spacing: 10) {
+                Button("Settings") {
+                    switcherWindow.hide()
+                    settingsWindow.open()
+                }
+                .buttonStyle(GlassGhostButtonStyle())
+                Button("Close") { switcherWindow.hide() }
+                    .buttonStyle(GlassPrimaryButtonStyle())
+                    .focused($focused)
+            }
+        }
+        .onAppear {
+            focused = true
+            keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                switch event.keyCode {
+                case Key.ESC:
+                    switcherWindow.hide()
+                    return nil
+                case Key.COMMA where event.modifierFlags.contains(.command):
+                    switcherWindow.hide()
+                    settingsWindow.open()
+                    return nil
+                case Key.W where event.modifierFlags.contains(.command):
+                    switcherWindow.hide()
+                    return nil
+                default:
+                    break
+                }
+                return event
+            }
+        }
+        .onDisappear {
+            if let monitor = keyboard.monitor {
+                NSEvent.removeMonitor(monitor)
+            }
+        }
+    }
+}
+
+struct LegacySwitcherListView: View {
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
 
@@ -334,115 +519,78 @@ struct SwitcherListView: View {
     let activationManager: ActivationManager
 
     @StateObject private var keyboard = KeyboardEventHandler()
-
     @State private var searchText = ""
     @State private var selectedIndex: Int = 0
 
     @FocusState private var focused: Bool
 
     var body: some View {
-        let editors = self.filterEditors()
+        let editors = filterEditors()
 
-        VStack(spacing: 0) {
-            Form {
-                TextField("Search", text: $searchText, prompt: Text("Search..."))
-                    .font(.system(size: CGFloat(Layout.searchFieldFontSize)))
+        VStack(spacing: Layout.listSpacing) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(LegacyPalette.textSecondary)
+                TextField("Search", text: $searchText)
+                    .font(.system(size: Layout.searchFieldFontSize))
                     .textFieldStyle(PlainTextFieldStyle())
-                    .labelsHidden()
                     .focused($focused)
-                    .padding(.horizontal, CGFloat(Layout.horisontalPadding))
-                    .padding(.bottom, CGFloat(Layout.searchFieldVerticalPadding))
                     .onChange(of: searchText) { _ in
                         selectedIndex = 0
                     }
             }
-            Divider().padding(.bottom, CGFloat(Layout.resultItemOuterPadding))
+            .padding(.horizontal, 10)
+            .frame(height: Layout.searchFieldHeight)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(LegacyPalette.rowBackground)
+            )
+
             ScrollView(.vertical) {
-                VStack(spacing: 0) {
+                VStack(spacing: 4) {
                     ForEach(Array(editors.enumerated()), id: \.1.id) { index, editor in
                         Button(action: { editor.activate() }) {
-                            HStack(spacing: 16) {
+                            HStack(spacing: 10) {
                                 Image("EditorIcon")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 16, height: 16)
-                                    .foregroundColor(.gray)
-                                Text(editor.name).font(.system(size: CGFloat(Layout.resultsFontSize)))
+                                    .foregroundColor(LegacyPalette.textSecondary)
+                                Text(editor.name)
+                                    .font(.system(size: Layout.resultsFontSize))
                                 Spacer()
                                 Text(editor.displayPath)
-                                    .font(.system(size: CGFloat(Layout.resultsFontSize)))
-                                    .foregroundColor(.gray)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(LegacyPalette.textSecondary)
                             }
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(selectedIndex == index ? LegacyPalette.rowSelected : Color.clear)
+                            )
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .frame(maxWidth: .infinity)
-                        .padding(Layout.resultItemInnerPadding)
-                        .background(
-                            Color.gray.opacity(selectedIndex == index ? 0.1 : 0.0)
-                        )
-                        .cornerRadius(6)
                         .focusable(false)
                     }
                 }
-                .padding(.horizontal, CGFloat(Layout.resultItemOuterPadding))
-                .padding(.bottom, CGFloat(Layout.resultsBottomPadding))
+                .padding(.vertical, 2)
             }
-            .frame(height: Layout.resultsContainerHeight)
-            HStack(spacing: 5) {
+            .frame(maxHeight: .infinity)
+
+            HStack(spacing: 10) {
                 Spacer()
-                BottomBarButton(text: "Quit Selected", shortcut: ["⌘", "⌫"], action: { self.quitSelectedEditor() })
-                BottomBarButton(text: "Quit All", shortcut: ["⌘", "Q"], action: { self.quitAllEditors() })
+                Button("Quit Selected") { quitSelectedEditor() }
+                Button("Quit All") { quitAllEditors() }
             }
-            .padding(.vertical, CGFloat(Layout.bottomBarVerticalPadding))
-            .padding(.horizontal, CGFloat(Layout.bottomBarHorizontalPadding))
-            .background(Color.black.opacity(0.1))
+            .font(.system(size: Layout.footerFontSize))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
-            self.focused = true
-
-            self.keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                switch event.keyCode {
-                case Key.ARROW_UP:
-                    if selectedIndex > 0 {
-                        selectedIndex -= 1
-                    }
-                    return nil
-                case Key.ARROW_DOWN:
-                    if selectedIndex < self.filterEditors().count - 1 {
-                        selectedIndex += 1
-                    }
-                    return nil
-                case Key.TAB:
-                    selectedIndex = (selectedIndex + 1) % self.filterEditors().count
-                    return nil
-                case Key.ENTER:
-                    let editors = self.filterEditors()
-                    if editors.indices.contains(selectedIndex) {
-                        let editor = editors[selectedIndex]
-                        editor.activate()
-                    }
-                    return nil
-                case Key.BACKSPACE where event.modifierFlags.contains(.command):
-                    self.quitSelectedEditor()
-                    return nil
-                case Key.ESC:
-                    switcherWindow.hide()
-                    return nil
-                case Key.COMMA where event.modifierFlags.contains(.command):
-                    switcherWindow.hide()
-                    settingsWindow.open()
-                    return nil
-                case Key.W where event.modifierFlags.contains(.command):
-                    switcherWindow.hide()
-                    return nil
-                case Key.Q where event.modifierFlags.contains(.command):
-                    self.quitAllEditors()
-                    return nil
-                default:
-                    break
-                }
-                return event
+            focused = true
+            keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                handleKey(event, editors: editors)
             }
         }
         .onDisappear {
@@ -452,7 +600,50 @@ struct SwitcherListView: View {
         }
     }
 
-    func filterEditors() -> [Editor] {
+    private func handleKey(_ event: NSEvent, editors: [Editor]) -> NSEvent? {
+        switch event.keyCode {
+        case Key.ARROW_UP:
+            if selectedIndex > 0 {
+                selectedIndex -= 1
+            }
+            return nil
+        case Key.ARROW_DOWN:
+            if selectedIndex < filterEditors().count - 1 {
+                selectedIndex += 1
+            }
+            return nil
+        case Key.TAB:
+            selectedIndex = (selectedIndex + 1) % max(filterEditors().count, 1)
+            return nil
+        case Key.ENTER:
+            if editors.indices.contains(selectedIndex) {
+                let editor = editors[selectedIndex]
+                editor.activate()
+            }
+            return nil
+        case Key.BACKSPACE where event.modifierFlags.contains(.command):
+            quitSelectedEditor()
+            return nil
+        case Key.ESC:
+            switcherWindow.hide()
+            return nil
+        case Key.COMMA where event.modifierFlags.contains(.command):
+            switcherWindow.hide()
+            settingsWindow.open()
+            return nil
+        case Key.W where event.modifierFlags.contains(.command):
+            switcherWindow.hide()
+            return nil
+        case Key.Q where event.modifierFlags.contains(.command):
+            quitAllEditors()
+            return nil
+        default:
+            break
+        }
+        return event
+    }
+
+    private func filterEditors() -> [Editor] {
         editorStore.getEditors(sortedFor: .switcher).filter { editor in
             searchText.isEmpty
                 || editor.name.contains(searchText)
@@ -460,8 +651,8 @@ struct SwitcherListView: View {
         }
     }
 
-    func quitSelectedEditor() {
-        let editors = self.filterEditors()
+    private func quitSelectedEditor() {
+        let editors = filterEditors()
         if editors.indices.contains(selectedIndex) {
             let editor = editors[selectedIndex]
             let totalEditors = editors.count
@@ -478,54 +669,270 @@ struct SwitcherListView: View {
         }
     }
 
-    func quitAllEditors() {
+    private func quitAllEditors() {
         Task {
             activationManager.activateTarget()
             await editorStore.quitAllEditors()
         }
     }
+}
 
-    struct BottomBarButton: View {
-        let text: String
-        let shortcut: [Character]
-        let action: () -> Void
+@available(macOS 26, *)
+struct GlassSwitcherListView: View {
+    @ObservedObject var editorStore: EditorStore
+    @ObservedObject var switcherWindow: SwitcherWindow
 
-        private static let background = Color.clear
+    let settingsWindow: RegularWindow<SettingsView>
+    let activationManager: ActivationManager
 
-        @State private var background: Color = Self.background
+    @StateObject private var keyboard = KeyboardEventHandler()
+    @State private var searchText = ""
+    @State private var selectedIndex: Int = 0
 
-        var body: some View {
-            Button(action: action) {
-                HStack(spacing: 8) {
-                    Text(text)
-                        .foregroundColor(.gray)
-                    HStack(spacing: 2) {
-                        ForEach(shortcut, id: \.self) { key in
-                            Text(String(key))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 1)
-                                .font(.system(size: CGFloat(Layout.bottomBarShortcutFontSize), design: .monospaced))
-                                .foregroundColor(.gray)
-                                .background(Color.white.opacity(0.05))
-                                .cornerRadius(2)
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        let editors = filterEditors()
+
+        VStack(spacing: Layout.listSpacing) {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(GlassPalette.textSecondary)
+                TextField("Search", text: $searchText)
+                    .font(.system(size: Layout.searchFieldFontSize, weight: .medium))
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .foregroundColor(GlassPalette.textPrimary)
+                    .focused($focused)
+                    .onChange(of: searchText) { _ in
+                        selectedIndex = 0
+                    }
+            }
+            .padding(.horizontal, 12)
+            .frame(height: Layout.searchFieldHeight)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(GlassPalette.searchBackground)
+            )
+
+            ScrollView(.vertical) {
+                VStack(spacing: Layout.listSpacing) {
+                    ForEach(Array(editors.enumerated()), id: \.1.id) { index, editor in
+                        Button(action: { editor.activate() }) {
+                            HStack(spacing: 14) {
+                                Image("EditorIcon")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 18, height: 18)
+                                    .foregroundColor(GlassPalette.textSecondary)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(editor.name)
+                                        .font(.system(size: Layout.resultsFontSize, weight: .semibold))
+                                        .foregroundColor(GlassPalette.textPrimary)
+                                    Text(editor.displayPath)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(GlassPalette.textSecondary)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.up.right.circle.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(
+                                        selectedIndex == index ? GlassPalette.tint : GlassPalette.textSecondary
+                                    )
+                            }
+                            .padding(.vertical, Layout.rowVerticalPadding)
+                            .padding(.horizontal, Layout.rowHorizontalPadding)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(selectedIndex == index ? GlassPalette.rowSelected : GlassPalette.rowBackground)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(GlassPalette.stroke, lineWidth: 1)
+                            )
                         }
+                        .buttonStyle(PlainButtonStyle())
+                        .focusable(false)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            .frame(maxHeight: .infinity)
+
+            HStack(spacing: Layout.footerSpacing) {
+                Spacer()
+                GlassBottomBarButton(text: "Quit Selected", shortcut: ["⌘", "⌫"], action: { quitSelectedEditor() })
+                GlassBottomBarButton(text: "Quit All", shortcut: ["⌘", "Q"], action: { quitAllEditors() })
+            }
+            .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            focused = true
+            keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                handleKey(event, editors: editors)
+            }
+        }
+        .onDisappear {
+            if let monitor = keyboard.monitor {
+                NSEvent.removeMonitor(monitor)
+            }
+        }
+    }
+
+    private func handleKey(_ event: NSEvent, editors: [Editor]) -> NSEvent? {
+        switch event.keyCode {
+        case Key.ARROW_UP:
+            if selectedIndex > 0 {
+                selectedIndex -= 1
+            }
+            return nil
+        case Key.ARROW_DOWN:
+            if selectedIndex < filterEditors().count - 1 {
+                selectedIndex += 1
+            }
+            return nil
+        case Key.TAB:
+            selectedIndex = (selectedIndex + 1) % max(filterEditors().count, 1)
+            return nil
+        case Key.ENTER:
+            if editors.indices.contains(selectedIndex) {
+                let editor = editors[selectedIndex]
+                editor.activate()
+            }
+            return nil
+        case Key.BACKSPACE where event.modifierFlags.contains(.command):
+            quitSelectedEditor()
+            return nil
+        case Key.ESC:
+            switcherWindow.hide()
+            return nil
+        case Key.COMMA where event.modifierFlags.contains(.command):
+            switcherWindow.hide()
+            settingsWindow.open()
+            return nil
+        case Key.W where event.modifierFlags.contains(.command):
+            switcherWindow.hide()
+            return nil
+        case Key.Q where event.modifierFlags.contains(.command):
+            quitAllEditors()
+            return nil
+        default:
+            break
+        }
+        return event
+    }
+
+    private func filterEditors() -> [Editor] {
+        editorStore.getEditors(sortedFor: .switcher).filter { editor in
+            searchText.isEmpty
+                || editor.name.contains(searchText)
+                || editor.displayPath.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    private func quitSelectedEditor() {
+        let editors = filterEditors()
+        if editors.indices.contains(selectedIndex) {
+            let editor = editors[selectedIndex]
+            let totalEditors = editors.count
+
+            if totalEditors == selectedIndex + 1 && selectedIndex != 0 {
+                selectedIndex -= 1
+            }
+
+            if totalEditors == 1 {
+                activationManager.activateTarget()
+            }
+
+            editor.quit()
+        }
+    }
+
+    private func quitAllEditors() {
+        Task {
+            activationManager.activateTarget()
+            await editorStore.quitAllEditors()
+        }
+    }
+}
+
+@available(macOS 26, *)
+struct GlassBottomBarButton: View {
+    let text: String
+    let shortcut: [Character]
+    let action: () -> Void
+
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text(text)
+                    .foregroundColor(GlassPalette.textSecondary)
+                HStack(spacing: 4) {
+                    ForEach(shortcut, id: \.self) { key in
+                        Text(String(key))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .font(.system(size: Layout.shortcutFontSize, design: .monospaced))
+                            .foregroundColor(GlassPalette.textSecondary)
+                            .background(GlassPalette.rowBackground)
+                            .cornerRadius(4)
                     }
                 }
             }
-            .font(.system(size: CGFloat(Layout.bottomBarFontSize)))
-            .buttonStyle(PlainButtonStyle())
-            .padding(.vertical, CGFloat(Layout.bottomBarButtonVerticalPadding))
-            .padding(.leading, CGFloat(Layout.bottomBarButtonLeadingPadding))
-            .padding(.trailing, CGFloat(Layout.bottomBarButtonTrailingPadding))
-            .background(background)
-            .cornerRadius(3)
-            .focusable(false)
-            .onHover(perform: { hovering in
-                withAnimation(.easeInOut(duration: 0.1)) {
-                    background = hovering ? Color.white.opacity(0.1) : Self.background
-                }
-            })
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(hovering ? GlassPalette.rowSelected : GlassPalette.rowBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(GlassPalette.stroke, lineWidth: 1)
+            )
         }
+        .font(.system(size: Layout.footerFontSize, weight: .medium))
+        .buttonStyle(PlainButtonStyle())
+        .focusable(false)
+        .onHover { isHovering in
+            withAnimation(.easeInOut(duration: 0.12)) {
+                hovering = isHovering
+            }
+        }
+    }
+}
+
+@available(macOS 26, *)
+struct GlassPrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(.black.opacity(configuration.isPressed ? 0.7 : 0.9))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(GlassPalette.tint)
+            .cornerRadius(10)
+            .opacity(configuration.isPressed ? 0.85 : 1.0)
+    }
+}
+
+@available(macOS 26, *)
+struct GlassGhostButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 12, weight: .medium))
+            .foregroundColor(GlassPalette.textPrimary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(GlassPalette.rowBackground)
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(GlassPalette.stroke, lineWidth: 1)
+            )
+            .opacity(configuration.isPressed ? 0.8 : 1.0)
     }
 }
 

@@ -54,7 +54,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     override init() {
         UserDefaults.standard.register(defaults: [
-            AppSettingsKey.forwardCLIErrors: true
+            AppSettingsKey.forwardCLIErrors: true,
+            AppSettingsKey.useGlassSwitcherUI: false
         ])
 
         let cli = CLI()
