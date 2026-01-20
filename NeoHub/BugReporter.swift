@@ -8,19 +8,17 @@ private struct GitHub {
 
 struct BugReporter {
     static func report(_ error: ReportableError) {
-        let url = BugReporter.buildUrl(title: error.message, error: String(describing: error))
-        NSWorkspace.shared.open(url)
+        NSWorkspace.shared.open(buildUrl(title: error.message, error: String(describing: error)))
     }
 
     // Since NotificationCenter can't reliably transfer ReportableError, we have to accept string'ish error
     static func report(title: String, error: String) {
-        let url = BugReporter.buildUrl(title: title, error: error)
-        NSWorkspace.shared.open(url)
+        NSWorkspace.shared.open(buildUrl(title: title, error: error))
     }
 
     private static func buildUrl(title: String, error: String) -> URL {
-        let title = title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
-        let body =
+        let title = encode(title)
+        let body = encode(
             """
             ## What happened?
             _Reproduction steps, context, etc._
@@ -30,18 +28,22 @@ struct BugReporter {
             \(error)
             ```
             """
-            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+        )
 
         let path = "https://github.com/\(GitHub.user)/\(GitHub.repo)/issues/new"
-        let query = "title=\(title ?? "")&body=\(body ?? "")&labels=user-report"
-        let url = "\(path)?\(query)"
+        let query = "title=\(title)&body=\(body)&labels=user-report"
+        let urlString = "\(path)?\(query)"
 
-        if let url = URL(string: url) {
-            return url
-        } else {
-            log.warning("Failed to create the reporter url from: \(url)")
+        guard let url = URL(string: urlString) else {
+            log.warning("Failed to create the reporter url from: \(urlString)")
             return URL(string: path)!
         }
+
+        return url
+    }
+
+    private static func encode(_ value: String) -> String {
+        value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
     }
 }
 

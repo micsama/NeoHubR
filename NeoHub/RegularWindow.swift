@@ -84,9 +84,7 @@ final class RegularWindow<Content: View>: NSObject {
     }
 
     func close() {
-        if let window = self.window {
-            window.close()
-        }
+        window?.close()
     }
 
     @objc private func handleWindowClose(_ notification: Notification) {
@@ -115,16 +113,10 @@ final class RegularWindowRef<Content: View> {
     }
 
     func isSameWindow(_ window: NSWindow) -> Bool {
-        if let win = self.window {
-            return win.isSameWindow(window)
-        } else {
-            return false
-        }
+        self.window?.isSameWindow(window) ?? false
     }
 
     func close() {
-        if let window = self.window {
-            window.close()
-        }
+        window?.close()
     }
 }

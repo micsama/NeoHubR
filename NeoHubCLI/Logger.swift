@@ -1,60 +1,39 @@
 import Foundation
-import os
+import NeoHubLib
 
 private let envVar = "NEOHUB_LOG"
 private let defaultLevel: LogLevel = .info
 
-enum LogLevel: Int {
-    case trace = 0
-    case debug = 1
-    case info = 2
-    case warning = 3
-    case error = 4
-    case critical = 5
-}
+struct CLILogger: Sendable {
+    private let logger: AppLogger
 
-struct AppLogger {
-    private let logger: Logger
-    private let level: LogLevel
-
-    init(subsystem: String, category: String, level: LogLevel) {
-        self.logger = Logger(subsystem: subsystem, category: category)
-        self.level = level
-    }
-
-    private func shouldLog(_ messageLevel: LogLevel) -> Bool {
-        messageLevel.rawValue >= level.rawValue
+    init(logger: AppLogger) {
+        self.logger = logger
     }
 
     func trace(_ message: String) {
-        guard shouldLog(.trace) else { return }
-        logger.debug("\(message, privacy: .public)")
+        logger.trace(message)
     }
 
     func debug(_ message: String) {
-        guard shouldLog(.debug) else { return }
-        logger.debug("\(message, privacy: .public)")
+        logger.debug(message)
     }
 
     func info(_ message: String) {
-        guard shouldLog(.info) else { return }
-        logger.info("\(message, privacy: .public)")
+        logger.info(message)
     }
 
     func warning(_ message: String) {
-        guard shouldLog(.warning) else { return }
-        logger.notice("\(message, privacy: .public)")
+        logger.warning(message)
     }
 
     func error(_ message: String) {
-        guard shouldLog(.error) else { return }
-        logger.error("\(message, privacy: .public)")
+        logger.error(message)
         writeToStderr(message)
     }
 
     func critical(_ message: String) {
-        guard shouldLog(.critical) else { return }
-        logger.fault("\(message, privacy: .public)")
+        logger.critical(message)
         writeToStderr(message)
     }
 }
@@ -75,14 +54,15 @@ private func parseLogLevel(_ value: String) -> LogLevel? {
     }
 }
 
-private func bootstrapLogger() -> AppLogger {
+private func bootstrapLogger() -> CLILogger {
     let level =
         switch ProcessInfo.processInfo.environment[envVar] {
         case .some(let value): parseLogLevel(value) ?? defaultLevel
         case .none: defaultLevel
         }
 
-    return AppLogger(subsystem: APP_BUNDLE_ID, category: "cli", level: level)
+    let logger = AppLogger(subsystem: APP_BUNDLE_ID, category: "cli", level: level)
+    return CLILogger(logger: logger)
 }
 
 let log = bootstrapLogger()
