@@ -869,7 +869,7 @@
 			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.2.3;
+				minimumVersion = 1.7.0;
 			};
 		};
 		FA30F21C2AEEB6F8004EC6E9 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
@@ -877,7 +877,7 @@
 			repositoryURL = "https://github.com/apple/swift-nio.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.61.0;
+				minimumVersion = 2.92.2;
 			};
 		};
 		FA30F22D2AEF828A004EC6E9 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
@@ -885,7 +885,7 @@
 			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.15.0;
+				minimumVersion = 2.4.0;
 			};
 		};
 		FA3937202AF41D84001D9105 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
@@ -893,7 +893,7 @@
 			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
+				minimumVersion = 1.1.0;
 			};
 		};
 		FA54EB7D2AF789D4001AE449 /* XCRemoteSwiftPackageReference "swift-log" */ = {
@@ -901,7 +901,7 @@
 			repositoryURL = "https://github.com/apple/swift-log.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.5.3;
+				minimumVersion = 1.9.1;
 			};
 		};
 		FA54EB922AF90B52001AE449 /* XCRemoteSwiftPackageReference "swift-log-syslog" */ = {
