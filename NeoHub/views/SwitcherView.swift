@@ -11,6 +11,19 @@ struct Key {
     static let COMMA: UInt16 = 43
     static let W: UInt16 = 13
     static let Q: UInt16 = 12
+    static let ONE: UInt16 = 18
+    static let TWO: UInt16 = 19
+    static let THREE: UInt16 = 20
+    static let FOUR: UInt16 = 21
+    static let FIVE: UInt16 = 23
+    static let SIX: UInt16 = 22
+    static let SEVEN: UInt16 = 26
+    static let EIGHT: UInt16 = 28
+    static let NINE: UInt16 = 25
+
+    static let commandNumberKeys: [UInt16] = [
+        ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE
+    ]
 }
 
 private final class KeyboardEventHandler: ObservableObject {
@@ -591,6 +604,9 @@ struct LegacySwitcherListView: View {
                                 Text(editor.name)
                                     .font(.system(size: Layout.resultsFontSize))
                                 Spacer()
+                                if index < 9 {
+                                    ShortcutPill(text: "⌘\(index + 1)")
+                                }
                                 Text(editor.displayPath)
                                     .font(.system(size: 12))
                                     .foregroundColor(LegacyPalette.textSecondary)
@@ -668,6 +684,12 @@ struct LegacySwitcherListView: View {
         case Key.Q where event.modifierFlags.contains(.command):
             quitAllEditors()
             return nil
+        case _ where event.modifierFlags.contains(.command):
+            if let index = commandNumberIndex(for: event.keyCode) {
+                activateEditor(at: index, editors: editors)
+                return nil
+            }
+            return nil
         default:
             break
         }
@@ -705,6 +727,21 @@ struct LegacySwitcherListView: View {
             activationManager.activateTarget()
             await editorStore.quitAllEditors()
         }
+    }
+
+    private func activateEditor(at index: Int, editors: [Editor]) {
+        guard editors.indices.contains(index) else {
+            return
+        }
+        selectedIndex = index
+        editors[index].activate()
+    }
+
+    private func commandNumberIndex(for keyCode: UInt16) -> Int? {
+        guard let index = Key.commandNumberKeys.firstIndex(of: keyCode) else {
+            return nil
+        }
+        return index
     }
 }
 
@@ -772,6 +809,9 @@ struct GlassSwitcherListView: View {
                                         .foregroundColor(GlassPalette.textSecondary(for: colorScheme))
                                 }
                                 Spacer()
+                                if index < 9 {
+                                    ShortcutPill(text: "⌘\(index + 1)")
+                                }
                                 Image(systemName: "arrow.up.right.circle.fill")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(
@@ -876,6 +916,12 @@ struct GlassSwitcherListView: View {
         case Key.Q where event.modifierFlags.contains(.command):
             quitAllEditors()
             return nil
+        case _ where event.modifierFlags.contains(.command):
+            if let index = commandNumberIndex(for: event.keyCode) {
+                activateEditor(at: index, editors: editors)
+                return nil
+            }
+            return nil
         default:
             break
         }
@@ -913,6 +959,23 @@ struct GlassSwitcherListView: View {
             activationManager.activateTarget()
             await editorStore.quitAllEditors()
         }
+    }
+
+    private func activateEditor(at index: Int, editors: [Editor]) {
+        guard editors.indices.contains(index) else {
+            return
+        }
+        withAnimation(.spring(response: 0.24, dampingFraction: 0.82)) {
+            selectedIndex = index
+        }
+        editors[index].activate()
+    }
+
+    private func commandNumberIndex(for keyCode: UInt16) -> Int? {
+        guard let index = Key.commandNumberKeys.firstIndex(of: keyCode) else {
+            return nil
+        }
+        return index
     }
 }
 
@@ -1021,6 +1084,21 @@ private struct GlassGhostButton: View {
                     .stroke(GlassPalette.stroke(for: colorScheme), lineWidth: 1)
             )
             .opacity(configuration.isPressed ? 0.8 : 1.0)
+    }
+}
+
+struct ShortcutPill: View {
+    let text: String
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.65) : Color.black.opacity(0.6))
+            .background(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.06))
+            .cornerRadius(6)
     }
 }
 

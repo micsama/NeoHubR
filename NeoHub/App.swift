@@ -53,9 +53,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let activationManager: ActivationManager
 
     override init() {
+        let useGlassSwitcherUIByDefault: Bool
+        if #available(macOS 26, *) {
+            useGlassSwitcherUIByDefault = true
+        } else {
+            useGlassSwitcherUIByDefault = false
+        }
+
         UserDefaults.standard.register(defaults: [
             AppSettingsKey.forwardCLIErrors: true,
-            AppSettingsKey.useGlassSwitcherUI: false
+            AppSettingsKey.useGlassSwitcherUI: useGlassSwitcherUIByDefault
         ])
 
         let cli = CLI()

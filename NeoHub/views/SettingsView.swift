@@ -11,6 +11,12 @@ struct SettingsView: View {
     @State private var launchAtLoginEnabled: Bool = false
     @AppStorage(AppSettingsKey.forwardCLIErrors) private var forwardCLIErrors = true
     @AppStorage(AppSettingsKey.useGlassSwitcherUI) private var useGlassSwitcherUI = false
+    private let glassAvailable = {
+        if #available(macOS 26, *) {
+            return true
+        }
+        return false
+    }()
 
     var body: some View {
         VStack(spacing: 20) {
@@ -70,6 +76,8 @@ struct SettingsView: View {
                     Toggle("", isOn: $useGlassSwitcherUI)
                         .toggleStyle(SwitchToggleStyle())
                 }
+                .opacity(glassAvailable ? 1.0 : 0.5)
+                .disabled(!glassAvailable)
                 .padding(.horizontal)
                 .padding(.vertical, 10)
 
