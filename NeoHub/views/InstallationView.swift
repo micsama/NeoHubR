@@ -1,5 +1,4 @@
 import SwiftUI
-import LaunchAtLogin
 import KeyboardShortcuts
 
 struct InstallationView: View {
