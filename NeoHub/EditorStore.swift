@@ -3,6 +3,7 @@ import SwiftUI
 import KeyboardShortcuts
 import NeoHubLib
 
+@MainActor
 final class EditorStore: ObservableObject {
     @Published private var editors: [EditorID:Editor]
 
@@ -93,76 +94,86 @@ final class EditorStore: ObservableObject {
                 editor.activate()
             case .none:
                 log.info("No editors at \(editorID) found. Launching a new one.")
+                let currentApp = NSWorkspace.shared.frontmostApplication
+                let editorID = editorID
+                let editorName = editorName
+                let request = request
 
-                do {
-                    log.info("Running editor at \(request.wd.path)")
+                DispatchQueue.global(qos: .background).async { [weak self] in
+                    do {
+                        log.info("Running editor at \(request.wd.path)")
 
-                    let process = Process()
+                        let process = Process()
 
-                    process.executableURL = request.bin
+                        process.executableURL = request.bin
 
-                    let nofork = "--no-fork"
+                        let nofork = "--no-fork"
 
-                    process.arguments = request.opts
+                        process.arguments = request.opts
 
-                    if !process.arguments!.contains(nofork) {
-                        process.arguments!.append(nofork)
-                    }
-
-                    if let path = request.path {
-                        process.arguments!.append(path)
-                    }
-
-                    process.currentDirectoryURL = request.wd
-                    process.environment = request.env
-
-                    process.terminationHandler = { process in
-                        DispatchQueue.main.async {
-                            log.info("Removing editor from the hub")
-                            self.editors.removeValue(forKey: editorID)
+                        if !process.arguments!.contains(nofork) {
+                            process.arguments!.append(nofork)
                         }
-                    }
 
-                    let currentApp = NSWorkspace.shared.frontmostApplication
+                        if let path = request.path {
+                            process.arguments!.append(path)
+                        }
 
-                    try process.run()
+                        process.currentDirectoryURL = request.wd
+                        process.environment = request.env
 
-                    activationManager.setActivationTarget(
-                        currentApp: currentApp,
-                        switcherWindow: self.switcherWindow,
-                        editors: self.getEditors()
-                    )
+                        process.terminationHandler = { _ in
+                            DispatchQueue.main.async {
+                                guard let self = self else { return }
+                                log.info("Removing editor from the hub")
+                                self.editors.removeValue(forKey: editorID)
+                            }
+                        }
 
-                    if process.isRunning {
-                        log.info("Editor is launched at \(editorID) with PID \(process.processIdentifier)")
+                        try process.run()
 
                         DispatchQueue.main.async {
-                            self.editors[editorID] = Editor(
-                                id: editorID,
-                                name: editorName,
-                                process: process,
-                                request: request
+                            guard let self = self else { return }
+                            self.activationManager.setActivationTarget(
+                                currentApp: currentApp,
+                                switcherWindow: self.switcherWindow,
+                                editors: self.getEditors()
                             )
+
+                            if process.isRunning {
+                                log.info("Editor is launched at \(editorID) with PID \(process.processIdentifier)")
+
+                                self.editors[editorID] = Editor(
+                                    id: editorID,
+                                    name: editorName,
+                                    process: process,
+                                    request: request
+                                )
+                            } else {
+                                let error = ReportableError(
+                                    "Editor process is not running",
+                                    code: Int(process.terminationStatus),
+                                    meta: [
+                                        "EditorID": editorID,
+                                        "EditorPID": process.processIdentifier,
+                                        "EditorTerminationStatus": process.terminationStatus,
+                                        "EditorWorkingDirectory": request.wd,
+                                        "EditorBinary": request.bin,
+                                        "EditorPathArgument": request.path ?? "-",
+                                        "EditorOptions": request.opts,
+                                    ]
+                                )
+                                log.error("\(error)")
+                                FailedToRunEditorProcessNotification(error: error).send()
+                            }
                         }
-                    } else {
-                        throw ReportableError(
-                            "Editor process is not running",
-                            code: Int(process.terminationStatus),
-                            meta: [
-                                "EditorID": editorID,
-                                "EditorPID": process.processIdentifier,
-                                "EditorTerminationStatus": process.terminationStatus,
-                                "EditorWorkingDirectory": request.wd,
-                                "EditorBinary": request.bin,
-                                "EditorPathArgument": request.path ?? "-",
-                                "EditorOptions": request.opts,
-                            ]
-                        )
+                    } catch {
+                        DispatchQueue.main.async {
+                            let error = ReportableError("Failed to run editor process", error: error)
+                            log.error("\(error)")
+                            FailedToRunEditorProcessNotification(error: error).send()
+                        }
                     }
-                } catch {
-                    let error = ReportableError("Failed to run editor process", error: error)
-                    log.error("\(error)")
-                    FailedToRunEditorProcessNotification(error: error).send()
                 }
         }
     }
@@ -191,36 +202,39 @@ final class EditorStore: ObservableObject {
         let timeout = TimeInterval(5)
         let startTime = Date()
 
+        let editorID = editor.id
+        let editorRequest = editor.request
+
         self.restartPoller = Timer.scheduledTimer(withTimeInterval: 0.005, repeats: true) { [weak self] _ in
-            log.trace("Starting the iteration...")
+            DispatchQueue.main.async {
+                guard let self = self else { return }
 
-            guard let self = self else { return }
+                log.trace("Starting the iteration...")
+                log.trace("We have self. Checking the store.")
 
-            log.trace("We have self. Checking the store.")
-            if self.editors[editor.id] == nil {
-                log.info("The old editor removed from the store. Starting the new instance.")
-                self.invalidateRestartPoller()
-                self.runEditor(request: editor.request)
-            } else if -startTime.timeIntervalSinceNow > timeout {
-                log.error("The editor wasn't removed from the store within the timeout. Canceling the restart.")
-                self.invalidateRestartPoller()
+                if self.editors[editorID] == nil {
+                    log.info("The old editor removed from the store. Starting the new instance.")
+                    self.invalidateRestartPoller()
+                    self.runEditor(request: editorRequest)
+                } else if -startTime.timeIntervalSinceNow > timeout {
+                    log.error("The editor wasn't removed from the store within the timeout. Canceling the restart.")
+                    self.invalidateRestartPoller()
 
-                let alert = NSAlert()
+                    let alert = NSAlert()
 
-                alert.messageText = "Failed to restart the editor"
-                alert.informativeText = "Please, report the issue on GitHub."
-                alert.alertStyle = .critical
-                alert.addButton(withTitle: "Report")
-                alert.addButton(withTitle: "Dismiss")
+                    alert.messageText = "Failed to restart the editor"
+                    alert.informativeText = "Please, report the issue on GitHub."
+                    alert.alertStyle = .critical
+                    alert.addButton(withTitle: "Report")
+                    alert.addButton(withTitle: "Dismiss")
 
-                switch alert.runModal() {
-                    case .alertFirstButtonReturn:
-                        let error = ReportableError("Failed to restart the editor")
-                        BugReporter.report(error)
-                    default: ()
+                    switch alert.runModal() {
+                        case .alertFirstButtonReturn:
+                            let error = ReportableError("Failed to restart the editor")
+                            BugReporter.report(error)
+                        default: ()
+                    }
                 }
-
-                return
             }
         }
     }
@@ -239,6 +253,7 @@ final class EditorStore: ObservableObject {
         self.restartPoller?.invalidate()
     }
 
+    @MainActor
     deinit {
         self.invalidateRestartPoller()
     }
@@ -275,6 +290,8 @@ extension EditorID: Equatable {
         return lhs.loc == rhs.loc
     }
 }
+
+extension EditorID: Sendable {}
 
 extension EditorID: CustomStringConvertible {
     var description: String { self.path }

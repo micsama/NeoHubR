@@ -12,7 +12,7 @@
   - 基于 `ArgumentParser` 解析参数。
   - 构造 `RunRequest` 并调用 `SocketClient`。
 - `SocketClient.swift`
-  - 连接 `/tmp/neohub.sock` 并发送 JSON 请求。
+  - 通过 Network.framework 连接 `/tmp/neohub.sock`，发送长度前缀 + JSON 请求。
   - 处理 App 的响应。
 - `Shell.swift`
   - 用 `/bin/sh -c` 运行 `command -v neovide` 获取路径。

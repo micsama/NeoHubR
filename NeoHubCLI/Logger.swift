@@ -49,12 +49,18 @@ struct AppLogger {
     func error(_ message: String) {
         guard shouldLog(.error) else { return }
         logger.error("\(message, privacy: .public)")
+        writeToStderr(message)
     }
 
     func critical(_ message: String) {
         guard shouldLog(.critical) else { return }
         logger.fault("\(message, privacy: .public)")
+        writeToStderr(message)
     }
+}
+
+private func writeToStderr(_ message: String) {
+    fputs("\(message)\n", stderr)
 }
 
 private func parseLogLevel(_ value: String) -> LogLevel? {

@@ -40,6 +40,7 @@ struct NeoHubApp: App {
     }
 }
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     let cli: CLI
     let editorStore: EditorStore

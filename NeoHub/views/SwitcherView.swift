@@ -45,6 +45,7 @@ struct Layout {
     )
 }
 
+@MainActor
 final class SwitcherWindow: ObservableObject {
     private let editorStore: EditorStore
     private let settingsWindow: RegularWindow<SettingsView>
@@ -536,6 +537,7 @@ struct SwitcherListView: View {
     }
 }
 
+@MainActor
 final class SwitcherWindowRef {
     private var window: SwitcherWindow?
 

@@ -6,6 +6,7 @@ enum ActivationTarget {
     case other(NSRunningApplication)
 }
 
+@MainActor
 struct NonSwitcherWindow {
     let window: NSWindow
 
@@ -20,6 +21,7 @@ struct NonSwitcherWindow {
     }
 }
 
+@MainActor
 final class ActivationManager {
     private(set) var activationTarget: ActivationTarget?
 

@@ -1,5 +1,5 @@
 import Foundation
-import NIO
+import Network
 import NeoHubLib
 
 enum SendError: Error {
@@ -19,7 +19,9 @@ extension SendError: LocalizedError {
 }
 
 class SocketClient {
-    private let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+    private let queue = DispatchQueue(label: "neohub.ipc.client")
+    private let timeoutSeconds: TimeInterval = 1.5
+    private let maxAttempts = 2
 
     func send(_ request: Codable) -> Result<String?, SendError> {
         if !FileManager.default.fileExists(atPath: Socket.addr) {
@@ -29,61 +31,117 @@ class SocketClient {
         do {
             let encoder = JSONEncoder()
             let json = try encoder.encode(request)
+            let payload = encodeFrame(json)
 
-            let responsePromise = group.next().makePromise(of: String.self)
-
-            let bootstrap = ClientBootstrap(group: group).channelInitializer { channel in
-                let responseHandler = ResponsePromiseHandler(promise: responsePromise)
-                return channel.pipeline.addHandlers([ResponseHandler(), responseHandler])
+            for attempt in 0..<maxAttempts {
+                let result = sendOnce(payload: payload, timeout: timeoutSeconds)
+                switch result {
+                    case .success(let response):
+                        return .success(response)
+                    case .failure(let error):
+                        if attempt == maxAttempts - 1 {
+                            return .failure(.failedToSendRequest(error))
+                        }
+                }
             }
 
-            let channel = try bootstrap.connect(unixDomainSocketPath: Socket.addr).wait()
-
-            let length = UInt32(bigEndian: UInt32(json.count))
-            let header = withUnsafeBytes(of: length) { Data($0) }
-            var buffer = channel.allocator.buffer(capacity: header.count + json.count)
-
-            buffer.writeBytes(header + json)
-
-            try channel.writeAndFlush(buffer).wait()
-
-            let response = try responsePromise.futureResult.wait()
-
-            try channel.close().wait()
-
-            return .success(response)
+            return .failure(.failedToSendRequest(timeoutError()))
         } catch {
             return .failure(.failedToSendRequest(error))
         }
     }
-}
 
-class ResponseHandler: ChannelInboundHandler {
-    typealias InboundIn = ByteBuffer
-    typealias OutboundOut = String
+    private func sendOnce(payload: Data, timeout: TimeInterval) -> Result<String?, Error> {
+        let connection = NWConnection(to: .unix(path: Socket.addr), using: .tcp)
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: Result<String?, Error>?
 
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        var buffer = unwrapInboundIn(data)
-        if let response = buffer.readString(length: buffer.readableBytes) {
-            context.fireChannelRead(self.wrapOutboundOut(response))
+        func finish(_ value: Result<String?, Error>) {
+            if result != nil {
+                return
+            }
+            result = value
+            connection.cancel()
+            semaphore.signal()
         }
+
+        connection.stateUpdateHandler = { state in
+            switch state {
+                case .ready:
+                    connection.send(content: payload, completion: .contentProcessed { error in
+                        if let error {
+                            finish(.failure(error))
+                            return
+                        }
+                        self.receiveResponse(connection: connection, finish: finish)
+                    })
+                case .failed(let error):
+                    finish(.failure(error))
+                case .cancelled:
+                    if result == nil {
+                        finish(.failure(self.timeoutError()))
+                    }
+                default:
+                    break
+            }
+        }
+
+        connection.start(queue: queue)
+        let waitResult = semaphore.wait(timeout: .now() + timeout)
+        if waitResult == .timedOut {
+            if result == nil {
+                result = .failure(timeoutError())
+            }
+            connection.cancel()
+        }
+        return result ?? .failure(timeoutError())
     }
-}
 
-class ResponsePromiseHandler: ChannelInboundHandler {
-    typealias InboundIn = String
-    private let promise: EventLoopPromise<String>
+    private func receiveResponse(
+        connection: NWConnection,
+        finish: @escaping (Result<String?, Error>) -> Void
+    ) {
+        var responseData = Data()
 
-    init(promise: EventLoopPromise<String>) {
-        self.promise = promise
+        func receiveNext() {
+            connection.receive(minimumIncompleteLength: 1, maximumLength: 4 * 1024) { data, _, isComplete, error in
+                if let data {
+                    responseData.append(data)
+                }
+
+                if let error {
+                    finish(.failure(error))
+                    return
+                }
+
+                if isComplete || !responseData.isEmpty {
+                    let response = responseData.isEmpty ? nil : String(data: responseData, encoding: .utf8)
+                    finish(.success(response))
+                    return
+                }
+
+                receiveNext()
+            }
+        }
+
+        receiveNext()
     }
 
-    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        let response = self.unwrapInboundIn(data)
-        promise.succeed(response)
+    private func encodeFrame(_ json: Data) -> Data {
+        let length = UInt32(json.count)
+        var header = Data(capacity: 4)
+        for shift in stride(from: 24, through: 0, by: -8) {
+            header.append(UInt8((length >> UInt32(shift)) & 0xFF))
+        }
+        var payload = Data()
+        payload.append(header)
+        payload.append(json)
+        return payload
     }
 
-    func errorCaught(context: ChannelHandlerContext, error: Error) {
-        promise.fail(error)
+    private func timeoutError() -> NSError {
+        NSError(domain: "NeoHubIPC", code: 1, userInfo: [
+            NSLocalizedDescriptionKey: "Timed out waiting for IPC response."
+        ])
     }
 }
