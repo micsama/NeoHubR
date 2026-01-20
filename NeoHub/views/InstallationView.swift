@@ -120,14 +120,13 @@ struct InstallationView: View {
                     VStack(spacing: 10) {
                         Button("Install") {
                             self.status = .notInstalled(progress: .busy)
-                            cli.perform(.install) { result, _ in
-                                Task { @MainActor in
-                                    switch result {
-                                    case .success(()):
-                                        self.status = .ok
-                                    case .failure(let error):
-                                        self.status = .notInstalled(progress: .error(error))
-                                    }
+                            Task { @MainActor in
+                                let result = await cli.run(.install).0
+                                switch result {
+                                case .success(()):
+                                    self.status = .ok
+                                case .failure(let error):
+                                    self.status = .notInstalled(progress: .error(error))
                                 }
                             }
                         }
@@ -173,14 +172,13 @@ struct InstallationView: View {
                     VStack(spacing: 10) {
                         Button("Update") {
                             self.status = .versionMismatch(progress: .busy)
-                            cli.perform(.install) { result, _ in
-                                Task { @MainActor in
-                                    switch result {
-                                    case .success(()):
-                                        self.status = .ok
-                                    case .failure(let error):
-                                        self.status = .versionMismatch(progress: .error(error))
-                                    }
+                            Task { @MainActor in
+                                let result = await cli.run(.install).0
+                                switch result {
+                                case .success(()):
+                                    self.status = .ok
+                                case .failure(let error):
+                                    self.status = .versionMismatch(progress: .error(error))
                                 }
                             }
                         }
@@ -199,7 +197,7 @@ struct InstallationView: View {
                         }
                         Button("Create an Issue") {
                             BugReporter.report(ReportableError("CLI failed to report a status", error: error))
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            MainThread.after(1) {
                                 NSApplication.shared.terminate(nil)
                             }
                         }

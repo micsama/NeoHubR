@@ -33,7 +33,7 @@ final class SocketServer: @unchecked Sendable {
                     case .failed(let error):
                         let report = ReportableError("Failed to start the socket server", error: error)
                         log.critical("\(report)")
-                        FailedToLaunchServerNotification(error: report).send()
+                        NotificationManager.send(kind: .failedToLaunchServer, error: report)
                     default:
                         break
                     }
@@ -55,7 +55,7 @@ final class SocketServer: @unchecked Sendable {
             } catch {
                 let error = ReportableError("Failed to start the socket server", error: error)
                 log.critical("\(error)")
-                FailedToLaunchServerNotification(error: error).send()
+                NotificationManager.send(kind: .failedToLaunchServer, error: error)
             }
         }
     }
@@ -96,14 +96,12 @@ private final class ConnectionHandler: @unchecked Sendable {
             guard let self else { return }
             switch state {
             case .ready:
-                log.trace("IPC connection ready")
                 self.receiveNext()
             case .failed(let error):
                 log.error("IPC connection failed: \(error)")
                 self.connection.cancel()
                 self.onFinish?()
             case .cancelled:
-                log.trace("IPC connection cancelled")
                 self.onFinish?()
             default:
                 break
@@ -117,7 +115,6 @@ private final class ConnectionHandler: @unchecked Sendable {
             [weak self] data, _, isComplete, error in
             guard let self else { return }
             if let data {
-                log.trace("Incoming data from the CLI")
                 self.buffer.append(data)
             }
 
@@ -170,41 +167,36 @@ private final class ConnectionHandler: @unchecked Sendable {
 
     private func handleRequest(frame: Data) {
         do {
-            log.trace("Decoding incoming JSON...")
-
             let decoder = JSONDecoder()
-            let req = try decoder.decode(RunRequest.self, from: frame)
-
-            log.debug(
-                """
-
-                ====================== INCOMING REQUEST ======================
-                wd: \(req.wd)
-                bin: \(req.bin)
-                name: \(req.name ?? "-")
-                path: \(req.path ?? "-")
-                opts: \(req.opts)
-                """
-            )
-            log.trace("env: \(req.env)")
-            log.debug(
-                """
-
-                ================== END OF INCOMING REQUEST ===================
-                """
-            )
-
-            Task {
-                await self.store.runEditor(request: req)
+            let message = try decoder.decode(IPCMessage.self, from: frame)
+            switch message.type {
+            case .run:
+                if let req = message.run {
+                    self.handleRunRequest(req)
+                } else {
+                    throw ReportableError("Missing run payload in IPC message")
+                }
+            case .cliError:
+                if let report = message.cliError {
+                    NotificationManager.sendCLIError(report)
+                } else {
+                    throw ReportableError("Missing cliError payload in IPC message")
+                }
             }
         } catch {
             let report = ReportableError("Failed to decode request from the CLI", error: error)
             log.error("\(report)")
-            FailedToHandleRequestFromCLINotification(error: report).send()
+            NotificationManager.send(kind: .failedToHandleRequestFromCLI, error: report)
         }
 
         didHandle = true
         sendResponse("OK")
+    }
+
+    private func handleRunRequest(_ req: RunRequest) {
+        Task {
+            await self.store.runEditor(request: req)
+        }
     }
 
     private func sendResponse(_ response: String) {
@@ -214,8 +206,6 @@ private final class ConnectionHandler: @unchecked Sendable {
             completion: .contentProcessed { [weak self] error in
                 if let error {
                     log.error("IPC send error: \(error)")
-                } else {
-                    log.trace("Response sent")
                 }
                 self?.connection.cancel()
                 self?.onFinish?()
