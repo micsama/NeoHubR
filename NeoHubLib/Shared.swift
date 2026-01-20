@@ -10,7 +10,7 @@ public struct RunRequest: Codable, Sendable {
     public let name: String?
     public let path: String?
     public let opts: [String]
-    public let env: [String:String]
+    public let env: [String: String]
 
     public init(
         wd: URL,
@@ -18,7 +18,7 @@ public struct RunRequest: Codable, Sendable {
         name: String?,
         path: String?,
         opts: [String],
-        env: [String:String]
+        env: [String: String]
     ) {
         self.wd = wd
         self.bin = bin

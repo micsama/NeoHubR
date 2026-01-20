@@ -51,7 +51,7 @@ struct ReportableError: Error {
     private let appBuild: String
     private let code: Int?
     private(set) var context: String
-    private var meta: [String: Any]?
+    private var meta: [String: String]?
     private let osVersion: String
     private let arch: String?
     private let originalError: Error?
@@ -71,19 +71,19 @@ struct ReportableError: Error {
 
             let context = Self.buildContext(from: (file: file, function: function))
 
-            if context != reportableError.context  {
+            if context != reportableError.context {
                 reportableError.context = "\(context) → \(reportableError.context)"
             }
 
             switch (meta, reportableError.meta) {
-                case (.some(let meta), .none):
-                    reportableError.meta = meta
-                case (.some(let meta), .some(var reportableErrorMeta)):
-                    reportableErrorMeta.merge(meta) { c, _ in c }
-                case
-                    (.none, .some(_)),
-                    (.none, .none):
-                    ()
+            case (.some(let meta), .none):
+                reportableError.meta = Self.normalizeMeta(meta)
+            case (.some(let meta), .some(var reportableErrorMeta)):
+                reportableErrorMeta.merge(Self.normalizeMeta(meta)) { c, _ in c }
+                reportableError.meta = reportableErrorMeta
+            case (.none, .some(_)),
+                (.none, .none):
+                ()
             }
 
             self = reportableError
@@ -98,15 +98,16 @@ struct ReportableError: Error {
             self.originalError = error
 
             switch (meta, error.flatMap { err in err as NSError }) {
-                case (.some(var meta), .some(let nsError)) where !nsError.userInfo.isEmpty:
-                    meta.merge(nsError.userInfo) { c, _ in c }
-                    self.meta = meta
-                case (.some(let meta), _):
-                    self.meta = meta
-                case (.none, .some(let nsError)) where !nsError.userInfo.isEmpty:
-                    self.meta = nsError.userInfo
-                case (.none, _):
-                    self.meta = nil
+            case (.some(let meta), .some(let nsError)) where !nsError.userInfo.isEmpty:
+                var merged = Self.normalizeMeta(meta)
+                merged.merge(Self.normalizeUserInfo(nsError.userInfo)) { c, _ in c }
+                self.meta = merged
+            case (.some(let meta), _):
+                self.meta = Self.normalizeMeta(meta)
+            case (.none, .some(let nsError)) where !nsError.userInfo.isEmpty:
+                self.meta = Self.normalizeUserInfo(nsError.userInfo)
+            case (.none, _):
+                self.meta = nil
             }
         }
     }
@@ -117,6 +118,14 @@ struct ReportableError: Error {
 
     private static func buildContext(from loc: (file: NSString, function: NSString)) -> String {
         "\((loc.file.lastPathComponent as NSString).deletingPathExtension)#\(loc.function)"
+    }
+
+    private static func normalizeMeta(_ meta: [String: Any]) -> [String: String] {
+        meta.mapValues { String(describing: $0) }
+    }
+
+    private static func normalizeUserInfo(_ userInfo: [String: Any]) -> [String: String] {
+        userInfo.mapValues { String(describing: $0) }
     }
 
     private static func getSystemArch() -> String? {

@@ -1,11 +1,11 @@
 import AppKit
-import SwiftUI
 import KeyboardShortcuts
 import NeoHubLib
+import SwiftUI
 
 @MainActor
 final class EditorStore: ObservableObject {
-    @Published private var editors: [EditorID:Editor]
+    @Published private var editors: [EditorID: Editor]
 
     let switcherWindow: SwitcherWindowRef
     let activationManager: ActivationManager
@@ -36,145 +36,146 @@ final class EditorStore: ObservableObject {
         let editors = self.getEditors()
 
         switch sortTarget {
-            case .menubar:
-                return editors.sorted { $0.name > $1.name }
-            case .lastActiveEditor:
-                if let lastActiveEditor = editors.max(by: { $0.lastAcceessTime < $1.lastAcceessTime }) {
-                    return [lastActiveEditor]
-                } else {
-                    return []
-                }
-            case .switcher:
-                var sorted = editors.sorted { $0.lastAcceessTime > $1.lastAcceessTime }
+        case .menubar:
+            return editors.sorted { $0.name > $1.name }
+        case .lastActiveEditor:
+            if let lastActiveEditor = editors.max(by: { $0.lastAcceessTime < $1.lastAcceessTime }) {
+                return [lastActiveEditor]
+            } else {
+                return []
+            }
+        case .switcher:
+            var sorted = editors.sorted { $0.lastAcceessTime > $1.lastAcceessTime }
 
-                if
-                    sorted.count > 1,
-                    let firstEditor = sorted.first,
-                    case .neovide(let prevEditor) = activationManager.activationTarget,
-                    firstEditor.processIdentifier == prevEditor.processIdentifier
-                {
-                    // Swap the first editor with the second one
-                    // so it would require just Enter to switch between two editors
-                    sorted.swapAt(0, 1)
-                }
+            if sorted.count > 1,
+                let firstEditor = sorted.first,
+                case .neovide(let prevEditor) = activationManager.activationTarget,
+                firstEditor.processIdentifier == prevEditor.processIdentifier
+            {
+                // Swap the first editor with the second one
+                // so it would require just Enter to switch between two editors
+                sorted.swapAt(0, 1)
+            }
 
-                return sorted
+            return sorted
         }
     }
 
     func runEditor(request: RunRequest) {
         log.info("Running an editor...")
 
-        let editorID = switch request.path {
-        case nil, "":
-            EditorID(request.wd)
-        case .some(let path):
-            EditorID(
-                URL(
-                    fileURLWithPath: path,
-                    relativeTo: request.wd
+        let editorID =
+            switch request.path {
+            case nil, "":
+                EditorID(request.wd)
+            case .some(let path):
+                EditorID(
+                    URL(
+                        fileURLWithPath: path,
+                        relativeTo: request.wd
+                    )
                 )
-            )
-        }
+            }
 
         log.info("Editor ID: \(editorID)")
 
-        let editorName = switch request.name {
-        case nil, "":
-            editorID.lastPathComponent
-        case .some(let name):
-            name
-        }
+        let editorName =
+            switch request.name {
+            case nil, "":
+                editorID.lastPathComponent
+            case .some(let name):
+                name
+            }
 
         log.info("Editor name: \(editorName)")
 
         switch editors[editorID] {
-            case .some(let editor):
-                log.info("Editor at \(editorID) is already in the hub. Activating it.")
-                editor.activate()
-            case .none:
-                log.info("No editors at \(editorID) found. Launching a new one.")
-                let currentApp = NSWorkspace.shared.frontmostApplication
-                let editorID = editorID
-                let editorName = editorName
-                let request = request
+        case .some(let editor):
+            log.info("Editor at \(editorID) is already in the hub. Activating it.")
+            editor.activate()
+        case .none:
+            log.info("No editors at \(editorID) found. Launching a new one.")
+            let currentApp = NSWorkspace.shared.frontmostApplication
+            let editorID = editorID
+            let editorName = editorName
+            let request = request
 
-                DispatchQueue.global(qos: .background).async { [weak self] in
-                    do {
-                        log.info("Running editor at \(request.wd.path)")
+            DispatchQueue.global(qos: .background).async { [weak self] in
+                do {
+                    log.info("Running editor at \(request.wd.path)")
 
-                        let process = Process()
+                    let process = Process()
 
-                        process.executableURL = request.bin
+                    process.executableURL = request.bin
 
-                        let nofork = "--no-fork"
+                    let nofork = "--no-fork"
 
-                        process.arguments = request.opts
+                    process.arguments = request.opts
 
-                        if !process.arguments!.contains(nofork) {
-                            process.arguments!.append(nofork)
-                        }
+                    if !process.arguments!.contains(nofork) {
+                        process.arguments!.append(nofork)
+                    }
 
-                        if let path = request.path {
-                            process.arguments!.append(path)
-                        }
+                    if let path = request.path {
+                        process.arguments!.append(path)
+                    }
 
-                        process.currentDirectoryURL = request.wd
-                        process.environment = request.env
+                    process.currentDirectoryURL = request.wd
+                    process.environment = request.env
 
-                        process.terminationHandler = { _ in
-                            DispatchQueue.main.async {
-                                guard let self = self else { return }
-                                log.info("Removing editor from the hub")
-                                self.editors.removeValue(forKey: editorID)
-                            }
-                        }
-
-                        try process.run()
-
+                    process.terminationHandler = { _ in
                         DispatchQueue.main.async {
                             guard let self = self else { return }
-                            self.activationManager.setActivationTarget(
-                                currentApp: currentApp,
-                                switcherWindow: self.switcherWindow,
-                                editors: self.getEditors()
-                            )
-
-                            if process.isRunning {
-                                log.info("Editor is launched at \(editorID) with PID \(process.processIdentifier)")
-
-                                self.editors[editorID] = Editor(
-                                    id: editorID,
-                                    name: editorName,
-                                    process: process,
-                                    request: request
-                                )
-                            } else {
-                                let error = ReportableError(
-                                    "Editor process is not running",
-                                    code: Int(process.terminationStatus),
-                                    meta: [
-                                        "EditorID": editorID,
-                                        "EditorPID": process.processIdentifier,
-                                        "EditorTerminationStatus": process.terminationStatus,
-                                        "EditorWorkingDirectory": request.wd,
-                                        "EditorBinary": request.bin,
-                                        "EditorPathArgument": request.path ?? "-",
-                                        "EditorOptions": request.opts,
-                                    ]
-                                )
-                                log.error("\(error)")
-                                FailedToRunEditorProcessNotification(error: error).send()
-                            }
+                            log.info("Removing editor from the hub")
+                            self.editors.removeValue(forKey: editorID)
                         }
-                    } catch {
-                        DispatchQueue.main.async {
-                            let error = ReportableError("Failed to run editor process", error: error)
+                    }
+
+                    try process.run()
+
+                    DispatchQueue.main.async {
+                        guard let self = self else { return }
+                        self.activationManager.setActivationTarget(
+                            currentApp: currentApp,
+                            switcherWindow: self.switcherWindow,
+                            editors: self.getEditors()
+                        )
+
+                        if process.isRunning {
+                            log.info("Editor is launched at \(editorID) with PID \(process.processIdentifier)")
+
+                            self.editors[editorID] = Editor(
+                                id: editorID,
+                                name: editorName,
+                                process: process,
+                                request: request
+                            )
+                        } else {
+                            let error = ReportableError(
+                                "Editor process is not running",
+                                code: Int(process.terminationStatus),
+                                meta: [
+                                    "EditorID": editorID,
+                                    "EditorPID": process.processIdentifier,
+                                    "EditorTerminationStatus": process.terminationStatus,
+                                    "EditorWorkingDirectory": request.wd,
+                                    "EditorBinary": request.bin,
+                                    "EditorPathArgument": request.path ?? "-",
+                                    "EditorOptions": request.opts,
+                                ]
+                            )
                             log.error("\(error)")
                             FailedToRunEditorProcessNotification(error: error).send()
                         }
                     }
+                } catch {
+                    DispatchQueue.main.async {
+                        let error = ReportableError("Failed to run editor process", error: error)
+                        log.error("\(error)")
+                        FailedToRunEditorProcessNotification(error: error).send()
+                    }
                 }
+            }
         }
     }
 
@@ -186,7 +187,11 @@ final class EditorStore: ObservableObject {
             return
         }
 
-        guard let editor = self.editors.first(where: { id, editor in editor.processIdentifier == activeApp.processIdentifier })?.value else {
+        guard
+            let editor = self.editors.first(where: { id, editor in
+                editor.processIdentifier == activeApp.processIdentifier
+            })?.value
+        else {
             log.info("The active app is not an editor. Canceling restart.")
             return
         }
@@ -229,22 +234,19 @@ final class EditorStore: ObservableObject {
                     alert.addButton(withTitle: "Dismiss")
 
                     switch alert.runModal() {
-                        case .alertFirstButtonReturn:
-                            let error = ReportableError("Failed to restart the editor")
-                            BugReporter.report(error)
-                        default: ()
+                    case .alertFirstButtonReturn:
+                        let error = ReportableError("Failed to restart the editor")
+                        BugReporter.report(error)
+                    default: ()
                     }
                 }
             }
         }
     }
 
-
     func quitAllEditors() async {
-        await withTaskGroup(of: Void.self) { group in
-            for (_, editor) in self.editors {
-                group.addTask { editor.quit() }
-            }
+        for (_, editor) in self.editors {
+            editor.quit()
         }
     }
 
@@ -297,6 +299,7 @@ extension EditorID: CustomStringConvertible {
     var description: String { self.path }
 }
 
+@MainActor
 final class Editor: Identifiable {
     let id: EditorID
     let name: String
@@ -349,18 +352,16 @@ final class Editor: Identifiable {
             return
         }
 
-        DispatchQueue.main.async {
-            // We have to activate NeoHub first so macOS would allow to activate Neovide
-            NSApp.activate(ignoringOtherApps: true)
+        // We have to activate NeoHub first so macOS would allow to activate Neovide
+        NSApp.activate(ignoringOtherApps: true)
 
-            let activated = app.activate()
-            if !activated {
-                let error = ReportableError("Failed to activate Neovide instance")
-                log.error("\(error)")
-                FailedToActivateEditorAppNotification(error: error).send()
-            } else {
-                self.lastAcceessTime = Date()
-            }
+        let activated = app.activate()
+        if !activated {
+            let error = ReportableError("Failed to activate Neovide instance")
+            log.error("\(error)")
+            FailedToActivateEditorAppNotification(error: error).send()
+        } else {
+            self.lastAcceessTime = Date()
         }
     }
 

@@ -1,6 +1,6 @@
-import SwiftUI
 import KeyboardShortcuts
 import ServiceManagement
+import SwiftUI
 
 struct SettingsView: View {
     static let defaultWidth: CGFloat = 400
@@ -74,98 +74,106 @@ struct SettingsView: View {
             Text("CLI").font(.title)
             VStack(spacing: 20) {
                 switch cli.status {
-                    case .ok:
-                        VStack(spacing: 10) {
-                            if self.runningCLIAction {
-                                InstallationView.Spinner()
-                            } else {
-                                Image(systemName: "gear.badge.checkmark")
-                                    .symbolRenderingMode(.palette)
-                                    .foregroundStyle(Color.green, Color.gray)
-                                    .font(.system(size: 32))
-                                Text("Installed")
-                            }
+                case .ok:
+                    VStack(spacing: 10) {
+                        if self.runningCLIAction {
+                            InstallationView.Spinner()
+                        } else {
+                            Image(systemName: "gear.badge.checkmark")
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(Color.green, Color.gray)
+                                .font(.system(size: 32))
+                            Text("Installed")
                         }
-                        Divider()
-                        VStack(spacing: 10) {
-                            Button("Uninstall") {
-                                self.runningCLIAction = true
-                                cli.perform(.uninstall) { _, _ in
+                    }
+                    Divider()
+                    VStack(spacing: 10) {
+                        Button("Uninstall") {
+                            self.runningCLIAction = true
+                            cli.perform(.uninstall) { _, _ in
+                                Task { @MainActor in
                                     self.runningCLIAction = false
                                 }
                             }
-                            .buttonStyle(LinkButtonStyle())
-                            .disabled(self.runningCLIAction)
-                            .focusable()
-                            InstallationView.ButtonNote()
                         }
-                    case .error(reason: .notInstalled):
-                        VStack(spacing: 10) {
-                            if self.runningCLIAction {
-                                InstallationView.Spinner()
-                            } else {
-                                Image(systemName: "gear.badge.xmark")
-                                    .symbolRenderingMode(.palette)
-                                    .foregroundStyle(Color.red, Color.gray)
-                                    .font(.system(size: 32))
-                                Text("Not Installed")
-                            }
-                        }
-                        VStack(spacing: 10) {
-                            Button("Install") {
-                                self.runningCLIAction = true
-                                cli.perform(.install) { _, _ in
-                                    self.runningCLIAction = false
-                                }
-                            }
-                            .disabled(self.runningCLIAction)
-                            .focusable()
-                            InstallationView.ButtonNote()
-                        }
-                    case .error(reason: .versionMismatch):
-                        VStack(spacing: 10) {
-                            if self.runningCLIAction {
-                                InstallationView.Spinner()
-                            } else {
-                                Image(systemName: "gear.badge")
-                                    .symbolRenderingMode(.palette)
-                                    .foregroundStyle(Color.yellow, Color.gray)
-                                    .font(.system(size: 32))
-                                Text("Needs Update")
-                            }
-                        }
-                        VStack(spacing: 20) {
-                            Button("Update") {
-                                self.runningCLIAction = true
-                                cli.perform(.install) { _, _ in
-                                    self.runningCLIAction = false
-                                }
-                            }
-                            .disabled(self.runningCLIAction)
-                            .focusable()
-                            Divider()
-                            Button("Uninstall") {
-                                self.runningCLIAction = true
-                                cli.perform(.uninstall) { _, _ in
-                                    self.runningCLIAction = false
-                                }
-                            }
-                            .buttonStyle(LinkButtonStyle())
-                            .disabled(self.runningCLIAction)
-                            .focusable()
-                            InstallationView.ButtonNote()
-                        }
-                    case .error(reason: .unexpectedError(let error)):
-                        VStack(spacing: 10) {
+                        .buttonStyle(LinkButtonStyle())
+                        .disabled(self.runningCLIAction)
+                        .focusable()
+                        InstallationView.ButtonNote()
+                    }
+                case .error(reason: .notInstalled):
+                    VStack(spacing: 10) {
+                        if self.runningCLIAction {
+                            InstallationView.Spinner()
+                        } else {
                             Image(systemName: "gear.badge.xmark")
                                 .symbolRenderingMode(.palette)
                                 .foregroundStyle(Color.red, Color.gray)
                                 .font(.system(size: 32))
-                            Text("Unexpected Error")
+                            Text("Not Installed")
                         }
-                        Button("Create an Issue on GitHub") {
-                            BugReporter.report(ReportableError("CLI failed to report a status", error: error))
+                    }
+                    VStack(spacing: 10) {
+                        Button("Install") {
+                            self.runningCLIAction = true
+                            cli.perform(.install) { _, _ in
+                                Task { @MainActor in
+                                    self.runningCLIAction = false
+                                }
+                            }
                         }
+                        .disabled(self.runningCLIAction)
+                        .focusable()
+                        InstallationView.ButtonNote()
+                    }
+                case .error(reason: .versionMismatch):
+                    VStack(spacing: 10) {
+                        if self.runningCLIAction {
+                            InstallationView.Spinner()
+                        } else {
+                            Image(systemName: "gear.badge")
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(Color.yellow, Color.gray)
+                                .font(.system(size: 32))
+                            Text("Needs Update")
+                        }
+                    }
+                    VStack(spacing: 20) {
+                        Button("Update") {
+                            self.runningCLIAction = true
+                            cli.perform(.install) { _, _ in
+                                Task { @MainActor in
+                                    self.runningCLIAction = false
+                                }
+                            }
+                        }
+                        .disabled(self.runningCLIAction)
+                        .focusable()
+                        Divider()
+                        Button("Uninstall") {
+                            self.runningCLIAction = true
+                            cli.perform(.uninstall) { _, _ in
+                                Task { @MainActor in
+                                    self.runningCLIAction = false
+                                }
+                            }
+                        }
+                        .buttonStyle(LinkButtonStyle())
+                        .disabled(self.runningCLIAction)
+                        .focusable()
+                        InstallationView.ButtonNote()
+                    }
+                case .error(reason: .unexpectedError(let error)):
+                    VStack(spacing: 10) {
+                        Image(systemName: "gear.badge.xmark")
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(Color.red, Color.gray)
+                            .font(.system(size: 32))
+                        Text("Unexpected Error")
+                    }
+                    Button("Create an Issue on GitHub") {
+                        BugReporter.report(ReportableError("CLI failed to report a status", error: error))
+                    }
                 }
             }
             .padding()

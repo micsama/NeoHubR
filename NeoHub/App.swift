@@ -1,6 +1,6 @@
 import AppKit
-import SwiftUI
 import KeyboardShortcuts
+import SwiftUI
 
 let APP_NAME = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as! String
 let APP_VERSION = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
@@ -117,7 +117,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         log.info("Updating CLI status...")
         self.cli.updateStatusOnLaunch { status in
             if case .error(_) = status {
-                self.installationWindow.open()
+                Task { @MainActor in
+                    self.installationWindow.open()
+                }
             }
         }
     }

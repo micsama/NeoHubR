@@ -34,21 +34,22 @@ enum CLIError {
 enum CLIInstallationError: Error {
     case failedToCreateAppleScript
     case userCanceledOperation
-    case failedToExecuteAppleScript(error: NSDictionary)
+    case failedToExecuteAppleScript(error: [String: String])
 }
 
+@MainActor
 final class CLI: ObservableObject {
     @Published private(set) var status: CLIStatus = .ok
 
-    func updateStatusOnLaunch(_ cb: @escaping (CLIStatus) -> Void) {
-        DispatchQueue.global().async {
+    func updateStatusOnLaunch(_ cb: @Sendable @escaping (CLIStatus) -> Void) {
+        Task.detached {
             log.info("Getting the CLI status...")
 
             let status = Self.getStatus()
 
             log.info("CLI status: \(status)")
 
-            DispatchQueue.main.async {
+            await MainActor.run {
                 if case .ok = status {
                     cb(status)
                 } else {
@@ -59,7 +60,7 @@ final class CLI: ObservableObject {
         }
     }
 
-    static func getStatus() -> CLIStatus {
+    nonisolated static func getStatus() -> CLIStatus {
         let fs = FileManager.default
 
         let installed = fs.fileExists(atPath: Bin.destination) && fs.fileExists(atPath: Lib.destination)
@@ -71,45 +72,48 @@ final class CLI: ObservableObject {
         let version = Self.getVersion()
 
         switch version {
-            case .success(let version):
-                if version == APP_VERSION {
-                    return .ok
-                } else {
-                    return .error(reason: .versionMismatch)
-                }
-            case .failure(let error):
-                log.error("Failed to get a CLI version. \(error)")
-                return .error(reason: .unexpectedError(error))
+        case .success(let version):
+            if version == APP_VERSION {
+                return .ok
+            } else {
+                return .error(reason: .versionMismatch)
+            }
+        case .failure(let error):
+            log.error("Failed to get a CLI version. \(error)")
+            return .error(reason: .unexpectedError(error))
         }
     }
 
-    func perform(_ operation: CLIOperation, andThen callback: @escaping (Result<Void, CLIInstallationError>, CLIStatus) -> Void) {
-        DispatchQueue.global(qos: .background).async {
+    func perform(
+        _ operation: CLIOperation,
+        andThen callback: @Sendable @escaping (Result<Void, CLIInstallationError>, CLIStatus) -> Void
+    ) {
+        Task.detached(priority: .background) {
             let script =
-            switch operation {
+                switch operation {
                 case .install:
                     "do shell script \"mkdir -p \(Lib.parent) && cp -Rf \(Lib.source) \(Lib.destination) && cp -f \(Bin.source) \(Bin.destination)\" with administrator privileges"
                 case .uninstall:
                     "do shell script \"rm \(Bin.destination) && rm -rf \(Lib.destination)\" with administrator privileges"
-            }
+                }
             let result = CLI.runAppleScript(script)
 
             let status =
-            switch result {
+                switch result {
                 case .success():
                     CLI.getStatus()
                 case .failure(_):
-                    self.status
-            }
+                    await MainActor.run { self.status }
+                }
 
-            DispatchQueue.main.async {
+            await MainActor.run {
                 self.status = status
                 callback(result, status)
             }
         }
     }
 
-    private static func getVersion() -> Result<String, Error> {
+    nonisolated private static func getVersion() -> Result<String, Error> {
         let process = Process()
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -130,7 +134,8 @@ final class CLI: ObservableObject {
                 return .success(result)
             } else {
                 let errorData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-                let errorOutput = String(data: errorData, encoding: .utf8)!.trimmingCharacters(in: .whitespacesAndNewlines)
+                let errorOutput = String(data: errorData, encoding: .utf8)!.trimmingCharacters(
+                    in: .whitespacesAndNewlines)
 
                 let error = ReportableError(
                     "Failed to get CLI version",
@@ -146,24 +151,34 @@ final class CLI: ObservableObject {
         }
     }
 
-    private static func runAppleScript(_ script: String) -> Result<Void, CLIInstallationError> {
+    nonisolated private static func runAppleScript(_ script: String) -> Result<Void, CLIInstallationError> {
         var error: NSDictionary?
 
         if let scriptObject = NSAppleScript(source: script) {
             scriptObject.executeAndReturnError(&error)
 
             switch error {
-                case .some(let error):
-                    if error["NSAppleScriptErrorNumber"] as? Int == -128 /* User canceled */ {
-                        return .failure(.userCanceledOperation)
-                    } else {
-                        return .failure(.failedToExecuteAppleScript(error: error))
-                    }
-                case .none:
-                    return .success(())
+            case .some(let error):
+                if error["NSAppleScriptErrorNumber"] as? Int == -128 /* User canceled */ {
+                    return .failure(.userCanceledOperation)
+                } else {
+                    return .failure(.failedToExecuteAppleScript(error: Self.normalizeAppleScriptError(error)))
+                }
+            case .none:
+                return .success(())
             }
         } else {
             return .failure(.failedToCreateAppleScript)
         }
+    }
+
+    nonisolated private static func normalizeAppleScriptError(_ error: NSDictionary) -> [String: String] {
+        var result: [String: String] = [:]
+        for (key, value) in error {
+            if let key = key as? String {
+                result[key] = String(describing: value)
+            }
+        }
+        return result
     }
 }
