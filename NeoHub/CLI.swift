@@ -32,6 +32,10 @@ enum CLIInstallationError: Error {
 final class CLI: ObservableObject {
     @Published private(set) var status: CLIStatus = .ok
 
+    nonisolated static var binPath: String {
+        Bin.destination
+    }
+
     func refreshStatus() async -> CLIStatus {
         let status = await Task.detached {
             Self.getStatus()
@@ -154,8 +158,8 @@ final class CLI: ObservableObject {
     }
 }
 
-private extension Result where Success == Void, Failure == CLIInstallationError {
-    var isSuccess: Bool {
+extension Result where Success == Void, Failure == CLIInstallationError {
+    fileprivate var isSuccess: Bool {
         if case .success = self {
             return true
         }
