@@ -21,32 +21,154 @@ struct Key {
     static let SEVEN: UInt16 = 26
     static let EIGHT: UInt16 = 28
     static let NINE: UInt16 = 25
+    static let ZERO: UInt16 = 29
 
     static let commandNumberKeys: [UInt16] = [
-        ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE
+        ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, ZERO
     ]
+}
+
+private enum SwitcherEntry: Identifiable {
+    case editor(Editor, title: String, displayPath: String)
+    case project(ProjectEntry, title: String, displayPath: String)
+
+    var id: String {
+        switch self {
+        case .editor(let editor, _, _):
+            return "editor:\(editor.id.id.path(percentEncoded: false))"
+        case .project(let project, _, _):
+            return "project:\(project.id.path(percentEncoded: false))"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .editor(_, let title, _): return title
+        case .project(_, let title, _): return title
+        }
+    }
+
+    var displayPath: String {
+        switch self {
+        case .editor(_, _, let displayPath): return displayPath
+        case .project(_, _, let displayPath): return displayPath
+        }
+    }
+
+    var isEditor: Bool {
+        if case .editor = self { return true }
+        return false
+    }
+
+    var isStarred: Bool {
+        if case .project(let project, _, _) = self { return project.isStarred }
+        return false
+    }
+}
+
+private enum DisplayPath {
+    static func format(_ url: URL) -> String {
+        let fullPath = url.path(percentEncoded: false)
+        let pattern = "^/Users/[^/]+/"
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return fullPath
+        }
+
+        let range = NSRange(fullPath.startIndex..., in: fullPath)
+        return regex.stringByReplacingMatches(
+            in: fullPath,
+            options: [],
+            range: range,
+            withTemplate: "~/"
+        )
+    }
 }
 
 @MainActor
 private enum SwitcherListLogic {
-    static func filterEditors(_ editorStore: EditorStore, searchText: String) -> [Editor] {
-        editorStore.getEditors(sortedFor: .switcher).filter { editor in
+    static func filterEntries(
+        editorStore: EditorStore,
+        projectRegistry: ProjectRegistryStore,
+        appSettings: AppSettingsStore,
+        searchText: String
+    ) -> [SwitcherEntry] {
+        let entries = buildEntries(
+            editorStore: editorStore,
+            projectRegistry: projectRegistry,
+            appSettings: appSettings
+        )
+        return entries.filter { entry in
             searchText.isEmpty
-                || editor.name.contains(searchText)
-                || editor.displayPath.localizedCaseInsensitiveContains(searchText)
+                || entry.title.localizedCaseInsensitiveContains(searchText)
+                || entry.displayPath.localizedCaseInsensitiveContains(searchText)
         }
+    }
+
+    static func buildEntries(
+        editorStore: EditorStore,
+        projectRegistry: ProjectRegistryStore,
+        appSettings: AppSettingsStore
+    ) -> [SwitcherEntry] {
+        let maxItems = AppSettings.clampSwitcherMaxItems(appSettings.switcherMaxItems)
+        let editors = editorStore.getEditors(sortedFor: .switcher)
+        var entries = editors.map {
+            SwitcherEntry.editor($0, title: $0.name, displayPath: $0.displayPath)
+        }
+
+        if entries.count >= maxItems {
+            return Array(entries.prefix(maxItems))
+        }
+
+        let editorLocations = Set(editors.map { $0.id.id })
+        let projects = projectRegistry.entries.filter { !editorLocations.contains($0.id) }
+
+        let starred = projects
+            .filter { $0.isStarred }
+            .sorted { lhs, rhs in
+                let lhsOrder = lhs      .pinnedOrder ?? Int.max
+                let rhsOrder = rhs.pinnedOrder ?? Int.max
+                if lhsOrder != rhsOrder {
+                    return lhsOrder < rhsOrder
+                }
+                return (lhs.lastOpenedAt ?? .distantPast) > (rhs.lastOpenedAt ?? .distantPast)
+            }
+
+        let recent = projects
+            .filter { !$0.isStarred }
+            .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
+
+        for project in starred + recent {
+            guard entries.count < maxItems else { break }
+            entries.append(
+                .project(
+                    project,
+                    title: project.name ?? project.id.lastPathComponent,
+                    displayPath: DisplayPath.format(project.id)
+                )
+            )
+        }
+
+        return entries
     }
 
     static func handleKey(
         _ event: NSEvent,
         editorStore: EditorStore,
+        projectRegistry: ProjectRegistryStore,
+        appSettings: AppSettingsStore,
         searchText: String,
         selectedIndex: inout Int,
         switcherWindow: SwitcherWindow,
         settingsWindow: RegularWindow<SettingsView>,
         activationManager: ActivationManager
     ) -> NSEvent? {
-        let editors = filterEditors(editorStore, searchText: searchText)
+        let entries = filterEntries(
+            editorStore: editorStore,
+            projectRegistry: projectRegistry,
+            appSettings: appSettings,
+            searchText: searchText
+        )
 
         switch event.keyCode {
         case Key.ARROW_UP:
@@ -55,20 +177,18 @@ private enum SwitcherListLogic {
             }
             return nil
         case Key.ARROW_DOWN:
-            if selectedIndex < editors.count - 1 {
+            if selectedIndex < entries.count - 1 {
                 selectedIndex += 1
             }
             return nil
         case Key.TAB:
-            selectedIndex = (selectedIndex + 1) % max(editors.count, 1)
+            selectedIndex = (selectedIndex + 1) % max(entries.count, 1)
             return nil
         case Key.ENTER:
-            if editors.indices.contains(selectedIndex) {
-                editors[selectedIndex].activate()
-            }
+            activateEntry(at: selectedIndex, entries: entries, selectedIndex: &selectedIndex, editorStore: editorStore)
             return nil
         case Key.BACKSPACE where event.modifierFlags.contains(.command):
-            quitSelectedEditor(editors: editors, selectedIndex: &selectedIndex, activationManager: activationManager)
+            quitSelectedEditor(entries: entries, selectedIndex: &selectedIndex, activationManager: activationManager)
             return nil
         case Key.ESC:
             switcherWindow.hide()
@@ -85,7 +205,7 @@ private enum SwitcherListLogic {
             return nil
         case _ where event.modifierFlags.contains(.command):
             if let index = commandNumberIndex(for: event.keyCode) {
-                activateEditor(at: index, editors: editors, selectedIndex: &selectedIndex)
+                activateEntry(at: index, entries: entries, selectedIndex: &selectedIndex, editorStore: editorStore)
                 return nil
             }
             return nil
@@ -96,21 +216,23 @@ private enum SwitcherListLogic {
     }
 
     static func quitSelectedEditor(
-        editors: [Editor],
+        entries: [SwitcherEntry],
         selectedIndex: inout Int,
         activationManager: ActivationManager
     ) {
-        guard editors.indices.contains(selectedIndex) else {
+        guard entries.indices.contains(selectedIndex) else {
             return
         }
 
-        let editor = editors[selectedIndex]
-        let totalEditors = editors.count
+        guard case .editor(let editor, _, _) = entries[selectedIndex] else {
+            return
+        }
 
-        if totalEditors == selectedIndex + 1 && selectedIndex != 0 {
+        if selectedIndex == entries.count - 1 && selectedIndex != 0 {
             selectedIndex -= 1
         }
 
+        let totalEditors = entries.filter { $0.isEditor }.count
         if totalEditors == 1 {
             activationManager.activateTarget()
         }
@@ -125,12 +247,22 @@ private enum SwitcherListLogic {
         }
     }
 
-    static func activateEditor(at index: Int, editors: [Editor], selectedIndex: inout Int) {
-        guard editors.indices.contains(index) else {
+    static func activateEntry(
+        at index: Int,
+        entries: [SwitcherEntry],
+        selectedIndex: inout Int,
+        editorStore: EditorStore
+    ) {
+        guard entries.indices.contains(index) else {
             return
         }
         selectedIndex = index
-        editors[index].activate()
+        switch entries[index] {
+        case .editor(let editor, _, _):
+            editor.activate()
+        case .project(let project, _, _):
+            editorStore.openProject(project)
+        }
     }
 
     static func commandNumberIndex(for keyCode: UInt16) -> Int? {
@@ -164,8 +296,20 @@ struct Layout {
     static let shortcutFontSize: CGFloat = 12
 }
 
+private func shortcutLabel(for index: Int) -> String? {
+    switch index {
+    case 0...8:
+        return "⌘\(index + 1)"
+    case 9:
+        return "⌘0"
+    default:
+        return nil
+    }
+}
+
 struct GlassPalette {
     static let tint = Color(red: 0.25, green: 0.82, blue: 0.82)
+    static let projectTint = Color(red: 0.98, green: 0.74, blue: 0.36)
 
     static func textPrimary(for scheme: ColorScheme) -> Color {
         scheme == .dark ? Color.white.opacity(0.92) : Color.black.opacity(0.88)
@@ -181,6 +325,10 @@ struct GlassPalette {
 
     static func rowSelected(for scheme: ColorScheme) -> Color {
         scheme == .dark ? Color.white.opacity(0.26) : Color.white.opacity(0.7)
+    }
+
+    static func projectSelected(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? projectTint.opacity(0.25) : projectTint.opacity(0.3)
     }
 
     static func stroke(for scheme: ColorScheme) -> Color {
@@ -203,7 +351,9 @@ struct GlassPalette {
 struct LegacyPalette {
     static let textPrimary = Color.primary
     static let textSecondary = Color.secondary
+    static let projectText = Color.secondary
     static let rowSelected = Color.accentColor.opacity(0.12)
+    static let projectSelected = Color.orange.opacity(0.12)
     static let border = Color.black.opacity(0.12)
     static let background = Color(NSColor.windowBackgroundColor).opacity(0.96)
     static let rowBackground = Color(NSColor.controlBackgroundColor).opacity(0.85)
@@ -240,6 +390,7 @@ final class SwitcherWindow: ObservableObject {
     private let selfRef: SwitcherWindowRef
     private let activationManager: ActivationManager
     private let appSettings: AppSettingsStore
+    private let projectRegistry: ProjectRegistryStore
 
     private var window: NSWindow!
 
@@ -250,18 +401,21 @@ final class SwitcherWindow: ObservableObject {
         settingsWindow: RegularWindow<SettingsView>,
         selfRef: SwitcherWindowRef,
         activationManager: ActivationManager,
-        appSettings: AppSettingsStore
+        appSettings: AppSettingsStore,
+        projectRegistry: ProjectRegistryStore
     ) {
         self.editorStore = editorStore
         self.settingsWindow = settingsWindow
         self.selfRef = selfRef
         self.activationManager = activationManager
         self.appSettings = appSettings
+        self.projectRegistry = projectRegistry
 
         let contentView = SwitcherView(
             editorStore: editorStore,
             switcherWindow: self,
             appSettings: appSettings,
+            projectRegistry: projectRegistry,
             settingsWindow: settingsWindow,
             activationManager: activationManager
         )
@@ -426,6 +580,7 @@ struct SwitcherView: View {
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
     @ObservedObject var appSettings: AppSettingsStore
+    @ObservedObject var projectRegistry: ProjectRegistryStore
 
     let settingsWindow: RegularWindow<SettingsView>
     let activationManager: ActivationManager
@@ -436,15 +591,17 @@ struct SwitcherView: View {
         }
 
         let editors = editorStore.getEditors()
+        let projects = projectRegistry.entries
 
-        switch editors.count {
-        case 0:
+        if editors.isEmpty && projects.isEmpty {
             return .noEditors
-        case 1:
-            return .oneEditor
-        default:
-            return .manyEditors
         }
+
+        if editors.count <= 1 {
+            return .oneEditor
+        }
+
+        return .manyEditors
     }
 
     var body: some View {
@@ -454,6 +611,8 @@ struct SwitcherView: View {
                     state: state,
                     editorStore: editorStore,
                     switcherWindow: switcherWindow,
+                    projectRegistry: projectRegistry,
+                    appSettings: appSettings,
                     settingsWindow: settingsWindow,
                     activationManager: activationManager
                 )
@@ -462,6 +621,8 @@ struct SwitcherView: View {
                     state: state,
                     editorStore: editorStore,
                     switcherWindow: switcherWindow,
+                    projectRegistry: projectRegistry,
+                    appSettings: appSettings,
                     settingsWindow: settingsWindow,
                     activationManager: activationManager
                 )
@@ -471,6 +632,8 @@ struct SwitcherView: View {
                 state: state,
                 editorStore: editorStore,
                 switcherWindow: switcherWindow,
+                projectRegistry: projectRegistry,
+                appSettings: appSettings,
                 settingsWindow: settingsWindow,
                 activationManager: activationManager
             )
@@ -482,6 +645,8 @@ struct LegacySwitcherRoot: View {
     let state: SwitcherState?
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
+    @ObservedObject var projectRegistry: ProjectRegistryStore
+    @ObservedObject var appSettings: AppSettingsStore
 
     let settingsWindow: RegularWindow<SettingsView>
     let activationManager: ActivationManager
@@ -500,6 +665,8 @@ struct LegacySwitcherRoot: View {
                     LegacySwitcherListView(
                         editorStore: editorStore,
                         switcherWindow: switcherWindow,
+                        projectRegistry: projectRegistry,
+                        appSettings: appSettings,
                         settingsWindow: settingsWindow,
                         activationManager: activationManager
                     )
@@ -519,6 +686,8 @@ struct GlassSwitcherRoot: View {
     let state: SwitcherState?
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
+    @ObservedObject var projectRegistry: ProjectRegistryStore
+    @ObservedObject var appSettings: AppSettingsStore
 
     let settingsWindow: RegularWindow<SettingsView>
     let activationManager: ActivationManager
@@ -544,6 +713,8 @@ struct GlassSwitcherRoot: View {
                     GlassSwitcherListView(
                         editorStore: editorStore,
                         switcherWindow: switcherWindow,
+                        projectRegistry: projectRegistry,
+                        appSettings: appSettings,
                         settingsWindow: settingsWindow,
                         activationManager: activationManager
                     )
@@ -676,6 +847,8 @@ struct GlassSwitcherEmptyView: View {
 struct LegacySwitcherListView: View {
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
+    @ObservedObject var projectRegistry: ProjectRegistryStore
+    @ObservedObject var appSettings: AppSettingsStore
 
     let settingsWindow: RegularWindow<SettingsView>
     let activationManager: ActivationManager
@@ -687,7 +860,12 @@ struct LegacySwitcherListView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        let editors = SwitcherListLogic.filterEditors(editorStore, searchText: searchText)
+        let entries = SwitcherListLogic.filterEntries(
+            editorStore: editorStore,
+            projectRegistry: projectRegistry,
+            appSettings: appSettings,
+            searchText: searchText
+        )
 
         VStack(spacing: Layout.listSpacing) {
             HStack(spacing: 8) {
@@ -711,29 +889,48 @@ struct LegacySwitcherListView: View {
 
             ScrollView(.vertical) {
                 VStack(spacing: 4) {
-                    ForEach(Array(editors.enumerated()), id: \.1.id) { index, editor in
-                        Button(action: { editor.activate() }) {
+                    ForEach(Array(entries.enumerated()), id: \.1.id) { index, entry in
+                        Button(action: {
+                            SwitcherListLogic.activateEntry(
+                                at: index,
+                                entries: entries,
+                                selectedIndex: &selectedIndex,
+                                editorStore: editorStore
+                            )
+                        }) {
                             HStack(spacing: 10) {
-                                Image("EditorIcon")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 16, height: 16)
-                                    .foregroundColor(LegacyPalette.textSecondary)
-                                Text(editor.name)
+                                Group {
+                                    if entry.isEditor {
+                                        Image("EditorIcon")
+                                            .resizable()
+                                            .scaledToFit()
+                                    } else {
+                                        Image(systemName: entry.isStarred ? "star.circle.fill" : "folder.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                    }
+                                }
+                                .frame(width: 16, height: 16)
+                                .foregroundColor(LegacyPalette.textSecondary)
+                                Text(entry.title)
                                     .font(.system(size: Layout.resultsFontSize))
                                 Spacer()
-                                Text(editor.displayPath)
+                                Text(entry.displayPath)
                                     .font(.system(size: 12))
                                     .foregroundColor(LegacyPalette.textSecondary)
-                                if index < 9 {
-                                    ShortcutPill(text: "⌘\(index + 1)")
+                                if let shortcut = shortcutLabel(for: index) {
+                                    ShortcutPill(text: shortcut)
                                 }
                             }
                             .padding(.vertical, 6)
                             .padding(.horizontal, 8)
                             .background(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(selectedIndex == index ? LegacyPalette.rowSelected : Color.clear)
+                                    .fill(
+                                        selectedIndex == index
+                                            ? (entry.isEditor ? LegacyPalette.rowSelected : LegacyPalette.projectSelected)
+                                            : Color.clear
+                                    )
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -748,7 +945,7 @@ struct LegacySwitcherListView: View {
                 Spacer()
                 Button("Quit Selected") {
                     SwitcherListLogic.quitSelectedEditor(
-                        editors: editors,
+                        entries: entries,
                         selectedIndex: &selectedIndex,
                         activationManager: activationManager
                     )
@@ -770,6 +967,8 @@ struct LegacySwitcherListView: View {
                 return SwitcherListLogic.handleKey(
                     event,
                     editorStore: editorStore,
+                    projectRegistry: projectRegistry,
+                    appSettings: appSettings,
                     searchText: searchText,
                     selectedIndex: &selectedIndex,
                     switcherWindow: switcherWindow,
@@ -790,6 +989,8 @@ struct LegacySwitcherListView: View {
 struct GlassSwitcherListView: View {
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
+    @ObservedObject var projectRegistry: ProjectRegistryStore
+    @ObservedObject var appSettings: AppSettingsStore
 
     let settingsWindow: RegularWindow<SettingsView>
     let activationManager: ActivationManager
@@ -802,7 +1003,12 @@ struct GlassSwitcherListView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        let editors = SwitcherListLogic.filterEditors(editorStore, searchText: searchText)
+        let entries = SwitcherListLogic.filterEntries(
+            editorStore: editorStore,
+            projectRegistry: projectRegistry,
+            appSettings: appSettings,
+            searchText: searchText
+        )
 
         VStack(spacing: Layout.listSpacing) {
             HStack(spacing: 10) {
@@ -827,37 +1033,60 @@ struct GlassSwitcherListView: View {
 
             ScrollView(.vertical) {
                 VStack(spacing: Layout.listSpacing) {
-                    ForEach(Array(editors.enumerated()), id: \.1.id) { index, editor in
-                        Button(action: { editor.activate() }) {
+                    ForEach(Array(entries.enumerated()), id: \.1.id) { index, entry in
+                        Button(action: {
+                            SwitcherListLogic.activateEntry(
+                                at: index,
+                                entries: entries,
+                                selectedIndex: &selectedIndex,
+                                editorStore: editorStore
+                            )
+                        }) {
                             HStack(spacing: 14) {
-                                Image("EditorIcon")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 18, height: 18)
-                                    .foregroundColor(GlassPalette.textSecondary(for: colorScheme))
+                                Group {
+                                    if entry.isEditor {
+                                        Image("EditorIcon")
+                                            .resizable()
+                                            .scaledToFit()
+                                    } else {
+                                        Image(systemName: entry.isStarred ? "star.circle.fill" : "folder.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                    }
+                                }
+                                .frame(width: 18, height: 18)
+                                .foregroundColor(
+                                    entry.isEditor
+                                        ? GlassPalette.textSecondary(for: colorScheme)
+                                        : GlassPalette.projectTint
+                                )
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(editor.name)
+                                    Text(entry.title)
                                         .font(.system(size: Layout.resultsFontSize, weight: .semibold))
-                                        .foregroundColor(GlassPalette.textPrimary(for: colorScheme))
+                                        .foregroundColor(
+                                            entry.isEditor
+                                                ? GlassPalette.textPrimary(for: colorScheme)
+                                                : GlassPalette.projectTint
+                                        )
                                         .shadow(
                                             color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.08),
                                             radius: 1,
                                             x: 0,
                                             y: 1
                                         )
-                                    Text(editor.displayPath)
+                                    Text(entry.displayPath)
                                         .font(.system(size: 12, weight: .medium))
                                         .foregroundColor(GlassPalette.textSecondary(for: colorScheme))
                                 }
                                 Spacer()
-                                if index < 9 {
-                                    ShortcutPill(text: "⌘\(index + 1)")
+                                if let shortcut = shortcutLabel(for: index) {
+                                    ShortcutPill(text: shortcut)
                                 }
                                 Image(systemName: "arrow.up.right.circle.fill")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(
                                         selectedIndex == index
-                                            ? GlassPalette.tint
+                                            ? (entry.isEditor ? GlassPalette.tint : GlassPalette.projectTint)
                                             : GlassPalette.textSecondary(for: colorScheme)
                                     )
                             }
@@ -868,13 +1097,25 @@ struct GlassSwitcherListView: View {
                                     RoundedRectangle(cornerRadius: 12)
                                         .fill(
                                             selectedIndex == index
-                                                ? GlassPalette.rowSelected(for: colorScheme)
+                                                ? (entry.isEditor
+                                                    ? GlassPalette.rowSelected(for: colorScheme)
+                                                    : GlassPalette.projectSelected(for: colorScheme))
                                                 : GlassPalette.rowBackground(for: colorScheme)
                                         )
                                     if selectedIndex == index {
                                         RoundedRectangle(cornerRadius: 12)
-                                            .stroke(GlassPalette.tint.opacity(0.5), lineWidth: 1)
-                                            .shadow(color: GlassPalette.tint.opacity(0.45), radius: 8, x: 0, y: 0)
+                                            .stroke(
+                                                (entry.isEditor ? GlassPalette.tint : GlassPalette.projectTint)
+                                                    .opacity(0.5),
+                                                lineWidth: 1
+                                            )
+                                            .shadow(
+                                                color: (entry.isEditor ? GlassPalette.tint : GlassPalette.projectTint)
+                                                    .opacity(0.45),
+                                                radius: 8,
+                                                x: 0,
+                                                y: 0
+                                            )
                                             .blendMode(.screen)
                                     }
                                 }
@@ -899,7 +1140,7 @@ struct GlassSwitcherListView: View {
                     shortcut: ["⌘", "⌫"],
                     action: {
                         SwitcherListLogic.quitSelectedEditor(
-                            editors: editors,
+                            entries: entries,
                             selectedIndex: &selectedIndex,
                             activationManager: activationManager
                         )
@@ -927,6 +1168,8 @@ struct GlassSwitcherListView: View {
                 return SwitcherListLogic.handleKey(
                     event,
                     editorStore: editorStore,
+                    projectRegistry: projectRegistry,
+                    appSettings: appSettings,
                     searchText: searchText,
                     selectedIndex: &selectedIndex,
                     switcherWindow: switcherWindow,

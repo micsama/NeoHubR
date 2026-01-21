@@ -144,10 +144,11 @@ private final class ConnectionHandler: @unchecked Sendable {
 
     private func nextFrame() -> Data? {
         if expectedLength == nil {
-            guard buffer.count >= 4 else { return nil }
-            let length = readLength(from: buffer.prefix(4))
+            guard buffer.count >= IPCFrame.headerSize else { return nil }
+            let header = Data(buffer.prefix(IPCFrame.headerSize))
+            let length = IPCFrame.readLength(from: header)
             expectedLength = length
-            buffer.removeFirst(4)
+            buffer.removeFirst(IPCFrame.headerSize)
         }
 
         guard let length = expectedLength, buffer.count >= length else { return nil }
@@ -157,18 +158,9 @@ private final class ConnectionHandler: @unchecked Sendable {
         return Data(frame)
     }
 
-    private func readLength(from data: Data) -> Int {
-        var length: UInt32 = 0
-        for byte in data {
-            length = (length << 8) | UInt32(byte)
-        }
-        return Int(length)
-    }
-
     private func handleRequest(frame: Data) {
         do {
-            let decoder = JSONDecoder()
-            let message = try decoder.decode(IPCMessage.self, from: frame)
+            let message = try IPCCodec.decoder().decode(IPCMessage.self, from: frame)
             switch message.type {
             case .run:
                 if let req = message.run {

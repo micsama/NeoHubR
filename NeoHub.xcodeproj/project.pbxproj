@@ -23,6 +23,10 @@
 		FA30F2282AEED1E7004EC6E9 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */; };
 		FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */; };
 		FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */; };
+		FAE1A0212C8F1A0000000002 /* EditorNamingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */; };
+		FAE1A0312C8F1B0000000004 /* ProjectRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */; };
+		FAE1A0412C8F1C0000000006 /* IPCFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0402C8F1C0000000005 /* IPCFrame.swift */; };
+		FAE1A0512C8F1D0000000008 /* IPCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0502C8F1D0000000007 /* IPCCodec.swift */; };
 		FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3937162AF291A5001D9105 /* SettingsView.swift */; };
 		FA39371D2AF3A7CC001D9105 /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA39371C2AF3A7CC001D9105 /* Shell.swift */; };
 		FA54EB702AF4FD84001AE449 /* neohub in Embed CLI */ = {isa = PBXBuildFile; fileRef = FA2AE45D2AEB9CA000D24008 /* neohub */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -124,6 +128,10 @@
 		FA728EF32AFF716E0013610E /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		FA7B1C1A2C5B123400000002 /* MainThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainThread.swift; sourceTree = "<group>"; };
 		FAE1A0102C8F0A1A00000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorNamingPolicy.swift; sourceTree = "<group>"; };
+		FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRegistry.swift; sourceTree = "<group>"; };
+		FAE1A0402C8F1C0000000005 /* IPCFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPCFrame.swift; sourceTree = "<group>"; };
+		FAE1A0502C8F1D0000000007 /* IPCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPCCodec.swift; sourceTree = "<group>"; };
 		FAE1A0142C8F0C2600000005 /* WindowPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPlacement.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -236,6 +244,10 @@
 				FA2EADA42AED589F000F8F7A /* NeoHubLib.h */,
 				FA2EADA52AED589F000F8F7A /* NeoHubLib.docc */,
 				FAE1A0102C8F0A1A00000001 /* AppSettings.swift */,
+				FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */,
+				FAE1A0402C8F1C0000000005 /* IPCFrame.swift */,
+				FAE1A0502C8F1D0000000007 /* IPCCodec.swift */,
+				FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */,
 				FA2EADAF2AED58C6000F8F7A /* Shared.swift */,
 			);
 			path = NeoHubLib;
@@ -469,6 +481,10 @@
 			files = (
 				FA2EADA62AED589F000F8F7A /* NeoHubLib.docc in Sources */,
 				FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */,
+				FAE1A0212C8F1A0000000002 /* EditorNamingPolicy.swift in Sources */,
+				FAE1A0412C8F1C0000000006 /* IPCFrame.swift in Sources */,
+				FAE1A0512C8F1D0000000008 /* IPCCodec.swift in Sources */,
+				FAE1A0312C8F1B0000000004 /* ProjectRegistry.swift in Sources */,
 				FA2EADB02AED58C6000F8F7A /* Shared.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

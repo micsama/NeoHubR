@@ -8,10 +8,49 @@ struct SettingsView: View {
 
     @ObservedObject var cli: CLI
     @ObservedObject var appSettings: AppSettingsStore
+    @ObservedObject var projectRegistry: ProjectRegistryStore
 
     @State var runningCLIAction: Bool = false
     @State private var launchAtLoginEnabled: Bool = false
     private let glassAvailable = AppSettings.isGlassAvailable
+
+    var body: some View {
+        TabView {
+            GeneralSettingsTab(
+                cli: cli,
+                appSettings: appSettings,
+                runningCLIAction: $runningCLIAction,
+                launchAtLoginEnabled: $launchAtLoginEnabled,
+                glassAvailable: glassAvailable
+            )
+            .tabItem { Text("General") }
+            ProjectRegistryTab(
+                appSettings: appSettings,
+                projectRegistry: projectRegistry
+            )
+            .tabItem { Text("Projects") }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            launchAtLoginEnabled = isLaunchAtLoginEnabled()
+        }
+    }
+
+    private func isLaunchAtLoginEnabled() -> Bool {
+        let status = SMAppService.mainApp.status
+        return status == .enabled || status == .requiresApproval
+    }
+}
+
+private struct GeneralSettingsTab: View {
+    @ObservedObject var cli: CLI
+    @ObservedObject var appSettings: AppSettingsStore
+    @Binding var runningCLIAction: Bool
+    @Binding var launchAtLoginEnabled: Bool
+
+    let glassAvailable: Bool
 
     var body: some View {
         VStack(spacing: 20) {
@@ -108,16 +147,28 @@ struct SettingsView: View {
                     }
                     Divider()
                     VStack(spacing: 10) {
-                        Button("Uninstall") {
-                            self.runningCLIAction = true
-                            Task { @MainActor in
-                                _ = await cli.run(.uninstall)
-                                self.runningCLIAction = false
+                        HStack(spacing: 16) {
+                            Button("Reinstall") {
+                                self.runningCLIAction = true
+                                Task { @MainActor in
+                                    _ = await cli.run(.install)
+                                    self.runningCLIAction = false
+                                }
                             }
+                            .buttonStyle(LinkButtonStyle())
+                            .disabled(self.runningCLIAction)
+                            .focusable()
+                            Button("Uninstall") {
+                                self.runningCLIAction = true
+                                Task { @MainActor in
+                                    _ = await cli.run(.uninstall)
+                                    self.runningCLIAction = false
+                                }
+                            }
+                            .buttonStyle(LinkButtonStyle())
+                            .disabled(self.runningCLIAction)
+                            .focusable()
                         }
-                        .buttonStyle(LinkButtonStyle())
-                        .disabled(self.runningCLIAction)
-                        .focusable()
                         InstallationView.ButtonNote()
                     }
                 case .error(reason: .notInstalled):
@@ -196,16 +247,171 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity)
             .settingsGroup()
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 40)
-        .frame(maxWidth: .infinity)
-        .onAppear {
-            launchAtLoginEnabled = isLaunchAtLoginEnabled()
-        }
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func isLaunchAtLoginEnabled() -> Bool {
         let status = SMAppService.mainApp.status
         return status == .enabled || status == .requiresApproval
+    }
+}
+
+private struct ProjectRegistryTab: View {
+    @ObservedObject var appSettings: AppSettingsStore
+    @ObservedObject var projectRegistry: ProjectRegistryStore
+
+    @State private var sliderValue: Double = Double(AppSettings.defaultSwitcherMaxItems)
+
+    var body: some View {
+        VStack(spacing: 16) {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Switcher Items")
+                    Spacer()
+                    Text("\(appSettings.switcherMaxItems)")
+                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                }
+                .padding(.horizontal)
+                .padding(.top, 10)
+                .padding(.bottom, 6)
+
+                HStack {
+                    Slider(
+                        value: $sliderValue,
+                        in: Double(AppSettings.minSwitcherItems)...Double(AppSettings.maxSwitcherItems),
+                        step: 1
+                    )
+                    .applyLiquidGlassSliderStyle()
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 10)
+            }
+            .settingsGroup()
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Starred Projects")
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 10)
+
+                Divider().padding(.horizontal)
+
+                List {
+                    if starredEntries.isEmpty {
+                        Text("No starred projects yet.")
+                            .foregroundColor(.secondary)
+                    } else {
+                        ForEach(starredEntries) { entry in
+                            ProjectRow(entry: entry, projectRegistry: projectRegistry)
+                        }
+                        .onMove { indices, newOffset in
+                            var ids = starredEntries.map { $0.id }
+                            ids.move(fromOffsets: indices, toOffset: newOffset)
+                            projectRegistry.updatePinnedOrder(ids: ids)
+                        }
+                        .moveDisabled(false)
+                    }
+
+                    if !recentEntries.isEmpty {
+                        Section("Recent") {
+                            ForEach(recentEntries) { entry in
+                                ProjectRow(entry: entry, projectRegistry: projectRegistry)
+                            }
+                        }
+                    }
+                }
+                .frame(height: 260)
+            }
+            .settingsGroup()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            sliderValue = Double(appSettings.switcherMaxItems)
+        }
+        .onChange(of: sliderValue) { newValue in
+            appSettings.switcherMaxItems = Int(newValue.rounded())
+        }
+    }
+
+    private var starredEntries: [ProjectEntry] {
+        projectRegistry.entries
+            .filter { $0.isStarred }
+            .sorted { lhs, rhs in
+                let lhsOrder = lhs.pinnedOrder ?? Int.max
+                let rhsOrder = rhs.pinnedOrder ?? Int.max
+                if lhsOrder != rhsOrder {
+                    return lhsOrder < rhsOrder
+                }
+                return (lhs.lastOpenedAt ?? .distantPast) > (rhs.lastOpenedAt ?? .distantPast)
+            }
+    }
+
+    private var recentEntries: [ProjectEntry] {
+        projectRegistry.entries
+            .filter { !$0.isStarred }
+            .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
+    }
+
+}
+
+private struct ProjectRow: View {
+    let entry: ProjectEntry
+    @ObservedObject var projectRegistry: ProjectRegistryStore
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: entry.isStarred ? "star.circle.fill" : "folder.fill")
+                .foregroundColor(entry.isStarred ? .yellow : .secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.name ?? entry.id.lastPathComponent)
+                    .font(.system(size: 13, weight: .medium))
+                Text(SettingsPath.format(entry.id))
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            Button(action: { projectRegistry.toggleStar(id: entry.id) }) {
+                Image(systemName: entry.isStarred ? "star.fill" : "star")
+                    .foregroundColor(entry.isStarred ? .yellow : .secondary)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+private enum SettingsPath {
+    static func format(_ url: URL) -> String {
+        let fullPath = url.path(percentEncoded: false)
+        let pattern = "^/Users/[^/]+/"
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return fullPath
+        }
+
+        let range = NSRange(fullPath.startIndex..., in: fullPath)
+        return regex.stringByReplacingMatches(
+            in: fullPath,
+            options: [],
+            range: range,
+            withTemplate: "~/"
+        )
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func applyLiquidGlassSliderStyle() -> some View {
+        if #available(macOS 26, *) {
+            self
+                .glassEffect(.regular.interactive())
+                .controlSize(.large)
+        } else {
+            self
+                .controlSize(.large)
+        }
     }
 }

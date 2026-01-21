@@ -8,9 +8,11 @@
 - `SwitcherView.swift`
   - 编辑器切换器主界面与热键处理；管理切换/激活逻辑。
   - 提供 Legacy 与 macOS 26 Liquid Glass 双 UI 模式（设置中切换）。
-  - 支持 Tab 循环与 `⌘1~⌘9` 快捷切换（列表右侧显示提示）。
+  - 支持 Tab 循环与 `⌘1~⌘0` 快捷切换（列表右侧显示提示）。
+  - 列表可混合展示已打开编辑器与最近项目（不足 N 条时补齐）。
 - `SettingsView.swift`
   - 应用设置与热键设置；启动项开关、CLI 安装/卸载入口。
+  - Projects 选项卡：显示/收藏项目、调整收藏排序、设置 Switcher 显示条数。
   - Liquid Glass 开关在 macOS 26+ 可用；低版本置灰。
 - `InstallationView.swift`
   - CLI 安装/更新/错误引导窗口；提供安装按钮与状态反馈。

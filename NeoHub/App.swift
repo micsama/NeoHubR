@@ -53,6 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let windowCounter: WindowCounter
     let activationManager: ActivationManager
     let appSettings: AppSettingsStore
+    let projectRegistry: ProjectRegistryStore
 
     override init() {
         let appSettings = AppSettingsStore()
@@ -61,13 +62,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let cli = CLI()
         let windowCounter = WindowCounter()
         let activationManager = ActivationManager()
+        let projectRegistry = ProjectRegistryStore()
 
         let switcherWindowRef = SwitcherWindowRef()
         let installationWindowRef = RegularWindowRef<InstallationView>()
 
         let editorStore = EditorStore(
             activationManager: activationManager,
-            switcherWindow: switcherWindowRef
+            switcherWindow: switcherWindowRef,
+            projectRegistry: projectRegistry
         )
 
         self.cli = cli
@@ -76,7 +79,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.settingsWindow = RegularWindow(
             width: SettingsView.defaultWidth,
             level: .floating,
-            content: { SettingsView(cli: cli, appSettings: appSettings) },
+            content: {
+                SettingsView(
+                    cli: cli,
+                    appSettings: appSettings,
+                    projectRegistry: projectRegistry
+                )
+            },
             windowCounter: windowCounter
         )
         self.aboutWindow = RegularWindow(
@@ -89,10 +98,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             settingsWindow: settingsWindow,
             selfRef: switcherWindowRef,
             activationManager: activationManager,
-            appSettings: appSettings
+            appSettings: appSettings,
+            projectRegistry: projectRegistry
         )
         self.windowCounter = windowCounter
         self.activationManager = activationManager
+        self.projectRegistry = projectRegistry
 
         self.installationWindow = RegularWindow(
             title: APP_NAME,
