@@ -1,4 +1,5 @@
 import KeyboardShortcuts
+import NeoHubLib
 import SwiftUI
 
 struct Key {

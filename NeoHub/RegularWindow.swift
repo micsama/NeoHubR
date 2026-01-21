@@ -28,13 +28,21 @@ final class RegularWindow<Content: View>: NSObject {
 
     let title: String?
     let width: CGFloat
+    let level: NSWindow.Level?
     let content: () -> Content
     let windowCounter: WindowCounter
 
-    init(title: String? = nil, width: CGFloat, content: @escaping () -> Content, windowCounter: WindowCounter) {
+    init(
+        title: String? = nil,
+        width: CGFloat,
+        level: NSWindow.Level? = nil,
+        content: @escaping () -> Content,
+        windowCounter: WindowCounter
+    ) {
         self.window = nil
         self.title = title
         self.width = width
+        self.level = level
         self.content = content
         self.windowCounter = windowCounter
         super.init()
@@ -47,8 +55,10 @@ final class RegularWindow<Content: View>: NSObject {
             return
         }
 
+        let hostingView = NSHostingView(rootView: self.content())
+        let fittingSize = hostingView.fittingSize
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: self.width, height: 0),
+            contentRect: NSRect(x: 0, y: 0, width: self.width, height: fittingSize.height),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -58,7 +68,11 @@ final class RegularWindow<Content: View>: NSObject {
             window.title = title
         }
 
-        window.contentView = NSHostingView(rootView: self.content())
+        if let level = self.level {
+            window.level = level
+        }
+
+        window.contentView = hostingView
 
         window.isReleasedWhenClosed = false
 
