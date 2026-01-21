@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		FA2AE44B2AEB980700D24008 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2AE44A2AEB980700D24008 /* App.swift */; };
+		FA9C0A122EAFB00100ABC002 /* SettingsLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9C0A112EAFB00100ABC001 /* SettingsLauncher.swift */; };
 		FA2AE44F2AEB980800D24008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA2AE44E2AEB980800D24008 /* Assets.xcassets */; };
 		FA2AE4522AEB980800D24008 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA2AE4512AEB980800D24008 /* Preview Assets.xcassets */; };
 		FA2AE4602AEB9CA000D24008 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2AE45F2AEB9CA000D24008 /* CLI.swift */; };
@@ -97,6 +98,7 @@
 		FA03D4C82AFA302A00790D2F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		FA2AE4472AEB980700D24008 /* NeoHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NeoHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA2AE44A2AEB980700D24008 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		FA9C0A112EAFB00100ABC001 /* SettingsLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsLauncher.swift; sourceTree = "<group>"; };
 		FA2AE44E2AEB980800D24008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FA2AE4512AEB980800D24008 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		FA2AE4532AEB980800D24008 /* NeoHub.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NeoHub.entitlements; sourceTree = "<group>"; };
@@ -194,6 +196,7 @@
 				FA54EB7A2AF6E3C5001AE449 /* components */,
 				FA30F2262AEED1C5004EC6E9 /* views */,
 				FA2AE44A2AEB980700D24008 /* App.swift */,
+				FA9C0A112EAFB00100ABC001 /* SettingsLauncher.swift */,
 				FAE1A0142C8F0C2600000005 /* WindowPlacement.swift */,
 				FA54EB712AF5033D001AE449 /* CLI.swift */,
 				FA54EB802AF789F6001AE449 /* Logger.swift */,
@@ -445,6 +448,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */,
+				FA9C0A122EAFB00100ABC002 /* SettingsLauncher.swift in Sources */,
 				FAE1A0132C8F0C2600000004 /* WindowPlacement.swift in Sources */,
 				FA54EB742AF53ED9001AE449 /* RegularWindow.swift in Sources */,
 				FA54EB762AF654D7001AE449 /* AboutView.swift in Sources */,
@@ -564,7 +568,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -622,7 +626,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;

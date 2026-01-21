@@ -22,7 +22,6 @@ struct MenuBarView: View {
     @ObservedObject var cli: CLI
     @ObservedObject var editorStore: EditorStore
 
-    let settingsWindow: RegularWindow<SettingsView>
     let aboutWindow: RegularWindow<AboutView>
 
     var body: some View {
@@ -56,12 +55,12 @@ struct MenuBarView: View {
                 }
             case .error(reason: .unexpectedError(_)):
                 Divider()
-                Button("❗ CLI Error") { settingsWindow.open() }
+                Button("❗ CLI Error") { SettingsLauncher.open() }
             case .ok:
                 EmptyView()
             }
             Divider()
-            Button("Settings") { settingsWindow.open() }
+            SettingsLink { Text("Settings") }
             Button("About") { aboutWindow.open() }
             Divider()
             Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }.disabled(editors.count == 0)

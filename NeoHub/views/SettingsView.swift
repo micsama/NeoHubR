@@ -8,7 +8,7 @@ import SwiftUI
 
 struct SettingsView: View {
     static let defaultWidth: CGFloat = 425
-    static let defaultHeight: CGFloat = 520
+    static let defaultHeight: CGFloat = 550
 
     @ObservedObject var cli: CLI
     @ObservedObject var appSettings: AppSettingsStore
@@ -20,64 +20,58 @@ struct SettingsView: View {
     private let glassAvailable = AppSettings.isGlassAvailable
 
     var body: some View {
-        VStack(spacing: 12) {
-            headerView
-
-            TabView {
-                GeneralSettingsTab(
-                    cli: cli,
-                    runningCLIAction: $runningCLIAction,
-                    launchAtLoginEnabled: $launchAtLoginEnabled
-                )
-                .tabItem {
-                    Label("General", systemImage: "gearshape")
-                }
-                .tag(0)
-
-                ProjectRegistryTab(
-                    appSettings: appSettings,
-                    projectRegistry: projectRegistry
-                )
-                .tabItem {
-                    Label("Projects", systemImage: "folder")
-                }
-                .tag(1)
-
-                AdvancedSettingsTab(
-                    appSettings: appSettings,
-                    glassAvailable: glassAvailable
-                )
-                .tabItem {
-                    Label("Advanced", systemImage: "gearshape.2")
-                }
-                .tag(2)
+        TabView {
+            GeneralSettingsTab(
+                cli: cli,
+                runningCLIAction: $runningCLIAction,
+                launchAtLoginEnabled: $launchAtLoginEnabled
+            )
+            .tabItem {
+                Label("General", systemImage: "gearshape")
             }
+            .tag(0)
+
+            ProjectRegistryTab(
+                appSettings: appSettings,
+                projectRegistry: projectRegistry
+            )
+            .tabItem {
+                Label("Projects", systemImage: "folder")
+            }
+            .tag(1)
+
+            AdvancedSettingsTab(
+                appSettings: appSettings,
+                glassAvailable: glassAvailable
+            )
+            .tabItem {
+                Label("Advanced", systemImage: "gearshape.2")
+            }
+            .tag(2)
         }
-        .padding(16)
-        .frame(width: Self.defaultWidth, height: Self.defaultHeight)
-        .onAppear {
-            launchAtLoginEnabled = isLaunchAtLoginEnabled()
-        }
+        // .onAppear {
+        //     launchAtLoginEnabled = isLaunchAtLoginEnabled()
+        // }
     }
 
-    private var headerView: some View {
-        ZStack {
-            HStack {
-                Spacer()
-                Text("v\(APP_VERSION) (\(APP_BUILD))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            HStack(spacing: 10) {
-                Image("EditorIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 28, height: 28)
-                Text("NeoHub")
-                    .font(.system(size: 18, weight: .semibold))
-            }
-        }
-    }
+    // private var headerView: some View {
+    //     ZStack {
+    //         HStack {
+    //             Spacer()
+    //             Text("v\(APP_VERSION) (\(APP_BUILD))")
+    //                 .font(.caption)
+    //                 .foregroundStyle(.secondary)
+    //         }
+    //         HStack(spacing: 10) {
+    //             Image("EditorIcon")
+    //                 .resizable()
+    //                 .scaledToFit()
+    //                 .frame(width: 28, height: 28)
+    //             Text("NeoHub")
+    //                 .font(.system(size: 18, weight: .semibold))
+    //         }
+    //     }
+    // }
 
     private func isLaunchAtLoginEnabled() -> Bool {
         let status = SMAppService.mainApp.status
@@ -94,10 +88,31 @@ private struct GeneralSettingsTab: View {
 
     var body: some View {
         Form {
+            // Header Section
+            Section {
+                HStack {
+                    Spacer()
+                    HStack(spacing: 12) {
+                        Image("EditorIcon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 48, height: 48)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("NeoHub")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("v\(APP_VERSION) (\(APP_BUILD))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                }
+            }
+
             Section {
                 Toggle("Launch at Login", isOn: $launchAtLoginEnabled)
-                    .onChange(of: launchAtLoginEnabled) { newValue in
-                        updateLaunchAtLogin(newValue)
+                    .onChange(of: launchAtLoginEnabled) {
+                        updateLaunchAtLogin(launchAtLoginEnabled)
                     }
             }
 
@@ -115,7 +130,7 @@ private struct GeneralSettingsTab: View {
                 }
             }
 
-            Section("Command Line Tool") {
+            Section {
                 CLIStatusView(cli: cli, runningCLIAction: $runningCLIAction)
             }
         }
@@ -140,7 +155,6 @@ private struct GeneralSettingsTab: View {
         return status == .enabled || status == .requiresApproval
     }
 }
-
 // MARK: - CLI Status View
 
 private struct CLIStatusView: View {
@@ -190,9 +204,6 @@ private struct CLIStatusView: View {
             }
         }
 
-        Text("Requires administrator privileges")
-            .font(.caption)
-            .foregroundStyle(.secondary)
     }
 
     @ViewBuilder

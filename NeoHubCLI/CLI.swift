@@ -110,7 +110,7 @@ struct CLI: ParsableCommand {
         let result = client.send(message)
 
         switch result {
-        case .success(let res):
+        case .success:
             Self.exit(withError: nil)
         case .failure(let error):
             Self.sendErrorReport(.failedToCommunicateWithNeoHub(error))
