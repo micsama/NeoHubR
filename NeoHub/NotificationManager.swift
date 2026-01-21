@@ -3,11 +3,6 @@ import UserNotifications
 
 typealias NotificationMeta = [String: String]
 
-enum AppSettingsKey {
-    static let forwardCLIErrors = "ForwardCLIErrorToGUI"
-    static let useGlassSwitcherUI = "UseGlassSwitcherUI"
-}
-
 private let cliErrorCategoryId = "CLI_ERROR"
 
 extension NotificationMeta {
@@ -171,7 +166,7 @@ final class NotificationManager: NSObject {
     }
 
     nonisolated static func sendCLIError(_ report: CLIErrorReport) {
-        guard UserDefaults.standard.bool(forKey: AppSettingsKey.forwardCLIErrors) else {
+        guard AppSettings.forwardCLIErrors else {
             return
         }
         Task { @MainActor in
