@@ -14,6 +14,7 @@
 - 进程/实例管理：`EditorStore.swift`
   - 维护 `Editor` 列表与排序逻辑。
   - 负责启动、激活、重启 Neovide 进程。
+  - 启动/激活时记录最近项目到 `ProjectRegistry`。
 - 激活目标管理：`ActivationManager.swift`
   - 记录/恢复前台应用与窗口（用于切换器隐藏后的回切）。
 - IPC：`SocketServer.swift`

@@ -9,13 +9,19 @@ final class EditorStore: ObservableObject {
 
     let switcherWindow: SwitcherWindowRef
     let activationManager: ActivationManager
+    let projectRegistry: ProjectRegistryStore
 
     private var restartPoller: Timer?
 
-    init(activationManager: ActivationManager, switcherWindow: SwitcherWindowRef) {
+    init(
+        activationManager: ActivationManager,
+        switcherWindow: SwitcherWindowRef,
+        projectRegistry: ProjectRegistryStore
+    ) {
         self.editors = [:]
         self.switcherWindow = switcherWindow
         self.activationManager = activationManager
+        self.projectRegistry = projectRegistry
 
         KeyboardShortcuts.onKeyUp(for: .restartEditor) { [self] in
             self.restartActiveEditor()
@@ -59,26 +65,10 @@ final class EditorStore: ObservableObject {
 
     func runEditor(request: RunRequest) {
         MainThread.assert()
-        let editorID =
-            switch request.path {
-            case nil, "":
-                EditorID(request.wd)
-            case .some(let path):
-                EditorID(
-                    URL(
-                        fileURLWithPath: path,
-                        relativeTo: request.wd
-                    )
-                )
-            }
-
-        let editorName =
-            switch request.name {
-            case nil, "":
-                editorID.lastPathComponent
-            case .some(let name):
-                name
-            }
+        let naming = EditorNamingPolicy.resolve(for: request)
+        let editorID = EditorID(naming.location)
+        let editorName = naming.displayName
+        updateProjectRegistry(location: naming.location, displayName: editorName)
 
         switch editors[editorID] {
         case .some(let editor):
@@ -224,6 +214,91 @@ final class EditorStore: ObservableObject {
 
     private func invalidateRestartPoller() {
         self.restartPoller?.invalidate()
+    }
+
+    private func updateProjectRegistry(location: URL, displayName: String) {
+        var entries = projectRegistry.entries
+        let now = Date()
+
+        if let index = entries.firstIndex(where: { $0.id == location }) {
+            var entry = entries[index]
+            if (entry.name ?? "").isEmpty {
+                entry.name = displayName
+            }
+            entry.lastOpenedAt = now
+            entries[index] = entry
+        } else {
+            entries.append(ProjectEntry(id: location, name: displayName, lastOpenedAt: now))
+        }
+
+        entries.sort { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
+        projectRegistry.entries = entries
+    }
+
+    func openProject(_ project: ProjectEntry) {
+        guard let bin = resolveNeovideBinary() else {
+            let error = ReportableError("Failed to locate Neovide binary in PATH.")
+            log.error("\(error)")
+            NotificationManager.send(kind: .failedToRunEditorProcess, error: error)
+            return
+        }
+
+        let path = project.id.path(percentEncoded: false)
+        let wd: URL
+        if project.id.hasDirectoryPath {
+            wd = project.id
+        } else {
+            wd = project.id.deletingLastPathComponent()
+        }
+
+        let request = RunRequest(
+            wd: wd,
+            bin: bin,
+            name: project.name,
+            path: path,
+            opts: [],
+            env: ProcessInfo.processInfo.environment
+        )
+        runEditor(request: request)
+    }
+
+    private func resolveNeovideBinary() -> URL? {
+        if let path = resolveNeovideFromPath() {
+            return path
+        }
+
+        let bundled = URL(fileURLWithPath: "/Applications/Neovide.app/Contents/MacOS/neovide")
+        if FileManager.default.fileExists(atPath: bundled.path) {
+            return bundled
+        }
+
+        return nil
+    }
+
+    private func resolveNeovideFromPath() -> URL? {
+        let process = Process()
+        let pipe = Pipe()
+
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["which", "neovide"]
+        process.standardOutput = pipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            guard process.terminationStatus == 0 else {
+                return nil
+            }
+
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let path = String(data: data, encoding: .utf8)?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let path, !path.isEmpty else { return nil }
+            return URL(fileURLWithPath: path)
+        } catch {
+            return nil
+        }
     }
 
     @MainActor

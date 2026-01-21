@@ -30,9 +30,8 @@ class SocketClient {
         }
 
         do {
-            let encoder = JSONEncoder()
-            let json = try encoder.encode(request)
-            let payload = encodeFrame(json)
+            let json = try IPCCodec.encoder().encode(request)
+            let payload = IPCFrame.encode(json)
 
             for attempt in 0..<maxAttempts {
                 let result = sendOnce(payload: payload, timeout: timeoutSeconds)
@@ -114,18 +113,6 @@ class SocketClient {
         }
 
         receiveNext()
-    }
-
-    private func encodeFrame(_ json: Data) -> Data {
-        let length = UInt32(json.count)
-        var header = Data(capacity: 4)
-        for shift in stride(from: 24, through: 0, by: -8) {
-            header.append(UInt8((length >> UInt32(shift)) & 0xFF))
-        }
-        var payload = Data()
-        payload.append(header)
-        payload.append(json)
-        return payload
     }
 
     private static func timeoutError() -> NSError {
