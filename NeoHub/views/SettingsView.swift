@@ -85,56 +85,55 @@ private struct GeneralSettingsTab: View {
     @Binding var launchAtLoginEnabled: Bool
 
     var body: some View {
-        Form {
+        VStack(spacing: 0) {
+            // Header 放在 Form 外部，透明背景，垂直居中
             headerView
+                .frame(height: 50, alignment: .center)
+            Form {
+                Section {
+                    Toggle("Launch at Login", isOn: $launchAtLoginEnabled)
+                        .onChange(of: launchAtLoginEnabled) {
+                            updateLaunchAtLogin(launchAtLoginEnabled)
+                        }
+                }
 
-            Section {
-                Toggle("Launch at Login", isOn: $launchAtLoginEnabled)
-                    .onChange(of: launchAtLoginEnabled) {
-                        updateLaunchAtLogin(launchAtLoginEnabled)
+                Section {
+                    LabeledContent("Toggle Editor Selector") {
+                        KeyboardShortcuts.Recorder("", name: .toggleSwitcher)
                     }
-            }
 
-            Section {
-                LabeledContent("Toggle Editor Selector") {
-                    KeyboardShortcuts.Recorder("", name: .toggleSwitcher)
+                    LabeledContent("Toggle Last Active Editor") {
+                        KeyboardShortcuts.Recorder("", name: .toggleLastActiveEditor)
+                    }
+
+                    LabeledContent("Restart Active Editor") {
+                        KeyboardShortcuts.Recorder("", name: .restartEditor)
+                    }
                 }
 
-                LabeledContent("Toggle Last Active Editor") {
-                    KeyboardShortcuts.Recorder("", name: .toggleLastActiveEditor)
-                }
-
-                LabeledContent("Restart Active Editor") {
-                    KeyboardShortcuts.Recorder("", name: .restartEditor)
+                Section {
+                    CLIStatusView(cli: cli, runningCLIAction: $runningCLIAction)
                 }
             }
-
-            Section {
-                CLIStatusView(cli: cli, runningCLIAction: $runningCLIAction)
-            }
+            .formStyle(.grouped)
+            .padding(.top, -20)
         }
-        .formStyle(.grouped)
     }
 
     private var headerView: some View {
-        HStack {
-            Spacer()
-            HStack(spacing: 12) {
-                Image("EditorIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 48, height: 48)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("NeoHub")
-                        .font(.system(size: 18, weight: .semibold))
-                    Text("v\(APP_VERSION) (\(APP_BUILD))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+        HStack(spacing: 12) {
+            Image("EditorIcon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 48, height: 48)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("NeoHub")
+                    .font(.system(size: 18, weight: .semibold))
+                Text("v\(APP_VERSION) (\(APP_BUILD))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            Spacer()
         }
-        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private func updateLaunchAtLogin(_ enabled: Bool) {
