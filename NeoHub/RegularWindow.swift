@@ -41,6 +41,12 @@ final class RegularWindow<Content: View>: NSObject {
     }
 
     func open() {
+        if let window = self.window {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: self.width, height: 0),
             styleMask: [.titled, .closable],
@@ -62,7 +68,7 @@ final class RegularWindow<Content: View>: NSObject {
         window.styleMask.remove(.resizable)
 
         // Ensuring that the window gets activated
-        window.center()
+        centerWindowOnCurrentScreen(window)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
 
@@ -100,6 +106,26 @@ final class RegularWindow<Content: View>: NSObject {
             NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: window)
         }
         self.window = nil
+    }
+
+    private func centerWindowOnCurrentScreen(_ window: NSWindow) {
+        let mouseLocation = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouseLocation, $0.frame, false) }
+            ?? NSScreen.main
+            ?? NSScreen.screens.first
+
+        guard let screen else {
+            window.center()
+            return
+        }
+
+        let frame = screen.visibleFrame
+        let size = window.frame.size
+        let origin = CGPoint(
+            x: frame.midX - size.width / 2,
+            y: frame.midY - size.height / 2
+        )
+        window.setFrameOrigin(origin)
     }
 
 }
