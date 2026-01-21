@@ -40,6 +40,11 @@ struct SettingsView: View {
                     projectRegistry: projectRegistry
                 )
                 .tabItem { Text("Projects") }
+                AdvancedSettingsTab(
+                    appSettings: appSettings,
+                    glassAvailable: glassAvailable
+                )
+                .tabItem { Text("Advanced") }
             }
         }
         .padding(.horizontal, 20)
@@ -115,26 +120,9 @@ private struct GeneralSettingsTab: View {
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 10)
-
-                HStack {
-                    Text("Use Liquid Glass Switcher (macOS 26)")
-                    Spacer()
-                    Toggle("", isOn: $appSettings.useGlassSwitcherUI)
-                        .toggleStyle(SwitchToggleStyle())
-                }
-                .opacity(glassAvailable ? 1.0 : 0.5)
-                .disabled(!glassAvailable)
-                .padding(.horizontal)
-                .padding(.vertical, 10)
             }
             .settingsGroup()
             VStack(spacing: 20) {
-                HStack {
-                    Text("Show CLI errors in app")
-                    Spacer()
-                    Toggle("", isOn: $appSettings.forwardCLIErrors)
-                        .toggleStyle(SwitchToggleStyle())
-                }
                 switch cli.status {
                 case .ok:
                     VStack(spacing: 10) {
@@ -257,6 +245,42 @@ private struct GeneralSettingsTab: View {
     private func isLaunchAtLoginEnabled() -> Bool {
         let status = SMAppService.mainApp.status
         return status == .enabled || status == .requiresApproval
+    }
+}
+
+private struct AdvancedSettingsTab: View {
+    @ObservedObject var appSettings: AppSettingsStore
+
+    let glassAvailable: Bool
+
+    var body: some View {
+        VStack(spacing: 20) {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Use Liquid Glass Switcher (macOS 26)")
+                    Spacer()
+                    Toggle("", isOn: $appSettings.useGlassSwitcherUI)
+                        .toggleStyle(SwitchToggleStyle())
+                }
+                .opacity(glassAvailable ? 1.0 : 0.5)
+                .disabled(!glassAvailable)
+                .padding(.horizontal)
+                .padding(.vertical, 10)
+
+                HStack {
+                    Text("Show CLI errors in app")
+                    Spacer()
+                    Toggle("", isOn: $appSettings.forwardCLIErrors)
+                        .toggleStyle(SwitchToggleStyle())
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 10)
+            }
+            .settingsGroup()
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 }
 
