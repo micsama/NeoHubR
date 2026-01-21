@@ -39,6 +39,7 @@
 		FA7B1C1A2C5B123400000001 /* MainThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B1C1A2C5B123400000002 /* MainThread.swift */; };
 		FAE1A0112C8F0A1A00000002 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0102C8F0A1A00000001 /* AppSettings.swift */; };
 		FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0102C8F0A1A00000001 /* AppSettings.swift */; };
+		FAE1A0132C8F0C2600000004 /* WindowPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0142C8F0C2600000005 /* WindowPlacement.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,6 +124,7 @@
 		FA728EF32AFF716E0013610E /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		FA7B1C1A2C5B123400000002 /* MainThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainThread.swift; sourceTree = "<group>"; };
 		FAE1A0102C8F0A1A00000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		FAE1A0142C8F0C2600000005 /* WindowPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPlacement.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -184,6 +186,7 @@
 				FA54EB7A2AF6E3C5001AE449 /* components */,
 				FA30F2262AEED1C5004EC6E9 /* views */,
 				FA2AE44A2AEB980700D24008 /* App.swift */,
+				FAE1A0142C8F0C2600000005 /* WindowPlacement.swift */,
 				FA54EB712AF5033D001AE449 /* CLI.swift */,
 				FA54EB802AF789F6001AE449 /* Logger.swift */,
 				FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */,
@@ -430,6 +433,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */,
+				FAE1A0132C8F0C2600000004 /* WindowPlacement.swift in Sources */,
 				FA54EB742AF53ED9001AE449 /* RegularWindow.swift in Sources */,
 				FA54EB762AF654D7001AE449 /* AboutView.swift in Sources */,
 				FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */,

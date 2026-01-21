@@ -27,6 +27,120 @@ struct Key {
     ]
 }
 
+@MainActor
+private enum SwitcherListLogic {
+    static func filterEditors(_ editorStore: EditorStore, searchText: String) -> [Editor] {
+        editorStore.getEditors(sortedFor: .switcher).filter { editor in
+            searchText.isEmpty
+                || editor.name.contains(searchText)
+                || editor.displayPath.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    static func handleKey(
+        _ event: NSEvent,
+        editorStore: EditorStore,
+        searchText: String,
+        selectedIndex: inout Int,
+        switcherWindow: SwitcherWindow,
+        settingsWindow: RegularWindow<SettingsView>,
+        activationManager: ActivationManager
+    ) -> NSEvent? {
+        let editors = filterEditors(editorStore, searchText: searchText)
+
+        switch event.keyCode {
+        case Key.ARROW_UP:
+            if selectedIndex > 0 {
+                selectedIndex -= 1
+            }
+            return nil
+        case Key.ARROW_DOWN:
+            if selectedIndex < editors.count - 1 {
+                selectedIndex += 1
+            }
+            return nil
+        case Key.TAB:
+            selectedIndex = (selectedIndex + 1) % max(editors.count, 1)
+            return nil
+        case Key.ENTER:
+            if editors.indices.contains(selectedIndex) {
+                editors[selectedIndex].activate()
+            }
+            return nil
+        case Key.BACKSPACE where event.modifierFlags.contains(.command):
+            quitSelectedEditor(editors: editors, selectedIndex: &selectedIndex, activationManager: activationManager)
+            return nil
+        case Key.ESC:
+            switcherWindow.hide()
+            return nil
+        case Key.COMMA where event.modifierFlags.contains(.command):
+            switcherWindow.hide()
+            settingsWindow.open()
+            return nil
+        case Key.W where event.modifierFlags.contains(.command):
+            switcherWindow.hide()
+            return nil
+        case Key.Q where event.modifierFlags.contains(.command):
+            quitAllEditors(editorStore: editorStore, activationManager: activationManager)
+            return nil
+        case _ where event.modifierFlags.contains(.command):
+            if let index = commandNumberIndex(for: event.keyCode) {
+                activateEditor(at: index, editors: editors, selectedIndex: &selectedIndex)
+                return nil
+            }
+            return nil
+        default:
+            break
+        }
+        return event
+    }
+
+    static func quitSelectedEditor(
+        editors: [Editor],
+        selectedIndex: inout Int,
+        activationManager: ActivationManager
+    ) {
+        guard editors.indices.contains(selectedIndex) else {
+            return
+        }
+
+        let editor = editors[selectedIndex]
+        let totalEditors = editors.count
+
+        if totalEditors == selectedIndex + 1 && selectedIndex != 0 {
+            selectedIndex -= 1
+        }
+
+        if totalEditors == 1 {
+            activationManager.activateTarget()
+        }
+
+        editor.quit()
+    }
+
+    static func quitAllEditors(editorStore: EditorStore, activationManager: ActivationManager) {
+        Task {
+            activationManager.activateTarget()
+            await editorStore.quitAllEditors()
+        }
+    }
+
+    static func activateEditor(at index: Int, editors: [Editor], selectedIndex: inout Int) {
+        guard editors.indices.contains(index) else {
+            return
+        }
+        selectedIndex = index
+        editors[index].activate()
+    }
+
+    static func commandNumberIndex(for keyCode: UInt16) -> Int? {
+        guard let index = Key.commandNumberKeys.firstIndex(of: keyCode) else {
+            return nil
+        }
+        return index
+    }
+}
+
 private final class KeyboardEventHandler: ObservableObject {
     var monitor: Any?
 }
@@ -188,7 +302,7 @@ final class SwitcherWindow: ObservableObject {
         window.standardWindowButton(.closeButton)?.isHidden = true
         window.standardWindowButton(.zoomButton)?.isHidden = true
 
-        window.center()
+        WindowPlacement.centerOnCurrentScreen(window)
 
         KeyboardShortcuts.onKeyDown(for: .toggleLastActiveEditor) { [self] in
             self.handleLastActiveEditorToggle()
@@ -274,7 +388,7 @@ final class SwitcherWindow: ObservableObject {
 
         self.hidden = false
 
-        window.center()
+        WindowPlacement.centerOnCurrentScreen(window)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -573,7 +687,7 @@ struct LegacySwitcherListView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        let editors = filterEditors()
+        let editors = SwitcherListLogic.filterEditors(editorStore, searchText: searchText)
 
         VStack(spacing: Layout.listSpacing) {
             HStack(spacing: 8) {
@@ -632,8 +746,19 @@ struct LegacySwitcherListView: View {
 
             HStack(spacing: 10) {
                 Spacer()
-                Button("Quit Selected") { quitSelectedEditor() }
-                Button("Quit All") { quitAllEditors() }
+                Button("Quit Selected") {
+                    SwitcherListLogic.quitSelectedEditor(
+                        editors: editors,
+                        selectedIndex: &selectedIndex,
+                        activationManager: activationManager
+                    )
+                }
+                Button("Quit All") {
+                    SwitcherListLogic.quitAllEditors(
+                        editorStore: editorStore,
+                        activationManager: activationManager
+                    )
+                }
             }
             .font(.system(size: Layout.footerFontSize))
         }
@@ -641,7 +766,16 @@ struct LegacySwitcherListView: View {
         .onAppear {
             focused = true
             keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                handleKey(event, editors: editors)
+                MainThread.assert()
+                return SwitcherListLogic.handleKey(
+                    event,
+                    editorStore: editorStore,
+                    searchText: searchText,
+                    selectedIndex: &selectedIndex,
+                    switcherWindow: switcherWindow,
+                    settingsWindow: settingsWindow,
+                    activationManager: activationManager
+                )
             }
         }
         .onDisappear {
@@ -649,103 +783,6 @@ struct LegacySwitcherListView: View {
                 NSEvent.removeMonitor(monitor)
             }
         }
-    }
-
-    private func handleKey(_ event: NSEvent, editors: [Editor]) -> NSEvent? {
-        switch event.keyCode {
-        case Key.ARROW_UP:
-            if selectedIndex > 0 {
-                selectedIndex -= 1
-            }
-            return nil
-        case Key.ARROW_DOWN:
-            if selectedIndex < filterEditors().count - 1 {
-                selectedIndex += 1
-            }
-            return nil
-        case Key.TAB:
-            selectedIndex = (selectedIndex + 1) % max(filterEditors().count, 1)
-            return nil
-        case Key.ENTER:
-            if editors.indices.contains(selectedIndex) {
-                let editor = editors[selectedIndex]
-                editor.activate()
-            }
-            return nil
-        case Key.BACKSPACE where event.modifierFlags.contains(.command):
-            quitSelectedEditor()
-            return nil
-        case Key.ESC:
-            switcherWindow.hide()
-            return nil
-        case Key.COMMA where event.modifierFlags.contains(.command):
-            switcherWindow.hide()
-            settingsWindow.open()
-            return nil
-        case Key.W where event.modifierFlags.contains(.command):
-            switcherWindow.hide()
-            return nil
-        case Key.Q where event.modifierFlags.contains(.command):
-            quitAllEditors()
-            return nil
-        case _ where event.modifierFlags.contains(.command):
-            if let index = commandNumberIndex(for: event.keyCode) {
-                activateEditor(at: index, editors: editors)
-                return nil
-            }
-            return nil
-        default:
-            break
-        }
-        return event
-    }
-
-    private func filterEditors() -> [Editor] {
-        editorStore.getEditors(sortedFor: .switcher).filter { editor in
-            searchText.isEmpty
-                || editor.name.contains(searchText)
-                || editor.displayPath.localizedCaseInsensitiveContains(searchText)
-        }
-    }
-
-    private func quitSelectedEditor() {
-        let editors = filterEditors()
-        if editors.indices.contains(selectedIndex) {
-            let editor = editors[selectedIndex]
-            let totalEditors = editors.count
-
-            if totalEditors == selectedIndex + 1 && selectedIndex != 0 {
-                selectedIndex -= 1
-            }
-
-            if totalEditors == 1 {
-                activationManager.activateTarget()
-            }
-
-            editor.quit()
-        }
-    }
-
-    private func quitAllEditors() {
-        Task {
-            activationManager.activateTarget()
-            await editorStore.quitAllEditors()
-        }
-    }
-
-    private func activateEditor(at index: Int, editors: [Editor]) {
-        guard editors.indices.contains(index) else {
-            return
-        }
-        selectedIndex = index
-        editors[index].activate()
-    }
-
-    private func commandNumberIndex(for keyCode: UInt16) -> Int? {
-        guard let index = Key.commandNumberKeys.firstIndex(of: keyCode) else {
-            return nil
-        }
-        return index
     }
 }
 
@@ -765,7 +802,7 @@ struct GlassSwitcherListView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        let editors = filterEditors()
+        let editors = SwitcherListLogic.filterEditors(editorStore, searchText: searchText)
 
         VStack(spacing: Layout.listSpacing) {
             HStack(spacing: 10) {
@@ -857,8 +894,27 @@ struct GlassSwitcherListView: View {
 
             HStack(spacing: Layout.footerSpacing) {
                 Spacer()
-                GlassBottomBarButton(text: "Quit Selected", shortcut: ["⌘", "⌫"], action: { quitSelectedEditor() })
-                GlassBottomBarButton(text: "Quit All", shortcut: ["⌘", "Q"], action: { quitAllEditors() })
+                GlassBottomBarButton(
+                    text: "Quit Selected",
+                    shortcut: ["⌘", "⌫"],
+                    action: {
+                        SwitcherListLogic.quitSelectedEditor(
+                            editors: editors,
+                            selectedIndex: &selectedIndex,
+                            activationManager: activationManager
+                        )
+                    }
+                )
+                GlassBottomBarButton(
+                    text: "Quit All",
+                    shortcut: ["⌘", "Q"],
+                    action: {
+                        SwitcherListLogic.quitAllEditors(
+                            editorStore: editorStore,
+                            activationManager: activationManager
+                        )
+                    }
+                )
             }
             .padding(.top, 4)
         }
@@ -867,7 +923,16 @@ struct GlassSwitcherListView: View {
         .onAppear {
             focused = true
             keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                handleKey(event, editors: editors)
+                MainThread.assert()
+                return SwitcherListLogic.handleKey(
+                    event,
+                    editorStore: editorStore,
+                    searchText: searchText,
+                    selectedIndex: &selectedIndex,
+                    switcherWindow: switcherWindow,
+                    settingsWindow: settingsWindow,
+                    activationManager: activationManager
+                )
             }
         }
         .onDisappear {
@@ -875,111 +940,6 @@ struct GlassSwitcherListView: View {
                 NSEvent.removeMonitor(monitor)
             }
         }
-    }
-
-    private func handleKey(_ event: NSEvent, editors: [Editor]) -> NSEvent? {
-        switch event.keyCode {
-        case Key.ARROW_UP:
-            if selectedIndex > 0 {
-                withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
-                    selectedIndex -= 1
-                }
-            }
-            return nil
-        case Key.ARROW_DOWN:
-            if selectedIndex < filterEditors().count - 1 {
-                withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
-                    selectedIndex += 1
-                }
-            }
-            return nil
-        case Key.TAB:
-            withAnimation(.spring(response: 0.26, dampingFraction: 0.78)) {
-                selectedIndex = (selectedIndex + 1) % max(filterEditors().count, 1)
-            }
-            return nil
-        case Key.ENTER:
-            if editors.indices.contains(selectedIndex) {
-                let editor = editors[selectedIndex]
-                editor.activate()
-            }
-            return nil
-        case Key.BACKSPACE where event.modifierFlags.contains(.command):
-            quitSelectedEditor()
-            return nil
-        case Key.ESC:
-            switcherWindow.hide()
-            return nil
-        case Key.COMMA where event.modifierFlags.contains(.command):
-            switcherWindow.hide()
-            settingsWindow.open()
-            return nil
-        case Key.W where event.modifierFlags.contains(.command):
-            switcherWindow.hide()
-            return nil
-        case Key.Q where event.modifierFlags.contains(.command):
-            quitAllEditors()
-            return nil
-        case _ where event.modifierFlags.contains(.command):
-            if let index = commandNumberIndex(for: event.keyCode) {
-                activateEditor(at: index, editors: editors)
-                return nil
-            }
-            return nil
-        default:
-            break
-        }
-        return event
-    }
-
-    private func filterEditors() -> [Editor] {
-        editorStore.getEditors(sortedFor: .switcher).filter { editor in
-            searchText.isEmpty
-                || editor.name.contains(searchText)
-                || editor.displayPath.localizedCaseInsensitiveContains(searchText)
-        }
-    }
-
-    private func quitSelectedEditor() {
-        let editors = filterEditors()
-        if editors.indices.contains(selectedIndex) {
-            let editor = editors[selectedIndex]
-            let totalEditors = editors.count
-
-            if totalEditors == selectedIndex + 1 && selectedIndex != 0 {
-                selectedIndex -= 1
-            }
-
-            if totalEditors == 1 {
-                activationManager.activateTarget()
-            }
-
-            editor.quit()
-        }
-    }
-
-    private func quitAllEditors() {
-        Task {
-            activationManager.activateTarget()
-            await editorStore.quitAllEditors()
-        }
-    }
-
-    private func activateEditor(at index: Int, editors: [Editor]) {
-        guard editors.indices.contains(index) else {
-            return
-        }
-        withAnimation(.spring(response: 0.24, dampingFraction: 0.82)) {
-            selectedIndex = index
-        }
-        editors[index].activate()
-    }
-
-    private func commandNumberIndex(for keyCode: UInt16) -> Int? {
-        guard let index = Key.commandNumberKeys.firstIndex(of: keyCode) else {
-            return nil
-        }
-        return index
     }
 }
 
