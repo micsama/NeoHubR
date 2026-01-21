@@ -15,23 +15,35 @@ struct SettingsView: View {
     private let glassAvailable = AppSettings.isGlassAvailable
 
     var body: some View {
-        TabView {
-            GeneralSettingsTab(
-                cli: cli,
-                appSettings: appSettings,
-                runningCLIAction: $runningCLIAction,
-                launchAtLoginEnabled: $launchAtLoginEnabled,
-                glassAvailable: glassAvailable
-            )
-            .tabItem { Text("General") }
-            ProjectRegistryTab(
-                appSettings: appSettings,
-                projectRegistry: projectRegistry
-            )
-            .tabItem { Text("Projects") }
+        VStack(spacing: 16) {
+            HStack(spacing: 10) {
+                Image("EditorIcon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 28, height: 28)
+                    .foregroundColor(.gray)
+                Text("NeoHub")
+                    .font(.system(size: 20, weight: .semibold))
+                Spacer()
+            }
+            TabView {
+                GeneralSettingsTab(
+                    cli: cli,
+                    appSettings: appSettings,
+                    runningCLIAction: $runningCLIAction,
+                    launchAtLoginEnabled: $launchAtLoginEnabled,
+                    glassAvailable: glassAvailable
+                )
+                .tabItem { Text("General") }
+                ProjectRegistryTab(
+                    appSettings: appSettings,
+                    projectRegistry: projectRegistry
+                )
+                .tabItem { Text("Projects") }
+            }
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 24)
+        .padding(.vertical, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             launchAtLoginEnabled = isLaunchAtLoginEnabled()
@@ -54,14 +66,6 @@ private struct GeneralSettingsTab: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            HStack {
-                Image("EditorIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 32, height: 32)
-                    .foregroundColor(.gray)
-                Text("NeoHub").font(.title)
-            }
             VStack(spacing: 0) {
                 HStack {
                     Text("Launch at Login")
@@ -124,7 +128,6 @@ private struct GeneralSettingsTab: View {
                 .padding(.vertical, 10)
             }
             .settingsGroup()
-            Text("CLI").font(.title)
             VStack(spacing: 20) {
                 HStack {
                     Text("Show CLI errors in app")
@@ -248,7 +251,7 @@ private struct GeneralSettingsTab: View {
             .settingsGroup()
         }
         .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
     }
 
     private func isLaunchAtLoginEnabled() -> Bool {
@@ -300,23 +303,27 @@ private struct ProjectRegistryTab: View {
                 Divider().padding(.horizontal)
 
                 List {
-                    if starredEntries.isEmpty {
-                        Text("No starred projects yet.")
-                            .foregroundColor(.secondary)
-                    } else {
-                        ForEach(starredEntries) { entry in
-                            ProjectRow(entry: entry, projectRegistry: projectRegistry)
+                    Section("Starred") {
+                        if starredEntries.isEmpty {
+                            Text("No starred projects yet.")
+                                .foregroundColor(.secondary)
+                        } else {
+                            ForEach(starredEntries) { entry in
+                                ProjectRow(entry: entry, projectRegistry: projectRegistry)
+                            }
+                            .onMove { indices, newOffset in
+                                var ids = starredEntries.map { $0.id }
+                                ids.move(fromOffsets: indices, toOffset: newOffset)
+                                projectRegistry.updatePinnedOrder(ids: ids)
+                            }
+                            .moveDisabled(false)
                         }
-                        .onMove { indices, newOffset in
-                            var ids = starredEntries.map { $0.id }
-                            ids.move(fromOffsets: indices, toOffset: newOffset)
-                            projectRegistry.updatePinnedOrder(ids: ids)
-                        }
-                        .moveDisabled(false)
                     }
-
-                    if !recentEntries.isEmpty {
-                        Section("Recent") {
+                    Section("Recent") {
+                        if recentEntries.isEmpty {
+                            Text("No recent projects yet.")
+                                .foregroundColor(.secondary)
+                        } else {
                             ForEach(recentEntries) { entry in
                                 ProjectRow(entry: entry, projectRegistry: projectRegistry)
                             }
@@ -326,8 +333,9 @@ private struct ProjectRegistryTab: View {
                 .frame(height: 260)
             }
             .settingsGroup()
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, alignment: .top)
         .onAppear {
             sliderValue = Double(appSettings.switcherMaxItems)
         }
