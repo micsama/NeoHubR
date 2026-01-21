@@ -49,33 +49,31 @@ struct SettingsView: View {
             }
             .tag(2)
         }
-        // .onAppear {
-        //     launchAtLoginEnabled = isLaunchAtLoginEnabled()
-        // }
+        .background(SettingsWindowLevelUpdater(alwaysOnTop: appSettings.settingsAlwaysOnTop))
+        .onAppear {
+            launchAtLoginEnabled = isLaunchAtLoginEnabled()
+        }
     }
-
-    // private var headerView: some View {
-    //     ZStack {
-    //         HStack {
-    //             Spacer()
-    //             Text("v\(APP_VERSION) (\(APP_BUILD))")
-    //                 .font(.caption)
-    //                 .foregroundStyle(.secondary)
-    //         }
-    //         HStack(spacing: 10) {
-    //             Image("EditorIcon")
-    //                 .resizable()
-    //                 .scaledToFit()
-    //                 .frame(width: 28, height: 28)
-    //             Text("NeoHub")
-    //                 .font(.system(size: 18, weight: .semibold))
-    //         }
-    //     }
-    // }
 
     private func isLaunchAtLoginEnabled() -> Bool {
         let status = SMAppService.mainApp.status
         return status == .enabled || status == .requiresApproval
+    }
+}
+
+private struct SettingsWindowLevelUpdater: NSViewRepresentable {
+    let alwaysOnTop: Bool
+
+    func makeNSView(context _: Context) -> NSView {
+        NSView()
+    }
+
+    func updateNSView(_ nsView: NSView, context _: Context) {
+        guard let window = nsView.window else { return }
+        let level: NSWindow.Level = alwaysOnTop ? .floating : .normal
+        if window.level != level {
+            window.level = level
+        }
     }
 }
 
@@ -88,26 +86,7 @@ private struct GeneralSettingsTab: View {
 
     var body: some View {
         Form {
-            // Header Section
-            Section {
-                HStack {
-                    Spacer()
-                    HStack(spacing: 12) {
-                        Image("EditorIcon")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 48, height: 48)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("NeoHub")
-                                .font(.system(size: 18, weight: .semibold))
-                            Text("v\(APP_VERSION) (\(APP_BUILD))")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                }
-            }
+            headerView
 
             Section {
                 Toggle("Launch at Login", isOn: $launchAtLoginEnabled)
@@ -116,7 +95,7 @@ private struct GeneralSettingsTab: View {
                     }
             }
 
-            Section("Keyboard Shortcuts") {
+            Section {
                 LabeledContent("Toggle Editor Selector") {
                     KeyboardShortcuts.Recorder("", name: .toggleSwitcher)
                 }
@@ -135,6 +114,27 @@ private struct GeneralSettingsTab: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    private var headerView: some View {
+        HStack {
+            Spacer()
+            HStack(spacing: 12) {
+                Image("EditorIcon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 48, height: 48)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("NeoHub")
+                        .font(.system(size: 18, weight: .semibold))
+                    Text("v\(APP_VERSION) (\(APP_BUILD))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private func updateLaunchAtLogin(_ enabled: Bool) {
@@ -399,6 +399,8 @@ private struct AdvancedSettingsTab: View {
             Section {
                 Toggle("Use Liquid Glass Switcher (macOS 26)", isOn: $appSettings.useGlassSwitcherUI)
                     .disabled(!glassAvailable)
+
+                Toggle("Keep Settings Window on Top", isOn: $appSettings.settingsAlwaysOnTop)
 
                 Toggle("Show CLI errors in app", isOn: $appSettings.forwardCLIErrors)
             }
