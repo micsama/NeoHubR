@@ -27,7 +27,7 @@ public enum AppSettings {
         UserDefaults.standard.register(defaults: [
             Key.forwardCLIErrors: true,
             Key.useGlassSwitcherUI: defaultUseGlassSwitcherUI,
-            Key.switcherMaxItems: defaultSwitcherMaxItems
+            Key.switcherMaxItems: defaultSwitcherMaxItems,
         ])
     }
 

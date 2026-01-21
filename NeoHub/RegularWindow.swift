@@ -57,8 +57,19 @@ final class RegularWindow<Content: View>: NSObject {
 
         let hostingView = NSHostingView(rootView: self.content())
         let fittingSize = hostingView.fittingSize
+        let fixedHeight: CGFloat? = {
+            if Content.self == SettingsView.self {
+                return SettingsView.defaultHeight
+            }
+            return nil
+        }()
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: self.width, height: fittingSize.height),
+            contentRect: NSRect(
+                x: 0,
+                y: 0,
+                width: self.width,
+                height: fixedHeight ?? fittingSize.height
+            ),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false

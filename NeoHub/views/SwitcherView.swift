@@ -24,7 +24,7 @@ struct Key {
     static let ZERO: UInt16 = 29
 
     static let commandNumberKeys: [UInt16] = [
-        ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, ZERO
+        ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, ZERO,
     ]
 }
 
@@ -123,10 +123,11 @@ private enum SwitcherListLogic {
         let editorLocations = Set(editors.map { $0.id.id })
         let projects = projectRegistry.entries.filter { !editorLocations.contains($0.id) }
 
-        let starred = projects
+        let starred =
+            projects
             .filter { $0.isStarred }
             .sorted { lhs, rhs in
-                let lhsOrder = lhs      .pinnedOrder ?? Int.max
+                let lhsOrder = lhs.pinnedOrder ?? Int.max
                 let rhsOrder = rhs.pinnedOrder ?? Int.max
                 if lhsOrder != rhsOrder {
                     return lhsOrder < rhsOrder
@@ -134,7 +135,8 @@ private enum SwitcherListLogic {
                 return (lhs.lastOpenedAt ?? .distantPast) > (rhs.lastOpenedAt ?? .distantPast)
             }
 
-        let recent = projects
+        let recent =
+            projects
             .filter { !$0.isStarred }
             .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
 
@@ -928,7 +930,8 @@ struct LegacySwitcherListView: View {
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(
                                         selectedIndex == index
-                                            ? (entry.isEditor ? LegacyPalette.rowSelected : LegacyPalette.projectSelected)
+                                            ? (entry.isEditor
+                                                ? LegacyPalette.rowSelected : LegacyPalette.projectSelected)
                                             : Color.clear
                                     )
                             )
