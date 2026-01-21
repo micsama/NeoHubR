@@ -61,17 +61,21 @@ struct SettingsView: View {
     }
 
     private var headerView: some View {
-        HStack(spacing: 10) {
-            Image("EditorIcon")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 28, height: 28)
-            Text("NeoHub")
-                .font(.system(size: 18, weight: .semibold))
-            Spacer()
-            Text("v\(APP_VERSION) (\(APP_BUILD))")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        ZStack {
+            HStack {
+                Spacer()
+                Text("v\(APP_VERSION) (\(APP_BUILD))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            HStack(spacing: 10) {
+                Image("EditorIcon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 28, height: 28)
+                Text("NeoHub")
+                    .font(.system(size: 18, weight: .semibold))
+            }
         }
     }
 
@@ -154,13 +158,13 @@ private struct CLIStatusView: View {
                 }
                 .disabled(runningCLIAction)
             }
-            
+
         case .error(reason: .notInstalled):
             statusRow(title: "Not Installed", subtitle: { pathSubtitle }) {
                 Button("Install") { runCLI(.install) }
                     .disabled(runningCLIAction)
             }
-            
+
         case .error(reason: .versionMismatch):
             statusRow(title: "Needs Update", subtitle: { pathSubtitle }) {
                 HStack(spacing: 12) {
@@ -169,7 +173,7 @@ private struct CLIStatusView: View {
                 }
                 .disabled(runningCLIAction)
             }
-            
+
         case .error(reason: .unexpectedError(let error)):
             statusRow(
                 title: "Unexpected Error",
@@ -230,8 +234,12 @@ private struct CLIStatusView: View {
                 Text(title)
                 subtitle()
             }
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
             action()
+                .fixedSize()
+                .frame(alignment: .trailing)
+                .layoutPriority(0)
         }
     }
 
@@ -239,9 +247,18 @@ private struct CLIStatusView: View {
         Button {
             copyPath()
         } label: {
-            Text(didCopyPath ? "Copied to clipboard" : CLI.binPath)
+            Text(CLI.binPath)
                 .font(.caption)
-                .foregroundStyle(didCopyPath ? .secondary : .blue)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .opacity(0)
+                .overlay(alignment: .leading) {
+                    Text(didCopyPath ? "Copied to clipboard" : CLI.binPath)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundStyle(didCopyPath ? AnyShapeStyle(.secondary) : AnyShapeStyle(.blue))
+                }
         }
         .buttonStyle(.plain)
     }
