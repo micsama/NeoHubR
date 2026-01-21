@@ -32,12 +32,20 @@ struct NeoHubApp: App {
                 MenuBarView(
                     cli: app.cli,
                     editorStore: app.editorStore,
-                    settingsWindow: app.settingsWindow,
                     aboutWindow: app.aboutWindow
                 )
             },
             label: { MenuBarIcon() }
         )
+        Settings {
+            SettingsView(
+                cli: app.cli,
+                appSettings: app.appSettings,
+                projectRegistry: app.projectRegistry
+            )
+        }
+        .defaultSize(width: SettingsView.defaultWidth, height: SettingsView.defaultHeight)
+        .windowResizability(.contentSize)
     }
 }
 
@@ -48,8 +56,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let server: SocketServer
     let switcherWindow: SwitcherWindow
     let installationWindow: RegularWindow<InstallationView>
-    let settingsWindow: RegularWindow<SettingsView>
     let aboutWindow: RegularWindow<AboutView>
+    let settingsWindow: RegularWindow<SettingsView>
     let windowCounter: WindowCounter
     let activationManager: ActivationManager
     let appSettings: AppSettingsStore
@@ -76,9 +84,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.cli = cli
         self.server = SocketServer(store: editorStore)
         self.editorStore = editorStore
+        self.aboutWindow = RegularWindow(
+            width: AboutView.defaultWidth,
+            content: { AboutView() },
+            windowCounter: windowCounter
+        )
         self.settingsWindow = RegularWindow(
             width: SettingsView.defaultWidth,
-            level: .floating,
             content: {
                 SettingsView(
                     cli: cli,
@@ -88,14 +100,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             },
             windowCounter: windowCounter
         )
-        self.aboutWindow = RegularWindow(
-            width: AboutView.defaultWidth,
-            content: { AboutView() },
-            windowCounter: windowCounter
-        )
         self.switcherWindow = SwitcherWindow(
             editorStore: editorStore,
-            settingsWindow: settingsWindow,
+            settingsWindow: self.settingsWindow,
             selfRef: switcherWindowRef,
             activationManager: activationManager,
             appSettings: appSettings,

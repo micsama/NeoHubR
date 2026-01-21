@@ -70,7 +70,7 @@ final class RegularWindow<Content: View>: NSObject {
                 width: self.width,
                 height: fixedHeight ?? fittingSize.height
             ),
-            styleMask: [.titled, .closable],
+            styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
         )

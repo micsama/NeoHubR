@@ -17,7 +17,7 @@ So, what NeoHub offers?
 4. CLI, which executes new Neovide instances, and if an instance at the current path is already running, it activates it instead of spawning a new one.
 
 ## Requirements
-- `macOS 13+`.
+- `macOS 14+`.
 - Administrative privileges to install the CLI.
 - `neovide` available in your `PATH`.
 
