@@ -1,6 +1,7 @@
 import AppKit
 
 enum WindowPlacement {
+    @MainActor
     static func centerOnCurrentScreen(_ window: NSWindow) {
         let mouseLocation = NSEvent.mouseLocation
         let screen = NSScreen.screens.first { NSMouseInRect(mouseLocation, $0.frame, false) }
