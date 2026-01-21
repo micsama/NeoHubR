@@ -6,6 +6,7 @@
 - 解析 CLI 参数与选项，构造 `RunRequest`。
 - 通过 UNIX domain socket 与 NeoHub App 通信。
 - 负责从 PATH 中定位 `neovide` 可执行文件。
+ - IPC 结构与设置 key 来自 `NeoHubLib`，确保 App/CLI 一致。
 
 ## 关键文件
 - `CLI.swift`
