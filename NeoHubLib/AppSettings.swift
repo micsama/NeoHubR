@@ -6,6 +6,7 @@ public enum AppSettings {
         public static let forwardCLIErrors = "ForwardCLIErrorToGUI"
         public static let useGlassSwitcherUI = "UseGlassSwitcherUI"
         public static let switcherMaxItems = "SwitcherMaxItems"
+        public static let settingsAlwaysOnTop = "SettingsAlwaysOnTop"
     }
 
     public static var isGlassAvailable: Bool {
@@ -28,6 +29,7 @@ public enum AppSettings {
             Key.forwardCLIErrors: true,
             Key.useGlassSwitcherUI: defaultUseGlassSwitcherUI,
             Key.switcherMaxItems: defaultSwitcherMaxItems,
+            Key.settingsAlwaysOnTop: false,
         ])
     }
 
@@ -65,6 +67,12 @@ public final class AppSettingsStore: ObservableObject {
         }
     }
 
+    @Published public var settingsAlwaysOnTop: Bool {
+        didSet {
+            UserDefaults.standard.set(settingsAlwaysOnTop, forKey: AppSettings.Key.settingsAlwaysOnTop)
+        }
+    }
+
     public init() {
         AppSettings.registerDefaults()
         self.forwardCLIErrors = UserDefaults.standard.bool(forKey: AppSettings.Key.forwardCLIErrors)
@@ -72,5 +80,6 @@ public final class AppSettingsStore: ObservableObject {
         self.switcherMaxItems = AppSettings.clampSwitcherMaxItems(
             UserDefaults.standard.integer(forKey: AppSettings.Key.switcherMaxItems)
         )
+        self.settingsAlwaysOnTop = UserDefaults.standard.bool(forKey: AppSettings.Key.settingsAlwaysOnTop)
     }
 }
