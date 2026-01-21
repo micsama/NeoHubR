@@ -1,3 +1,4 @@
+import AppKit
 import KeyboardShortcuts
 import NeoHubLib
 import ServiceManagement
@@ -6,7 +7,7 @@ import SwiftUI
 // MARK: - Main Settings View
 
 struct SettingsView: View {
-    static let defaultWidth: CGFloat = 500
+    static let defaultWidth: CGFloat = 425
     static let defaultHeight: CGFloat = 520
 
     @ObservedObject var cli: CLI
@@ -141,46 +142,42 @@ private struct GeneralSettingsTab: View {
 private struct CLIStatusView: View {
     @ObservedObject var cli: CLI
     @Binding var runningCLIAction: Bool
+    @State private var didCopyPath = false
 
     var body: some View {
         switch cli.status {
         case .ok:
-            statusRow(
-                title: "Installed",
-                subtitle: CLI.binPath
-            ) {
+            statusRow(title: "Installed", subtitle: { pathSubtitle }) {
                 HStack(spacing: 12) {
                     Button("Reinstall") { runCLI(.install) }
                     Button("Uninstall") { runCLI(.uninstall) }
                 }
                 .disabled(runningCLIAction)
             }
-
+            
         case .error(reason: .notInstalled):
-            statusRow(
-                title: "Not Installed",
-                subtitle: CLI.binPath
-            ) {
+            statusRow(title: "Not Installed", subtitle: { pathSubtitle }) {
                 Button("Install") { runCLI(.install) }
                     .disabled(runningCLIAction)
             }
-
+            
         case .error(reason: .versionMismatch):
-            statusRow(
-                title: "Needs Update",
-                subtitle: CLI.binPath
-            ) {
+            statusRow(title: "Needs Update", subtitle: { pathSubtitle }) {
                 HStack(spacing: 12) {
                     Button("Update") { runCLI(.install) }
                     Button("Uninstall") { runCLI(.uninstall) }
                 }
                 .disabled(runningCLIAction)
             }
-
+            
         case .error(reason: .unexpectedError(let error)):
             statusRow(
                 title: "Unexpected Error",
-                subtitle: "Check logs for details",
+                subtitle: {
+                    Text("Check logs for details")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                },
                 useStatusIcon: false
             ) {
                 Button("Report Issue") {
@@ -214,9 +211,9 @@ private struct CLIStatusView: View {
     }
 
     @ViewBuilder
-    private func statusRow<Action: View>(
+    private func statusRow<Action: View, Subtitle: View>(
         title: String,
-        subtitle: String,
+        @ViewBuilder subtitle: () -> Subtitle,
         useStatusIcon: Bool = true,
         @ViewBuilder action: () -> Action
     ) -> some View {
@@ -231,12 +228,32 @@ private struct CLIStatusView: View {
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                subtitle()
             }
             Spacer()
             action()
+        }
+    }
+
+    private var pathSubtitle: some View {
+        Button {
+            copyPath()
+        } label: {
+            Text(didCopyPath ? "Copied to clipboard" : CLI.binPath)
+                .font(.caption)
+                .foregroundStyle(didCopyPath ? .secondary : .blue)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func copyPath() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(CLI.binPath, forType: .string)
+        didCopyPath = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            didCopyPath = false
         }
     }
 
