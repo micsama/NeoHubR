@@ -124,6 +124,7 @@ final class SwitcherWindow: ObservableObject {
     private let settingsWindow: RegularWindow<SettingsView>
     private let selfRef: SwitcherWindowRef
     private let activationManager: ActivationManager
+    private let appSettings: AppSettingsStore
 
     private var window: NSWindow!
 
@@ -133,16 +134,19 @@ final class SwitcherWindow: ObservableObject {
         editorStore: EditorStore,
         settingsWindow: RegularWindow<SettingsView>,
         selfRef: SwitcherWindowRef,
-        activationManager: ActivationManager
+        activationManager: ActivationManager,
+        appSettings: AppSettingsStore
     ) {
         self.editorStore = editorStore
         self.settingsWindow = settingsWindow
         self.selfRef = selfRef
         self.activationManager = activationManager
+        self.appSettings = appSettings
 
         let contentView = SwitcherView(
             editorStore: editorStore,
             switcherWindow: self,
+            appSettings: appSettings,
             settingsWindow: settingsWindow,
             activationManager: activationManager
         )
@@ -306,11 +310,10 @@ enum SwitcherState {
 struct SwitcherView: View {
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
+    @ObservedObject var appSettings: AppSettingsStore
 
     let settingsWindow: RegularWindow<SettingsView>
     let activationManager: ActivationManager
-
-    @AppStorage(AppSettingsKey.useGlassSwitcherUI) private var useGlassSwitcherUI = false
 
     private var state: SwitcherState? {
         if switcherWindow.isHidden() {
@@ -330,7 +333,7 @@ struct SwitcherView: View {
     }
 
     var body: some View {
-        if useGlassSwitcherUI {
+        if appSettings.useGlassSwitcherUI {
             if #available(macOS 26, *) {
                 GlassSwitcherRoot(
                     state: state,
@@ -604,12 +607,12 @@ struct LegacySwitcherListView: View {
                                 Text(editor.name)
                                     .font(.system(size: Layout.resultsFontSize))
                                 Spacer()
-                                if index < 9 {
-                                    ShortcutPill(text: "⌘\(index + 1)")
-                                }
                                 Text(editor.displayPath)
                                     .font(.system(size: 12))
                                     .foregroundColor(LegacyPalette.textSecondary)
+                                if index < 9 {
+                                    ShortcutPill(text: "⌘\(index + 1)")
+                                }
                             }
                             .padding(.vertical, 6)
                             .padding(.horizontal, 8)

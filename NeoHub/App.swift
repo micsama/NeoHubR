@@ -51,19 +51,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let aboutWindow: RegularWindow<AboutView>
     let windowCounter: WindowCounter
     let activationManager: ActivationManager
+    let appSettings: AppSettingsStore
 
     override init() {
-        let useGlassSwitcherUIByDefault: Bool
-        if #available(macOS 26, *) {
-            useGlassSwitcherUIByDefault = true
-        } else {
-            useGlassSwitcherUIByDefault = false
-        }
-
-        UserDefaults.standard.register(defaults: [
-            AppSettingsKey.forwardCLIErrors: true,
-            AppSettingsKey.useGlassSwitcherUI: useGlassSwitcherUIByDefault
-        ])
+        let appSettings = AppSettingsStore()
+        self.appSettings = appSettings
 
         let cli = CLI()
         let windowCounter = WindowCounter()
@@ -82,7 +74,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.editorStore = editorStore
         self.settingsWindow = RegularWindow(
             width: SettingsView.defaultWidth,
-            content: { SettingsView(cli: cli) },
+            content: { SettingsView(cli: cli, appSettings: appSettings) },
             windowCounter: windowCounter
         )
         self.aboutWindow = RegularWindow(
@@ -94,7 +86,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             editorStore: editorStore,
             settingsWindow: settingsWindow,
             selfRef: switcherWindowRef,
-            activationManager: activationManager
+            activationManager: activationManager,
+            appSettings: appSettings
         )
         self.windowCounter = windowCounter
         self.activationManager = activationManager

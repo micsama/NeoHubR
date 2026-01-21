@@ -6,17 +6,11 @@ struct SettingsView: View {
     static let defaultWidth: CGFloat = 400
 
     @ObservedObject var cli: CLI
+    @ObservedObject var appSettings: AppSettingsStore
 
     @State var runningCLIAction: Bool = false
     @State private var launchAtLoginEnabled: Bool = false
-    @AppStorage(AppSettingsKey.forwardCLIErrors) private var forwardCLIErrors = true
-    @AppStorage(AppSettingsKey.useGlassSwitcherUI) private var useGlassSwitcherUI = false
-    private let glassAvailable = {
-        if #available(macOS 26, *) {
-            return true
-        }
-        return false
-    }()
+    private let glassAvailable = AppSettings.isGlassAvailable
 
     var body: some View {
         VStack(spacing: 20) {
@@ -71,21 +65,21 @@ struct SettingsView: View {
                 Divider().padding(.horizontal)
 
                 HStack {
-                    Text("Use Liquid Glass Switcher (macOS 26)")
-                    Spacer()
-                    Toggle("", isOn: $useGlassSwitcherUI)
-                        .toggleStyle(SwitchToggleStyle())
-                }
-                .opacity(glassAvailable ? 1.0 : 0.5)
-                .disabled(!glassAvailable)
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-
-                HStack {
                     Text("Restart Active Editor")
                     Spacer()
                     KeyboardShortcuts.Recorder("", name: .restartEditor)
                 }
+                .padding(.horizontal)
+                .padding(.vertical, 10)
+
+                HStack {
+                    Text("Use Liquid Glass Switcher (macOS 26)")
+                    Spacer()
+                    Toggle("", isOn: $appSettings.useGlassSwitcherUI)
+                        .toggleStyle(SwitchToggleStyle())
+                }
+                .opacity(glassAvailable ? 1.0 : 0.5)
+                .disabled(!glassAvailable)
                 .padding(.horizontal)
                 .padding(.vertical, 10)
             }
@@ -95,7 +89,7 @@ struct SettingsView: View {
                 HStack {
                     Text("Show CLI errors in app")
                     Spacer()
-                    Toggle("", isOn: $forwardCLIErrors)
+                    Toggle("", isOn: $appSettings.forwardCLIErrors)
                         .toggleStyle(SwitchToggleStyle())
                 }
                 switch cli.status {
