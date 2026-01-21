@@ -1,5 +1,6 @@
 import AppKit
 import KeyboardShortcuts
+import NeoHubLib
 import SwiftUI
 
 let APP_NAME = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as! String
@@ -74,6 +75,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.editorStore = editorStore
         self.settingsWindow = RegularWindow(
             width: SettingsView.defaultWidth,
+            level: .floating,
             content: { SettingsView(cli: cli, appSettings: appSettings) },
             windowCounter: windowCounter
         )

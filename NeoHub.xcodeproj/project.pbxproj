@@ -38,6 +38,7 @@
 		FA54EB8F2AF8ACDB001AE449 /* ActivationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB8E2AF8ACDB001AE449 /* ActivationManager.swift */; };
 		FA7B1C1A2C5B123400000001 /* MainThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B1C1A2C5B123400000002 /* MainThread.swift */; };
 		FAE1A0112C8F0A1A00000002 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0102C8F0A1A00000001 /* AppSettings.swift */; };
+		FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0102C8F0A1A00000001 /* AppSettings.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -183,7 +184,6 @@
 				FA54EB7A2AF6E3C5001AE449 /* components */,
 				FA30F2262AEED1C5004EC6E9 /* views */,
 				FA2AE44A2AEB980700D24008 /* App.swift */,
-				FAE1A0102C8F0A1A00000001 /* AppSettings.swift */,
 				FA54EB712AF5033D001AE449 /* CLI.swift */,
 				FA54EB802AF789F6001AE449 /* Logger.swift */,
 				FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */,
@@ -232,6 +232,7 @@
 			children = (
 				FA2EADA42AED589F000F8F7A /* NeoHubLib.h */,
 				FA2EADA52AED589F000F8F7A /* NeoHubLib.docc */,
+				FAE1A0102C8F0A1A00000001 /* AppSettings.swift */,
 				FA2EADAF2AED58C6000F8F7A /* Shared.swift */,
 			);
 			path = NeoHubLib;
@@ -429,7 +430,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */,
-				FAE1A0112C8F0A1A00000002 /* AppSettings.swift in Sources */,
 				FA54EB742AF53ED9001AE449 /* RegularWindow.swift in Sources */,
 				FA54EB762AF654D7001AE449 /* AboutView.swift in Sources */,
 				FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */,
@@ -464,6 +464,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA2EADA62AED589F000F8F7A /* NeoHubLib.docc in Sources */,
+				FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */,
 				FA2EADB02AED58C6000F8F7A /* Shared.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
