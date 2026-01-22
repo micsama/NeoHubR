@@ -52,11 +52,29 @@ final class ActivationManager {
     }
 
     public func activateTarget() {
-        switch self.activationTarget {
-        case nil: ()
-        case .neohub(let window): window.activate()
-        case .neovide(let editor): editor.activate()
-        case .other(let app): app.activate()
+        guard let target = self.activationTarget else { return }
+
+        switch target {
+        case .neohub(let window):
+            guard window.window.isVisible else {
+                self.activationTarget = nil
+                return
+            }
+            window.activate()
+        case .neovide(let editor):
+            guard let app = NSRunningApplication(processIdentifier: editor.processIdentifier),
+                !app.isTerminated
+            else {
+                self.activationTarget = nil
+                return
+            }
+            editor.activate()
+        case .other(let app):
+            guard !app.isTerminated else {
+                self.activationTarget = nil
+                return
+            }
+            app.activate()
         }
     }
 }
