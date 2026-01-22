@@ -61,6 +61,17 @@
 "Keep Settings Window on Top" = "Keep Settings Window on Top";
 "Show CLI errors in app" = "Show CLI errors in app";
 "Version" = "Version";
+"CLI Installed" = "CLI Installed";
+"CLI Install Required" = "CLI Install Required";
+"CLI Update Required" = "CLI Update Required";
+"CLI Error" = "CLI Error";
+"NeoHub CLI is not installed" = "NeoHub CLI is not installed";
+"Please open Settings to install the CLI." = "Please open Settings to install the CLI.";
+"NeoHub CLI needs to be updated" = "NeoHub CLI needs to be updated";
+"Please open Settings to update the CLI." = "Please open Settings to update the CLI.";
+"NeoHub CLI error" = "NeoHub CLI error";
+"Please open Settings and check logs." = "Please open Settings and check logs.";
+"Open Settings" = "Open Settings";
 "Notification Permission" = "Notification Permission";
 "Not Determined" = "Not Determined";
 "Denied" = "Denied";

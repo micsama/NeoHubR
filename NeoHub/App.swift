@@ -55,9 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let editorStore: EditorStore
     let server: SocketServer
     let switcherWindow: SwitcherWindow
-    let installationWindow: RegularWindow<InstallationView>
     let aboutWindow: RegularWindow<AboutView>
-    let settingsWindow: RegularWindow<SettingsView>
     let windowCounter: WindowCounter
     let activationManager: ActivationManager
     let appSettings: AppSettingsStore
@@ -73,7 +71,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let projectRegistry = ProjectRegistryStore()
 
         let switcherWindowRef = SwitcherWindowRef()
-        let installationWindowRef = RegularWindowRef<InstallationView>()
 
         let editorStore = EditorStore(
             activationManager: activationManager,
@@ -89,20 +86,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             content: { AboutView() },
             windowCounter: windowCounter
         )
-        self.settingsWindow = RegularWindow(
-            width: SettingsView.defaultWidth,
-            content: {
-                SettingsView(
-                    cli: cli,
-                    appSettings: appSettings,
-                    projectRegistry: projectRegistry
-                )
-            },
-            windowCounter: windowCounter
-        )
         self.switcherWindow = SwitcherWindow(
             editorStore: editorStore,
-            settingsWindow: self.settingsWindow,
             selfRef: switcherWindowRef,
             activationManager: activationManager,
             appSettings: appSettings,
@@ -112,20 +97,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.activationManager = activationManager
         self.projectRegistry = projectRegistry
 
-        self.installationWindow = RegularWindow(
-            title: APP_NAME,
-            width: InstallationView.defaultWidth,
-            content: {
-                InstallationView(
-                    cli: cli,
-                    installationWindow: installationWindowRef
-                )
-            },
-            windowCounter: windowCounter
-        )
-
         switcherWindowRef.set(self.switcherWindow)
-        installationWindowRef.set(self.installationWindow)
 
         super.init()
     }
@@ -138,7 +110,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             let status = await self.cli.refreshStatus()
             if case .error(_) = status {
-                self.installationWindow.open()
+                self.showCLIAlert(status)
+                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
             }
         }
     }
@@ -149,5 +122,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         server.stop()
+    }
+
+    private func showCLIAlert(_ status: CLIStatus) {
+        guard case .error(let reason) = status else { return }
+
+        let alert = NSAlert()
+        switch reason {
+        case .notInstalled:
+            alert.messageText = String(localized: "NeoHub CLI is not installed")
+            alert.informativeText = String(localized: "Please open Settings to install the CLI.")
+        case .versionMismatch:
+            alert.messageText = String(localized: "NeoHub CLI needs to be updated")
+            alert.informativeText = String(localized: "Please open Settings to update the CLI.")
+        case .unexpectedError:
+            alert.messageText = String(localized: "NeoHub CLI error")
+            alert.informativeText = String(localized: "Please open Settings and check logs.")
+        }
+
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: String(localized: "Open Settings"))
+        alert.runModal()
     }
 }
