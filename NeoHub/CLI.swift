@@ -25,7 +25,7 @@ enum CLIError {
 enum CLIInstallationError: Error {
     case failedToCreateAppleScript
     case userCanceledOperation
-    case failedToExecuteAppleScript(error: [String: String])
+    case failedToExecuteAppleScript(message: String)
 }
 
 @MainActor
@@ -137,7 +137,9 @@ final class CLI: ObservableObject {
                 if error["NSAppleScriptErrorNumber"] as? Int == -128 /* User canceled */ {
                     return .failure(.userCanceledOperation)
                 } else {
-                    return .failure(.failedToExecuteAppleScript(error: Self.normalizeAppleScriptError(error)))
+                    let message = Self.formatAppleScriptError(error)
+                    log.error("AppleScript failed: \(message)")
+                    return .failure(.failedToExecuteAppleScript(message: message))
                 }
             case .none:
                 return .success(())
@@ -147,14 +149,19 @@ final class CLI: ObservableObject {
         }
     }
 
-    nonisolated private static func normalizeAppleScriptError(_ error: NSDictionary) -> [String: String] {
-        var result: [String: String] = [:]
-        for (key, value) in error {
-            if let key = key as? String {
-                result[key] = String(describing: value)
-            }
+    nonisolated private static func formatAppleScriptError(_ error: NSDictionary) -> String {
+        let message = (error["NSAppleScriptErrorMessage"] as? String) ?? "Unknown AppleScript error"
+        let number = error["NSAppleScriptErrorNumber"] as? Int
+        let range = error["NSAppleScriptErrorRange"]
+
+        var parts = [message]
+        if let number {
+            parts.append("Code: \(number)")
         }
-        return result
+        if let range {
+            parts.append("Range: \(String(describing: range))")
+        }
+        return parts.joined(separator: " | ")
     }
 }
 

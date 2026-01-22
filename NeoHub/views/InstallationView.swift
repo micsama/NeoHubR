@@ -104,13 +104,18 @@ struct InstallationView: View {
                                     BugReporter.report(error)
                                 }
                             }
-                        case .error(.failedToExecuteAppleScript(error: let error)):
+                        case .error(.failedToExecuteAppleScript(message: let message)):
                             VStack {
                                 Text("Something went wrong").foregroundColor(.red)
+                                Text(message)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(4)
                                 Button("Report") {
                                     let error = ReportableError(
                                         "Failed to execute installation Apple Script",
-                                        meta: error.mapValues { $0 as Any }
+                                        meta: ["AppleScriptError": message]
                                     )
                                     BugReporter.report(error)
                                 }
@@ -156,13 +161,18 @@ struct InstallationView: View {
                                     BugReporter.report(error)
                                 }
                             }
-                        case .error(.failedToExecuteAppleScript(error: let error)):
+                        case .error(.failedToExecuteAppleScript(message: let message)):
                             VStack {
                                 Text("Something went wrong").foregroundColor(.red)
+                                Text(message)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(4)
                                 Button("Report") {
                                     let error = ReportableError(
                                         "Failed to execute installation Apple Script",
-                                        meta: error.mapValues { $0 as Any }
+                                        meta: ["AppleScriptError": message]
                                     )
                                     BugReporter.report(error)
                                 }

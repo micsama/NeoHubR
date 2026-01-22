@@ -94,8 +94,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3AFE7700C68AF82BB552689D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "NeoHub/zh-Hans.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
-		AF868A6614B2E7D702836114 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "NeoHub/en.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		3AFE7700C68AF82BB552689D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "NeoHub/Resources/Localization/zh-Hans.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		AF868A6614B2E7D702836114 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "NeoHub/Resources/Localization/en.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
 		FA03D4C82AFA302A00790D2F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		FA2AE4472AEB980700D24008 /* NeoHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NeoHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA2AE44A2AEB980700D24008 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };

@@ -3,6 +3,7 @@ import KeyboardShortcuts
 import NeoHubLib
 import ServiceManagement
 import SwiftUI
+import UserNotifications
 
 // MARK: - Main Settings View
 
@@ -401,6 +402,7 @@ private struct ProjectRegistryTab: View {
 
 private struct AdvancedSettingsTab: View {
     @ObservedObject var appSettings: AppSettingsStore
+    @State private var notificationStatusText = "Unknown"
 
     var body: some View {
         Form {
@@ -416,8 +418,37 @@ private struct AdvancedSettingsTab: View {
                         .foregroundStyle(.secondary)
                 }
             }
+
+            Section {
+                LabeledContent("Notification Permission") {
+                    Text(notificationStatusText)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
         .formStyle(.grouped)
+        .task {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            let text: String
+            switch settings.authorizationStatus {
+            case .notDetermined:
+                text = String(localized: "Not Determined")
+            case .denied:
+                text = String(localized: "Denied")
+            case .authorized:
+                text = String(localized: "Authorized")
+            case .provisional:
+                text = String(localized: "Provisional")
+            case .ephemeral:
+                text = String(localized: "Ephemeral")
+            @unknown default:
+                text = String(localized: "Unknown")
+            }
+
+            await MainActor.run {
+                notificationStatusText = text
+            }
+        }
     }
 }
 
