@@ -30,7 +30,6 @@
 		FA54EB722AF5033D001AE449 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB712AF5033D001AE449 /* CLI.swift */; };
 		FA54EB742AF53ED9001AE449 /* RegularWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB732AF53ED9001AE449 /* RegularWindow.swift */; };
 		FA54EB762AF654D7001AE449 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB752AF654D7001AE449 /* AboutView.swift */; };
-		FA54EB7C2AF6E3E8001AE449 /* SettingsGroupModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB7B2AF6E3E8001AE449 /* SettingsGroupModifier.swift */; };
 		FA54EB812AF789F6001AE449 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB802AF789F6001AE449 /* Logger.swift */; };
 		FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB822AF7A381001AE449 /* NotificationManager.swift */; };
 		FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB8C2AF7F689001AE449 /* BugReporter.swift */; };
@@ -116,7 +115,6 @@
 		FA54EB712AF5033D001AE449 /* CLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLI.swift; sourceTree = "<group>"; };
 		FA54EB732AF53ED9001AE449 /* RegularWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegularWindow.swift; sourceTree = "<group>"; };
 		FA54EB752AF654D7001AE449 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
-		FA54EB7B2AF6E3E8001AE449 /* SettingsGroupModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsGroupModifier.swift; sourceTree = "<group>"; };
 		FA54EB802AF789F6001AE449 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		FA54EB822AF7A381001AE449 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		FA54EB8C2AF7F689001AE449 /* BugReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BugReporter.swift; sourceTree = "<group>"; };
@@ -185,7 +183,6 @@
 			isa = PBXGroup;
 			children = (
 				FA2AE4A92AEBDDB800D24008 /* Info.plist */,
-				FA54EB7A2AF6E3C5001AE449 /* components */,
 				FA30F2262AEED1C5004EC6E9 /* views */,
 				FA2AE44A2AEB980700D24008 /* App.swift */,
 				FA54EB712AF5033D001AE449 /* CLI.swift */,
@@ -254,14 +251,6 @@
 				FA54EB752AF654D7001AE449 /* AboutView.swift */,
 			);
 			path = views;
-			sourceTree = "<group>";
-		};
-		FA54EB7A2AF6E3C5001AE449 /* components */ = {
-			isa = PBXGroup;
-			children = (
-				FA54EB7B2AF6E3E8001AE449 /* SettingsGroupModifier.swift */,
-			);
-			path = components;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -442,7 +431,6 @@
 				FA54EB762AF654D7001AE449 /* AboutView.swift in Sources */,
 				FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */,
 				FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */,
-				FA54EB7C2AF6E3E8001AE449 /* SettingsGroupModifier.swift in Sources */,
 				FA2AE44B2AEB980700D24008 /* App.swift in Sources */,
 				FA54EB722AF5033D001AE449 /* CLI.swift in Sources */,
 				FA54EB812AF789F6001AE449 /* Logger.swift in Sources */,

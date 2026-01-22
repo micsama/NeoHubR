@@ -40,4 +40,3 @@
 
 ## 相关子模块
 - 视图：`NeoHub/views/`（菜单栏、切换器、设置、安装、关于等）
-- UI 组件：`NeoHub/components/`（小型视图修饰器）

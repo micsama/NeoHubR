@@ -5,16 +5,15 @@ struct MenuBarIcon: View {
 
     init() {
         let icon: NSImage = NSImage(named: "MenuBarIcon")!
-
-        let ratio = icon.size.height / icon.size.width
-        icon.size.height = 15
-        icon.size.width = 15 / ratio
-
+        icon.isTemplate = true
         self.icon = icon
     }
 
     var body: some View {
         Image(nsImage: icon)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 15, height: 15)
     }
 }
 
@@ -37,17 +36,17 @@ struct MenuBarView: View {
                 }
             }
             switch cli.status {
-            case .error(reason: .notInstalled):
+            case .error(reason: .notInstalled), .error(reason: .versionMismatch):
                 Divider()
-                Button("⚠️ Install CLI") {
-                    Task { @MainActor in
-                        let response = await cli.run(.install)
-                        Self.showCLIInstallationAlert(with: response)
+                let title: String = {
+                    switch cli.status {
+                    case .error(reason: .versionMismatch):
+                        return "⚠️ Update CLI"
+                    default:
+                        return "⚠️ Install CLI"
                     }
-                }
-            case .error(reason: .versionMismatch):
-                Divider()
-                Button("⚠️ Update CLI") {
+                }()
+                Button(title) {
                     Task { @MainActor in
                         let response = await cli.run(.install)
                         Self.showCLIInstallationAlert(with: response)
@@ -62,17 +61,18 @@ struct MenuBarView: View {
             }
             Divider()
             SettingsLink { Text("Settings") }
+                // MenuBarExtra opens Settings without focus in accessory apps; activate to ensure key window.
                 .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
             Button("About") { aboutWindow.open() }
             Divider()
-            Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }.disabled(editors.count == 0)
+            Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }
+                .disabled(editors.count == 0)
             Button("Quit NeoHub") { NSApplication.shared.terminate(nil) }
         }
     }
 
     @MainActor
-    static func showCLIInstallationAlert(with response: (result: Result<Void, CLIInstallationError>, status: CLIStatus))
-    {
+    static func showCLIInstallationAlert(with response: (result: Result<Void, CLIInstallationError>, status: CLIStatus)) {
         switch response.result {
         case .success(()):
             let alert = NSAlert()
@@ -86,38 +86,31 @@ struct MenuBarView: View {
 
         case .failure(.userCanceledOperation): ()
 
-        case .failure(.failedToCreateAppleScript):
+        case .failure(let error):
             let alert = NSAlert()
-
             alert.messageText = String(localized: "Oh no!")
-            alert.informativeText = String(localized: "There was an issue during installation.")
             alert.alertStyle = .critical
             alert.addButton(withTitle: String(localized: "Report"))
             alert.addButton(withTitle: String(localized: "Dismiss"))
 
-            switch alert.runModal() {
-            case .alertFirstButtonReturn:
-                let error = ReportableError("Failed to build installation Apple Script")
-                BugReporter.report(error)
-            default: ()
-            }
-
-        case .failure(.failedToExecuteAppleScript(message: let message)):
-            let alert = NSAlert()
-
-            alert.messageText = String(localized: "Oh no!")
-            alert.informativeText = message
-            alert.alertStyle = .critical
-            alert.addButton(withTitle: String(localized: "Report"))
-            alert.addButton(withTitle: String(localized: "Dismiss"))
-
-            switch alert.runModal() {
-            case .alertFirstButtonReturn:
-                let error = ReportableError(
+            let reportError: ReportableError
+            switch error {
+            case .failedToCreateAppleScript:
+                alert.informativeText = String(localized: "There was an issue during installation.")
+                reportError = ReportableError("Failed to build installation Apple Script")
+            case .failedToExecuteAppleScript(message: let message):
+                alert.informativeText = message
+                reportError = ReportableError(
                     "Failed to execute installation Apple Script",
                     meta: ["AppleScriptError": message]
                 )
-                BugReporter.report(error)
+            case .userCanceledOperation:
+                return
+            }
+
+            switch alert.runModal() {
+            case .alertFirstButtonReturn:
+                BugReporter.report(reportError)
             default: ()
             }
         }
