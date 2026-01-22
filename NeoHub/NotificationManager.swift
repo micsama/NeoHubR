@@ -27,6 +27,7 @@ enum NotificationKind: CaseIterable {
     case failedToRunEditorProcess
     case failedToGetRunningEditorApp
     case failedToActivateEditorApp
+    case failedToRestartEditor
 
     var id: String {
         switch self {
@@ -40,6 +41,8 @@ enum NotificationKind: CaseIterable {
             return "FAILED_TO_GET_RUNNING_EDITOR_APP"
         case .failedToActivateEditorApp:
             return "FAILED_TO_ACTIVATE_EDITOR_APP"
+        case .failedToRestartEditor:
+            return "FAILED_TO_RESTART_EDITOR"
         }
     }
 
@@ -51,6 +54,8 @@ enum NotificationKind: CaseIterable {
             return String(localized: "Failed to open Neovide")
         case .failedToGetRunningEditorApp, .failedToActivateEditorApp:
             return String(localized: "Failed to activate Neovide")
+        case .failedToRestartEditor:
+            return String(localized: "Failed to restart the editor")
         }
     }
 
@@ -66,6 +71,8 @@ enum NotificationKind: CaseIterable {
             return String(localized: "Requested Neovide instance is not running.")
         case .failedToActivateEditorApp:
             return String(localized: "Please create an issue in GitHub repo.")
+        case .failedToRestartEditor:
+            return String(localized: "Please, report the issue on GitHub.")
         }
     }
 
