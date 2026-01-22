@@ -380,6 +380,8 @@ struct GlassBackgroundView: NSViewRepresentable {
     }
 }
 
+// Shared switcher window created in AppDelegate (NeoHub/App.swift) and hosted by NSWindow.
+// External modules call into it via injected references (show/hide/compare) rather than constructing their own.
 @MainActor
 final class SwitcherWindow: ObservableObject {
     private let editorStore: EditorStore
@@ -573,6 +575,11 @@ enum SwitcherState {
     case manyEditors
 }
 
+// Entry view for the switcher window.
+// Triggered by global shortcuts (KeyboardShortcuts in App.swift/EditorStore). When shown:
+// - If no editors/projects: shows empty state.
+// - If >= 2 editors (or any projects), shows list view.
+// - List combines active editors with ProjectRegistry entries, and keeps the last active editor in front.
 struct SwitcherView: View {
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
@@ -1040,6 +1047,8 @@ struct ShortcutPill: View {
     }
 }
 
+// Lightweight handle passed to ActivationManager/EditorStore to avoid retaining the window directly.
+// Used for window identity checks and to restore focus when the switcher hides.
 @MainActor
 final class SwitcherWindowRef {
     private var window: SwitcherWindow?
