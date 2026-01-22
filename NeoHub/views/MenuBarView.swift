@@ -75,10 +75,10 @@ struct MenuBarView: View {
         case .success(()):
             let alert = NSAlert()
 
-            alert.messageText = "Boom!"
-            alert.informativeText = "The CLI is ready to roll 🚀"
+            alert.messageText = String(localized: "Boom!")
+            alert.informativeText = String(localized: "The CLI is ready to roll 🚀")
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: String(localized: "OK"))
 
             alert.runModal()
 
@@ -87,11 +87,11 @@ struct MenuBarView: View {
         case .failure(.failedToCreateAppleScript):
             let alert = NSAlert()
 
-            alert.messageText = "Oh no!"
-            alert.informativeText = "There was an issue during installation."
+            alert.messageText = String(localized: "Oh no!")
+            alert.informativeText = String(localized: "There was an issue during installation.")
             alert.alertStyle = .critical
-            alert.addButton(withTitle: "Report")
-            alert.addButton(withTitle: "Dismiss")
+            alert.addButton(withTitle: String(localized: "Report"))
+            alert.addButton(withTitle: String(localized: "Dismiss"))
 
             switch alert.runModal() {
             case .alertFirstButtonReturn:
@@ -103,11 +103,11 @@ struct MenuBarView: View {
         case .failure(.failedToExecuteAppleScript(error: let error)):
             let alert = NSAlert()
 
-            alert.messageText = "Oh no!"
-            alert.informativeText = "There was an issue during installation."
+            alert.messageText = String(localized: "Oh no!")
+            alert.informativeText = String(localized: "There was an issue during installation.")
             alert.alertStyle = .critical
-            alert.addButton(withTitle: "Report")
-            alert.addButton(withTitle: "Dismiss")
+            alert.addButton(withTitle: String(localized: "Report"))
+            alert.addButton(withTitle: String(localized: "Dismiss"))
 
             switch alert.runModal() {
             case .alertFirstButtonReturn:

@@ -409,7 +409,7 @@ private struct SwitcherSearchField: NSViewRepresentable {
     func makeNSView(context: Context) -> NSTextField {
         let field = NSTextField()
         field.delegate = context.coordinator
-        field.placeholderString = "Search"
+        field.placeholderString = String(localized: "Search")
         field.isBordered = false
         field.backgroundColor = .clear
         field.focusRingType = .none

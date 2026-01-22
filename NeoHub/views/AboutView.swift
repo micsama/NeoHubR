@@ -4,7 +4,9 @@ struct AboutView: View {
     static let defaultWidth: CGFloat = 300
     static let defaultHeight: CGFloat = 220
 
-    private let versionText = "Version \(APP_VERSION) (\(APP_BUILD))"
+    private var versionText: String {
+        String(format: String(localized: "Version %@ (%@)"), APP_VERSION, APP_BUILD)
+    }
 
     var body: some View {
         VStack(spacing: 12) {

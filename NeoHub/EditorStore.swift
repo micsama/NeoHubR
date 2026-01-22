@@ -188,11 +188,11 @@ final class EditorStore: ObservableObject {
 
                     let alert = NSAlert()
 
-                    alert.messageText = "Failed to restart the editor"
-                    alert.informativeText = "Please, report the issue on GitHub."
+                    alert.messageText = String(localized: "Failed to restart the editor")
+                    alert.informativeText = String(localized: "Please, report the issue on GitHub.")
                     alert.alertStyle = .critical
-                    alert.addButton(withTitle: "Report")
-                    alert.addButton(withTitle: "Dismiss")
+                    alert.addButton(withTitle: String(localized: "Report"))
+                    alert.addButton(withTitle: String(localized: "Dismiss"))
 
                     switch alert.runModal() {
                     case .alertFirstButtonReturn:
