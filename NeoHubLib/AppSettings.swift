@@ -4,20 +4,8 @@ import Foundation
 public enum AppSettings {
     public enum Key {
         public static let forwardCLIErrors = "ForwardCLIErrorToGUI"
-        public static let useGlassSwitcherUI = "UseGlassSwitcherUI"
         public static let switcherMaxItems = "SwitcherMaxItems"
         public static let settingsAlwaysOnTop = "SettingsAlwaysOnTop"
-    }
-
-    public static var isGlassAvailable: Bool {
-        if #available(macOS 26, *) {
-            return true
-        }
-        return false
-    }
-
-    public static var defaultUseGlassSwitcherUI: Bool {
-        isGlassAvailable
     }
 
     public static let minSwitcherItems = 3
@@ -27,7 +15,6 @@ public enum AppSettings {
     public static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
             Key.forwardCLIErrors: true,
-            Key.useGlassSwitcherUI: defaultUseGlassSwitcherUI,
             Key.switcherMaxItems: defaultSwitcherMaxItems,
             Key.settingsAlwaysOnTop: false,
         ])
@@ -47,12 +34,6 @@ public final class AppSettingsStore: ObservableObject {
     @Published public var forwardCLIErrors: Bool {
         didSet {
             UserDefaults.standard.set(forwardCLIErrors, forKey: AppSettings.Key.forwardCLIErrors)
-        }
-    }
-
-    @Published public var useGlassSwitcherUI: Bool {
-        didSet {
-            UserDefaults.standard.set(useGlassSwitcherUI, forKey: AppSettings.Key.useGlassSwitcherUI)
         }
     }
 
@@ -76,7 +57,6 @@ public final class AppSettingsStore: ObservableObject {
     public init() {
         AppSettings.registerDefaults()
         self.forwardCLIErrors = UserDefaults.standard.bool(forKey: AppSettings.Key.forwardCLIErrors)
-        self.useGlassSwitcherUI = UserDefaults.standard.bool(forKey: AppSettings.Key.useGlassSwitcherUI)
         self.switcherMaxItems = AppSettings.clampSwitcherMaxItems(
             UserDefaults.standard.integer(forKey: AppSettings.Key.switcherMaxItems)
         )
