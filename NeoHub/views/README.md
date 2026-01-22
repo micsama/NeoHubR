@@ -14,8 +14,6 @@
   - 应用设置与热键设置；启动项开关、CLI 安装/卸载入口。
   - Projects 选项卡：显示/收藏项目、调整收藏排序、设置 Switcher 显示条数。
   - Advanced 页：窗口置顶开关与 CLI 错误提示开关。
-- `InstallationView.swift`
-  - CLI 安装/更新/错误引导窗口；提供安装按钮与状态反馈。
 - `AboutView.swift`
   - 应用信息与版本展示。
 

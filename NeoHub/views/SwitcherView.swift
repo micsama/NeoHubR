@@ -220,7 +220,6 @@ private final class SwitcherViewModel {
 final class SwitcherWindow {
     private let panel: NSPanel
     private let viewModel: SwitcherViewModel
-    private let settingsWindow: RegularWindow<SettingsView>
     private let activationManager: ActivationManager
     private let editorStore: EditorStore
     private let selfRef: SwitcherWindowRef
@@ -229,14 +228,12 @@ final class SwitcherWindow {
 
     init(
         editorStore: EditorStore,
-        settingsWindow: RegularWindow<SettingsView>,
         selfRef: SwitcherWindowRef,
         activationManager: ActivationManager,
         appSettings: AppSettingsStore,
         projectRegistry: ProjectRegistryStore
     ) {
         self.editorStore = editorStore
-        self.settingsWindow = settingsWindow
         self.selfRef = selfRef
         self.activationManager = activationManager
 
@@ -368,7 +365,7 @@ final class SwitcherWindow {
 
     func openSettings() {
         hide()
-        settingsWindow.open()
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
     private func centerOnScreen() {

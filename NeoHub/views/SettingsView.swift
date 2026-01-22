@@ -8,8 +8,8 @@ import UserNotifications
 // MARK: - Main Settings View
 
 struct SettingsView: View {
-    static let defaultWidth: CGFloat = 425
-    static let defaultHeight: CGFloat = 500
+    static let defaultWidth: CGFloat = 400
+    static let defaultHeight: CGFloat = 450
 
     @ObservedObject var cli: CLI
     @ObservedObject var appSettings: AppSettingsStore
@@ -175,32 +175,47 @@ private struct CLIStatusView: View {
     var body: some View {
         switch cli.status {
         case .ok:
-            statusRow(title: "Installed", subtitle: { pathSubtitle }) {
+            statusRow(title: { statusTitle("CLI Installed", color: .primary, bold: false) },
+                      subtitle: { pathSubtitle }) {
                 HStack(spacing: 12) {
                     Button("Reinstall") { runCLI(.install) }
+                        .buttonStyle(.bordered)
+                        .tint(.blue)
                     Button("Uninstall") { runCLI(.uninstall) }
+                        .buttonStyle(.bordered)
+                        .tint(.red)
                 }
                 .disabled(runningCLIAction)
             }
 
         case .error(reason: .notInstalled):
-            statusRow(title: "Not Installed", subtitle: { pathSubtitle }) {
+            statusRow(
+                title: { Text("CLI Install Required").font(.title3).foregroundStyle(.red) },
+                subtitle: { EmptyView() }
+            ) {
                 Button("Install") { runCLI(.install) }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
                     .disabled(runningCLIAction)
             }
 
         case .error(reason: .versionMismatch):
-            statusRow(title: "Needs Update", subtitle: { pathSubtitle }) {
+            statusRow(title: { statusTitle("CLI Update Required", color: .orange, bold: true) },
+                      subtitle: { pathSubtitle }) {
                 HStack(spacing: 12) {
                     Button("Update") { runCLI(.install) }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.blue)
                     Button("Uninstall") { runCLI(.uninstall) }
+                        .buttonStyle(.bordered)
+                        .tint(.red)
                 }
                 .disabled(runningCLIAction)
             }
 
         case .error(reason: .unexpectedError(let error)):
             statusRow(
-                title: "Unexpected Error",
+                title: { statusTitle("CLI Error", color: .red, bold: true) },
                 subtitle: {
                     Text("Check logs for details")
                         .font(.caption)
@@ -236,8 +251,8 @@ private struct CLIStatusView: View {
     }
 
     @ViewBuilder
-    private func statusRow<Action: View, Subtitle: View>(
-        title: LocalizedStringKey,
+    private func statusRow<Title: View, Action: View, Subtitle: View>(
+        @ViewBuilder title: () -> Title,
         @ViewBuilder subtitle: () -> Subtitle,
         useStatusIcon: Bool = true,
         @ViewBuilder action: () -> Action
@@ -252,7 +267,7 @@ private struct CLIStatusView: View {
                     .frame(width: 24, height: 24)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
+                title()
                 subtitle()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -262,6 +277,11 @@ private struct CLIStatusView: View {
                 .frame(alignment: .trailing)
                 .layoutPriority(0)
         }
+    }
+
+    private func statusTitle(_ title: LocalizedStringKey, color: Color, bold: Bool) -> Text {
+        let text = Text(title).foregroundStyle(color)
+        return bold ? text.bold() : text
     }
 
     private var pathSubtitle: some View {
@@ -283,6 +303,8 @@ private struct CLIStatusView: View {
         }
         .buttonStyle(.plain)
     }
+
+
 
     private func copyPath() {
         let pasteboard = NSPasteboard.general

@@ -61,6 +61,17 @@
 "Keep Settings Window on Top" = "设置窗口置顶";
 "Show CLI errors in app" = "在应用内显示 CLI 错误";
 "Version" = "版本";
+"CLI Installed" = "CLI 已安装";
+"CLI Install Required" = "需要安装 CLI 工具";
+"CLI Update Required" = "CLI 需要更新";
+"CLI Error" = "CLI 出现错误";
+"NeoHub CLI is not installed" = "NeoHub CLI 未安装";
+"Please open Settings to install the CLI." = "请打开设置安装 CLI。";
+"NeoHub CLI needs to be updated" = "NeoHub CLI 需要更新";
+"Please open Settings to update the CLI." = "请打开设置更新 CLI。";
+"NeoHub CLI error" = "NeoHub CLI 出现错误";
+"Please open Settings and check logs." = "请打开设置并查看日志。";
+"Open Settings" = "打开设置";
 "Notification Permission" = "通知权限";
 "Not Determined" = "未询问";
 "Denied" = "已拒绝";
