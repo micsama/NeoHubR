@@ -8,4 +8,4 @@ private let defaultLevel: LogLevel = {
     #endif
 }()
 
-let log = bootstrapAppLogger(subsystem: APP_BUNDLE_ID, category: "app", defaultLevel: defaultLevel)
+let log = Logger.bootstrap(subsystem: APP_BUNDLE_ID, category: "app", defaultLevel: defaultLevel)

@@ -12,13 +12,12 @@
 - `CLI.swift`
   - 基于 `ArgumentParser` 解析参数。
   - 构造 `RunRequest` 并调用 `SocketClient`。
+  - 使用 `NeoHubLib.Logger.bootstrap`，读取 `NEOHUB_LOG` 设置日志级别。
 - `SocketClient.swift`
   - 通过 Network.framework 连接 `/tmp/neohub.sock`，发送长度前缀 + JSON 请求。
   - 处理 App 的响应。
 - `Shell.swift`
   - 用 `/bin/sh -c` 运行 `command -v neovide` 获取路径。
-- `Logger.swift`
-  - 读取 `NEOHUB_LOG` 环境变量设置日志级别。
 
 ## 典型流程
 1. 用户在项目目录运行 `neohub`。

@@ -33,7 +33,6 @@
 		FA54EB7C2AF6E3E8001AE449 /* SettingsGroupModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB7B2AF6E3E8001AE449 /* SettingsGroupModifier.swift */; };
 		FA54EB812AF789F6001AE449 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB802AF789F6001AE449 /* Logger.swift */; };
 		FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB822AF7A381001AE449 /* NotificationManager.swift */; };
-		FA54EB872AF7CB97001AE449 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB862AF7CB97001AE449 /* Logger.swift */; };
 		FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB8C2AF7F689001AE449 /* BugReporter.swift */; };
 		FAE1A0722D00000100000002 /* AppUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0712D00000100000001 /* AppUtilities.swift */; };
 		FAE1A0612C90000100000002 /* LoggerBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0602C90000100000001 /* LoggerBootstrap.swift */; };
@@ -120,7 +119,6 @@
 		FA54EB7B2AF6E3E8001AE449 /* SettingsGroupModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsGroupModifier.swift; sourceTree = "<group>"; };
 		FA54EB802AF789F6001AE449 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		FA54EB822AF7A381001AE449 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
-		FA54EB862AF7CB97001AE449 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		FA54EB8C2AF7F689001AE449 /* BugReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BugReporter.swift; sourceTree = "<group>"; };
 		FA728EF32AFF716E0013610E /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		FAE1A0712D00000100000001 /* AppUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUtilities.swift; sourceTree = "<group>"; };
@@ -220,7 +218,6 @@
 				FA2AE4AA2AEBDF7800D24008 /* NeoHubCLI.entitlements */,
 				FA2AE45F2AEB9CA000D24008 /* CLI.swift */,
 				FA39371C2AF3A7CC001D9105 /* Shell.swift */,
-				FA54EB862AF7CB97001AE449 /* Logger.swift */,
 				FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */,
 			);
 			path = NeoHubCLI;
@@ -464,7 +461,6 @@
 				FA39371D2AF3A7CC001D9105 /* Shell.swift in Sources */,
 				FA2AE4602AEB9CA000D24008 /* CLI.swift in Sources */,
 				FA2EAD932AEC4CCD000F8F7A /* SocketClient.swift in Sources */,
-				FA54EB872AF7CB97001AE449 /* Logger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

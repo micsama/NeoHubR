@@ -8,9 +8,6 @@ import UserNotifications
 // MARK: - Main Settings View
 
 struct SettingsView: View {
-    static let defaultWidth: CGFloat = 375
-    static let defaultHeight: CGFloat = 450
-
     @ObservedObject var cli: CLI
     @ObservedObject var appSettings: AppSettingsStore
     @ObservedObject var projectRegistry: ProjectRegistryStore

@@ -1,78 +1,98 @@
 import Foundation
+import os
 
-public struct CLILogger: Sendable {
-    private let logger: AppLogger
+public enum LogLevel: Int, Sendable {
+    case trace = 0
+    case debug = 1
+    case info = 2
+    case warning = 3
+    case error = 4
+    case critical = 5
+
+    public static func parse(_ value: String) -> LogLevel? {
+        switch value.lowercased() {
+        case "trace": return .trace
+        case "debug": return .debug
+        case "info": return .info
+        case "warn", "warning": return .warning
+        case "error": return .error
+        case "critical", "fault": return .critical
+        default: return nil
+        }
+    }
+}
+
+public struct Logger: Sendable {
+    private let logger: os.Logger
+    private let level: LogLevel
     private let alsoStderr: Bool
 
-    public init(logger: AppLogger, alsoStderr: Bool) {
-        self.logger = logger
+    public init(subsystem: String, category: String, level: LogLevel, alsoStderr: Bool) {
+        self.logger = os.Logger(subsystem: subsystem, category: category)
+        self.level = level
         self.alsoStderr = alsoStderr
     }
 
+    public static func bootstrap(
+        subsystem: String,
+        category: String,
+        defaultLevel: LogLevel = .info,
+        envVar: String? = nil,
+        alsoStderr: Bool = false
+    ) -> Logger {
+        let level = resolvedLevel(envVar: envVar, defaultLevel: defaultLevel)
+        return Logger(subsystem: subsystem, category: category, level: level, alsoStderr: alsoStderr)
+    }
+
+    private func shouldLog(_ messageLevel: LogLevel) -> Bool {
+        messageLevel.rawValue >= level.rawValue
+    }
+
     public func trace(_ message: String) {
-        logger.trace(message)
+        guard shouldLog(.trace) else { return }
+        logger.debug("\(message, privacy: .public)")
     }
 
     public func debug(_ message: String) {
-        logger.debug(message)
+        guard shouldLog(.debug) else { return }
+        logger.debug("\(message, privacy: .public)")
     }
 
     public func info(_ message: String) {
-        logger.info(message)
+        guard shouldLog(.info) else { return }
+        logger.info("\(message, privacy: .public)")
     }
 
     public func warning(_ message: String) {
-        logger.warning(message)
+        guard shouldLog(.warning) else { return }
+        logger.notice("\(message, privacy: .public)")
+    }
+
+    public func notice(_ message: String) {
+        guard shouldLog(.warning) else { return }
+        logger.notice("\(message, privacy: .public)")
     }
 
     public func error(_ message: String) {
-        logger.error(message)
+        guard shouldLog(.error) else { return }
+        logger.error("\(message, privacy: .public)")
         if alsoStderr { writeToStderr(message) }
     }
 
     public func critical(_ message: String) {
-        logger.critical(message)
+        guard shouldLog(.critical) else { return }
+        logger.fault("\(message, privacy: .public)")
         if alsoStderr { writeToStderr(message) }
     }
 }
 
-public func bootstrapAppLogger(
-    subsystem: String,
-    category: String,
-    defaultLevel: LogLevel
-) -> AppLogger {
-    AppLogger(subsystem: subsystem, category: category, level: defaultLevel)
-}
-
-public func bootstrapCLILogger(
-    subsystem: String,
-    category: String,
-    envVar: String = "NEOHUB_LOG",
-    defaultLevel: LogLevel = .info,
-    alsoStderr: Bool = true
-) -> CLILogger {
-    let level: LogLevel
-    if let value = ProcessInfo.processInfo.environment[envVar],
-       let parsed = parseLogLevel(value) {
-        level = parsed
-    } else {
-        level = defaultLevel
+private func resolvedLevel(envVar: String?, defaultLevel: LogLevel) -> LogLevel {
+    guard let envVar else { return defaultLevel }
+    guard let value = ProcessInfo.processInfo.environment[envVar],
+          let parsed = LogLevel.parse(value) else {
+        return defaultLevel
     }
-
-    let logger = AppLogger(subsystem: subsystem, category: category, level: level)
-    return CLILogger(logger: logger, alsoStderr: alsoStderr)
-}
-
-private func parseLogLevel(_ value: String) -> LogLevel? {
-    switch value.lowercased() {
-    case "trace": return .trace
-    case "debug": return .debug
-    case "info": return .info
-    case "warn", "warning": return .warning
-    case "error": return .error
-    case "critical", "fault": return .critical
-    default: return nil
-    }
+    return parsed
 }
 
 private func writeToStderr(_ message: String) {

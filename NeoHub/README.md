@@ -31,7 +31,7 @@
 - 通知与报告：`NotificationManager.swift`、`BugReporter.swift`
   - 运行时错误通知、用户反馈入口。
 - 日志：`Logger.swift`
-  - 使用 `os.Logger`。
+  - 使用 `NeoHubLib.Logger`（基于 `os.Logger`）。
 
 ## 典型运行流程
 1. App 启动后初始化 SocketServer 并注册通知代理。
