@@ -219,8 +219,9 @@ final class EditorStore: ObservableObject {
     private func updateProjectRegistry(location: URL, displayName: String) {
         var entries = projectRegistry.entries
         let now = Date()
+        let normalizedLocation = ProjectRegistry.normalizeID(location)
 
-        if let index = entries.firstIndex(where: { $0.id == location }) {
+        if let index = entries.firstIndex(where: { $0.id == normalizedLocation }) {
             var entry = entries[index]
             if (entry.name ?? "").isEmpty {
                 entry.name = displayName
@@ -228,7 +229,7 @@ final class EditorStore: ObservableObject {
             entry.lastOpenedAt = now
             entries[index] = entry
         } else {
-            entries.append(ProjectEntry(id: location, name: displayName, lastOpenedAt: now))
+            entries.append(ProjectEntry(id: normalizedLocation, name: displayName, lastOpenedAt: now))
         }
 
         entries.sort { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }

@@ -39,10 +39,10 @@ struct SettingsView: View {
             .tag(1)
 
             AdvancedSettingsTab(appSettings: appSettings)
-            .tabItem {
-                Label("Advanced", systemImage: "gearshape.2")
-            }
-            .tag(2)
+                .tabItem {
+                    Label("Advanced", systemImage: "gearshape.2")
+                }
+                .tag(2)
         }
         .background(SettingsWindowLevelUpdater(alwaysOnTop: appSettings.settingsAlwaysOnTop))
         .onAppear {

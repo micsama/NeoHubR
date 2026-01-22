@@ -46,6 +46,53 @@ public enum ProjectRegistry {
         let data = try? encoder.encode(entries)
         UserDefaults.standard.set(data, forKey: defaultsKey)
     }
+
+    public static func normalizeID(_ url: URL) -> URL {
+        let standardized = url.standardizedFileURL
+        return URL(fileURLWithPath: standardized.path)
+    }
+
+    public static func deduplicate(_ entries: [ProjectEntry]) -> [ProjectEntry] {
+        var order: [URL] = []
+        var merged: [URL: ProjectEntry] = [:]
+
+        for entry in entries {
+            let id = normalizeID(entry.id)
+            if merged[id] == nil {
+                order.append(id)
+            }
+
+            var combined = merged[id] ?? ProjectEntry(id: id)
+            if (combined.name ?? "").isEmpty, let name = entry.name, !name.isEmpty {
+                combined.name = name
+            }
+            if (combined.icon ?? "").isEmpty, let icon = entry.icon, !icon.isEmpty {
+                combined.icon = icon
+            }
+            if (combined.colorHex ?? "").isEmpty, let colorHex = entry.colorHex, !colorHex.isEmpty {
+                combined.colorHex = colorHex
+            }
+            if let date = entry.lastOpenedAt, (combined.lastOpenedAt ?? .distantPast) < date {
+                combined.lastOpenedAt = date
+            }
+            combined.isStarred = combined.isStarred || entry.isStarred
+            if let orderValue = entry.pinnedOrder {
+                if combined.pinnedOrder == nil || orderValue < (combined.pinnedOrder ?? orderValue) {
+                    combined.pinnedOrder = orderValue
+                }
+            }
+
+            merged[id] = combined
+        }
+
+        return order.compactMap { id in
+            guard var entry = merged[id] else { return nil }
+            if !entry.isStarred {
+                entry.pinnedOrder = nil
+            }
+            return entry
+        }
+    }
 }
 
 @MainActor
@@ -57,7 +104,12 @@ public final class ProjectRegistryStore: ObservableObject {
     }
 
     public init() {
-        self.entries = ProjectRegistry.load()
+        let loaded = ProjectRegistry.load()
+        let deduped = ProjectRegistry.deduplicate(loaded)
+        self.entries = deduped
+        if deduped.count != loaded.count {
+            ProjectRegistry.save(deduped)
+        }
     }
 
     public func toggleStar(id: URL) {
