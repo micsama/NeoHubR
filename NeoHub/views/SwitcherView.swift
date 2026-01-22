@@ -441,7 +441,7 @@ private struct SwitcherSearchField: NSViewRepresentable {
             switch commandSelector {
             case #selector(NSResponder.moveUp(_:)):
                 parent.onUp()
-                return true
+                return true // 返回 true 表示我们处理了，系统不要再移动光标了
             case #selector(NSResponder.moveDown(_:)):
                 parent.onDown()
                 return true
@@ -452,13 +452,13 @@ private struct SwitcherSearchField: NSViewRepresentable {
                 parent.onEscape()
                 return true
             case #selector(NSResponder.insertTab(_:)):
-                parent.onDown()
+                parent.onDown() // Tab 映射为向下
                 return true
             case #selector(NSResponder.insertBacktab(_:)):
-                parent.onUp()
+                parent.onUp() // Shift+Tab 映射为向上
                 return true
             default:
-                return false
+                return false // 其他按键（如左右键、字母）交给系统默认处理
             }
         }
     }
@@ -573,34 +573,28 @@ private struct SwitcherContentView: View {
         }
     }
 
-    private var entryList: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(spacing: 4) {
-                    ForEach(Array(viewModel.filteredEntries.enumerated()), id: \.element.id) { index, entry in
-                        SwitcherRowView(
-                            entry: entry,
-                            index: index,
-                            isSelected: index == viewModel.selectedIndex
-                        )
-                        .id(entry.id)
-                        .onTapGesture {
-                            viewModel.activate(at: index)
-                        }
-                    }
+private var entryList: some View {
+    List {
+        ForEach(Array(viewModel.filteredEntries.enumerated()), id: \.element.id) { index, entry in
+            SwitcherRowView(entry: entry, index: index)
+                .listRowBackground(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(index == viewModel.selectedIndex ? Color.accentColor.opacity(0.2) : Color.clear)
+                )
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
+                .onTapGesture {
+                    viewModel.activate(at: index)
                 }
-                .padding(.vertical, 4)
-            }
-            .scrollContentBackground(.hidden)
-            .onChange(of: viewModel.selectedIndex) { _, newIndex in
-                if let entry = viewModel.filteredEntries[safe: newIndex] {
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        proxy.scrollTo(entry.id, anchor: .center)
-                    }
-                }
-            }
         }
     }
+    .listStyle(.plain)
+    .scrollContentBackground(.hidden)
+    .scrollPosition(id: Binding(
+        get: { viewModel.filteredEntries[safe: viewModel.selectedIndex]?.id },
+        set: { _ in }
+    ))
+}
 
     private var bottomBar: some View {
         HStack {
@@ -635,7 +629,6 @@ private struct SwitcherContentView: View {
 private struct SwitcherRowView: View {
     let entry: SwitcherEntry
     let index: Int
-    let isSelected: Bool
 
     var body: some View {
         HStack(spacing: 12) {
@@ -664,11 +657,7 @@ private struct SwitcherRowView: View {
             }
         }
         .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(isSelected ? Color.accentColor.opacity(0.2) : Color.clear)
-        )
+        .padding(.horizontal, 4)
         .contentShape(Rectangle())
     }
 
