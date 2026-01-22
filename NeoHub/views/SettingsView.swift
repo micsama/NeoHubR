@@ -8,7 +8,7 @@ import SwiftUI
 
 struct SettingsView: View {
     static let defaultWidth: CGFloat = 425
-    static let defaultHeight: CGFloat = 550
+    static let defaultHeight: CGFloat = 500
 
     @ObservedObject var cli: CLI
     @ObservedObject var appSettings: AppSettingsStore
@@ -83,7 +83,7 @@ private struct GeneralSettingsTab: View {
         VStack(spacing: 0) {
             // Header 放在 Form 外部，透明背景，垂直居中
             headerView
-                .frame(height: 50, alignment: .center)
+                .frame(height: 60, alignment: .center)
             Form {
                 Section {
                     Toggle("Launch at Login", isOn: $launchAtLoginEnabled)
@@ -111,7 +111,7 @@ private struct GeneralSettingsTab: View {
                 }
             }
             .formStyle(.grouped)
-            .padding(.top, -20)
+            .padding(.top, -5)
         }
     }
 
