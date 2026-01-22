@@ -102,8 +102,8 @@ private struct GeneralSettingsTab: View {
             Form {
                 Section {
                     Toggle("Launch at Login", isOn: $launchAtLoginEnabled)
-                        .onChange(of: launchAtLoginEnabled) {
-                            updateLaunchAtLogin(launchAtLoginEnabled)
+                        .onChange(of: launchAtLoginEnabled) { _, newValue in
+                            updateLaunchAtLogin(newValue)
                         }
                 }
 

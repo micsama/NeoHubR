@@ -55,7 +55,7 @@ struct MenuBarView: View {
                 }
             case .error(reason: .unexpectedError(_)):
                 Divider()
-                Button("❗ CLI Error") { SettingsLauncher.open() }
+                SettingsLink { Text("❗ CLI Error") }
             case .ok:
                 EmptyView()
             }
