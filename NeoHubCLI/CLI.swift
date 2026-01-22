@@ -3,6 +3,12 @@ import Foundation
 import NeoHubLib
 
 let APP_BUNDLE_ID = "com.alex35mil.NeoHub.CLI"
+let log = Logger.bootstrap(
+    subsystem: APP_BUNDLE_ID,
+    category: "cli",
+    envVar: "NEOHUB_LOG",
+    alsoStderr: true
+)
 
 enum CLIError: Error {
     case failedToGetBin(Error)
