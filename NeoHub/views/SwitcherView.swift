@@ -350,38 +350,33 @@ struct GlassPalette {
     }
 }
 
-struct LegacyPalette {
-    static let textPrimary = Color.primary
-    static let textSecondary = Color.secondary
-    static let projectText = Color.secondary
-    static let rowSelected = Color.accentColor.opacity(0.12)
-    static let projectSelected = Color.orange.opacity(0.12)
-    static let border = Color.black.opacity(0.12)
-    static let background = Color(NSColor.windowBackgroundColor).opacity(0.96)
-    static let rowBackground = Color(NSColor.controlBackgroundColor).opacity(0.85)
-}
-
-struct LegacyBackground: View {
-    var body: some View {
-        RoundedRectangle(cornerRadius: Layout.windowCornerRadius)
-            .fill(LegacyPalette.background)
-            .overlay(
-                RoundedRectangle(cornerRadius: Layout.windowCornerRadius)
-                    .stroke(LegacyPalette.border, lineWidth: 1)
-            )
-    }
-}
-
-@available(macOS 26, *)
 struct GlassBackgroundView: NSViewRepresentable {
-    func makeNSView(context _: Context) -> NSGlassEffectView {
-        let view = NSGlassEffectView()
-        view.cornerRadius = Layout.windowCornerRadius
+    func makeNSView(context _: Context) -> NSView {
+        if #available(macOS 26, *) {
+            let view = NSGlassEffectView()
+            view.cornerRadius = Layout.windowCornerRadius
+            return view
+        }
+
+        let view = NSVisualEffectView()
+        view.material = .hudWindow
+        view.blendingMode = .behindWindow
+        view.state = .active
+        view.wantsLayer = true
+        view.layer?.cornerRadius = Layout.windowCornerRadius
+        view.layer?.masksToBounds = true
         return view
     }
 
-    func updateNSView(_ nsView: NSGlassEffectView, context _: Context) {
-        nsView.cornerRadius = Layout.windowCornerRadius
+    func updateNSView(_ nsView: NSView, context _: Context) {
+        if #available(macOS 26, *), let glassView = nsView as? NSGlassEffectView {
+            glassView.cornerRadius = Layout.windowCornerRadius
+            return
+        }
+
+        if let effectView = nsView as? NSVisualEffectView {
+            effectView.layer?.cornerRadius = Layout.windowCornerRadius
+        }
     }
 }
 
@@ -607,83 +602,18 @@ struct SwitcherView: View {
     }
 
     var body: some View {
-        if appSettings.useGlassSwitcherUI {
-            if #available(macOS 26, *) {
-                GlassSwitcherRoot(
-                    state: state,
-                    editorStore: editorStore,
-                    switcherWindow: switcherWindow,
-                    projectRegistry: projectRegistry,
-                    appSettings: appSettings,
-                    settingsWindow: settingsWindow,
-                    activationManager: activationManager
-                )
-            } else {
-                LegacySwitcherRoot(
-                    state: state,
-                    editorStore: editorStore,
-                    switcherWindow: switcherWindow,
-                    projectRegistry: projectRegistry,
-                    appSettings: appSettings,
-                    settingsWindow: settingsWindow,
-                    activationManager: activationManager
-                )
-            }
-        } else {
-            LegacySwitcherRoot(
-                state: state,
-                editorStore: editorStore,
-                switcherWindow: switcherWindow,
-                projectRegistry: projectRegistry,
-                appSettings: appSettings,
-                settingsWindow: settingsWindow,
-                activationManager: activationManager
-            )
-        }
+        GlassSwitcherRoot(
+            state: state,
+            editorStore: editorStore,
+            switcherWindow: switcherWindow,
+            projectRegistry: projectRegistry,
+            appSettings: appSettings,
+            settingsWindow: settingsWindow,
+            activationManager: activationManager
+        )
     }
 }
 
-struct LegacySwitcherRoot: View {
-    let state: SwitcherState?
-    @ObservedObject var editorStore: EditorStore
-    @ObservedObject var switcherWindow: SwitcherWindow
-    @ObservedObject var projectRegistry: ProjectRegistryStore
-    @ObservedObject var appSettings: AppSettingsStore
-
-    let settingsWindow: RegularWindow<SettingsView>
-    let activationManager: ActivationManager
-
-    var body: some View {
-        ZStack {
-            LegacyBackground()
-            Group {
-                switch state {
-                case .noEditors:
-                    LegacySwitcherEmptyView(
-                        switcherWindow: switcherWindow,
-                        settingsWindow: settingsWindow
-                    )
-                case .oneEditor, .manyEditors:
-                    LegacySwitcherListView(
-                        editorStore: editorStore,
-                        switcherWindow: switcherWindow,
-                        projectRegistry: projectRegistry,
-                        appSettings: appSettings,
-                        settingsWindow: settingsWindow,
-                        activationManager: activationManager
-                    )
-                case .none:
-                    EmptyView()
-                }
-            }
-            .padding(Layout.windowContentPadding)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: Layout.windowCornerRadius))
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-@available(macOS 26, *)
 struct GlassSwitcherRoot: View {
     let state: SwitcherState?
     @ObservedObject var editorStore: EditorStore
@@ -731,60 +661,6 @@ struct GlassSwitcherRoot: View {
     }
 }
 
-struct LegacySwitcherEmptyView: View {
-    @ObservedObject var switcherWindow: SwitcherWindow
-
-    let settingsWindow: RegularWindow<SettingsView>
-
-    @StateObject private var keyboard = KeyboardEventHandler()
-    @FocusState private var focused: Bool
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "sparkles.rectangle.stack")
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundColor(LegacyPalette.textSecondary)
-            Text("No Neovide instances")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(LegacyPalette.textSecondary)
-            HStack(spacing: 10) {
-                Button("Settings") {
-                    switcherWindow.hide()
-                    settingsWindow.open()
-                }
-                Button("Close") { switcherWindow.hide() }
-                    .focused($focused)
-            }
-        }
-        .onAppear {
-            focused = true
-            keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                switch event.keyCode {
-                case Key.ESC:
-                    switcherWindow.hide()
-                    return nil
-                case Key.COMMA where event.modifierFlags.contains(.command):
-                    switcherWindow.hide()
-                    settingsWindow.open()
-                    return nil
-                case Key.W where event.modifierFlags.contains(.command):
-                    switcherWindow.hide()
-                    return nil
-                default:
-                    break
-                }
-                return event
-            }
-        }
-        .onDisappear {
-            if let monitor = keyboard.monitor {
-                NSEvent.removeMonitor(monitor)
-            }
-        }
-    }
-}
-
-@available(macOS 26, *)
 struct GlassSwitcherEmptyView: View {
     @ObservedObject var switcherWindow: SwitcherWindow
 
@@ -846,149 +722,6 @@ struct GlassSwitcherEmptyView: View {
     }
 }
 
-struct LegacySwitcherListView: View {
-    @ObservedObject var editorStore: EditorStore
-    @ObservedObject var switcherWindow: SwitcherWindow
-    @ObservedObject var projectRegistry: ProjectRegistryStore
-    @ObservedObject var appSettings: AppSettingsStore
-
-    let settingsWindow: RegularWindow<SettingsView>
-    let activationManager: ActivationManager
-
-    @StateObject private var keyboard = KeyboardEventHandler()
-    @State private var searchText = ""
-    @State private var selectedIndex: Int = 0
-
-    @FocusState private var focused: Bool
-
-    var body: some View {
-        let entries = SwitcherListLogic.filterEntries(
-            editorStore: editorStore,
-            projectRegistry: projectRegistry,
-            appSettings: appSettings,
-            searchText: searchText
-        )
-
-        VStack(spacing: Layout.listSpacing) {
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(LegacyPalette.textSecondary)
-                TextField("Search", text: $searchText)
-                    .font(.system(size: Layout.searchFieldFontSize))
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .focused($focused)
-                    .onChange(of: searchText) { _ in
-                        selectedIndex = 0
-                    }
-            }
-            .padding(.horizontal, 10)
-            .frame(height: Layout.searchFieldHeight)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(LegacyPalette.rowBackground)
-            )
-
-            ScrollView(.vertical) {
-                VStack(spacing: 4) {
-                    ForEach(Array(entries.enumerated()), id: \.1.id) { index, entry in
-                        Button(action: {
-                            SwitcherListLogic.activateEntry(
-                                at: index,
-                                entries: entries,
-                                selectedIndex: &selectedIndex,
-                                editorStore: editorStore
-                            )
-                        }) {
-                            HStack(spacing: 10) {
-                                Group {
-                                    if entry.isEditor {
-                                        Image("EditorIcon")
-                                            .resizable()
-                                            .scaledToFit()
-                                    } else {
-                                        Image(systemName: entry.isStarred ? "star.circle.fill" : "folder.fill")
-                                            .resizable()
-                                            .scaledToFit()
-                                    }
-                                }
-                                .frame(width: 16, height: 16)
-                                .foregroundColor(LegacyPalette.textSecondary)
-                                Text(entry.title)
-                                    .font(.system(size: Layout.resultsFontSize))
-                                Spacer()
-                                Text(entry.displayPath)
-                                    .font(.system(size: 12))
-                                    .foregroundColor(LegacyPalette.textSecondary)
-                                if let shortcut = shortcutLabel(for: index) {
-                                    ShortcutPill(text: shortcut)
-                                }
-                            }
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(
-                                        selectedIndex == index
-                                            ? (entry.isEditor
-                                                ? LegacyPalette.rowSelected : LegacyPalette.projectSelected)
-                                            : Color.clear
-                                    )
-                            )
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .focusable(false)
-                    }
-                }
-                .padding(.vertical, 2)
-            }
-            .frame(maxHeight: .infinity)
-
-            HStack(spacing: 10) {
-                Spacer()
-                Button("Quit Selected") {
-                    SwitcherListLogic.quitSelectedEditor(
-                        entries: entries,
-                        selectedIndex: &selectedIndex,
-                        activationManager: activationManager
-                    )
-                }
-                Button("Quit All") {
-                    SwitcherListLogic.quitAllEditors(
-                        editorStore: editorStore,
-                        activationManager: activationManager
-                    )
-                }
-            }
-            .font(.system(size: Layout.footerFontSize))
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            focused = true
-            keyboard.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                MainThread.assert()
-                return SwitcherListLogic.handleKey(
-                    event,
-                    editorStore: editorStore,
-                    projectRegistry: projectRegistry,
-                    appSettings: appSettings,
-                    searchText: searchText,
-                    selectedIndex: &selectedIndex,
-                    switcherWindow: switcherWindow,
-                    settingsWindow: settingsWindow,
-                    activationManager: activationManager
-                )
-            }
-        }
-        .onDisappear {
-            if let monitor = keyboard.monitor {
-                NSEvent.removeMonitor(monitor)
-            }
-        }
-    }
-}
-
-@available(macOS 26, *)
 struct GlassSwitcherListView: View {
     @ObservedObject var editorStore: EditorStore
     @ObservedObject var switcherWindow: SwitcherWindow
@@ -1189,7 +922,6 @@ struct GlassSwitcherListView: View {
     }
 }
 
-@available(macOS 26, *)
 struct GlassBottomBarButton: View {
     let text: String
     let shortcut: [Character]
@@ -1241,21 +973,18 @@ struct GlassBottomBarButton: View {
     }
 }
 
-@available(macOS 26, *)
 struct GlassPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         GlassPrimaryButton(configuration: configuration)
     }
 }
 
-@available(macOS 26, *)
 struct GlassGhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         GlassGhostButton(configuration: configuration)
     }
 }
 
-@available(macOS 26, *)
 private struct GlassPrimaryButton: View {
     let configuration: ButtonStyle.Configuration
     @Environment(\.colorScheme) private var colorScheme
@@ -1276,7 +1005,6 @@ private struct GlassPrimaryButton: View {
     }
 }
 
-@available(macOS 26, *)
 private struct GlassGhostButton: View {
     let configuration: ButtonStyle.Configuration
     @Environment(\.colorScheme) private var colorScheme

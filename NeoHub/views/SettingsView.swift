@@ -17,8 +17,6 @@ struct SettingsView: View {
     @State private var runningCLIAction = false
     @State private var launchAtLoginEnabled = false
 
-    private let glassAvailable = AppSettings.isGlassAvailable
-
     var body: some View {
         TabView {
             GeneralSettingsTab(
@@ -40,10 +38,7 @@ struct SettingsView: View {
             }
             .tag(1)
 
-            AdvancedSettingsTab(
-                appSettings: appSettings,
-                glassAvailable: glassAvailable
-            )
+            AdvancedSettingsTab(appSettings: appSettings)
             .tabItem {
                 Label("Advanced", systemImage: "gearshape.2")
             }
@@ -391,14 +386,10 @@ private struct ProjectRegistryTab: View {
 
 private struct AdvancedSettingsTab: View {
     @ObservedObject var appSettings: AppSettingsStore
-    let glassAvailable: Bool
 
     var body: some View {
         Form {
             Section {
-                Toggle("Use Liquid Glass Switcher (macOS 26)", isOn: $appSettings.useGlassSwitcherUI)
-                    .disabled(!glassAvailable)
-
                 Toggle("Keep Settings Window on Top", isOn: $appSettings.settingsAlwaysOnTop)
 
                 Toggle("Show CLI errors in app", isOn: $appSettings.forwardCLIErrors)
