@@ -73,6 +73,7 @@ private final class SwitcherViewModel {
 
     var searchText = ""
     var selectedIndex: Int = 0
+    var refreshToken: Int = 0
 
     init(
         editorStore: EditorStore,
@@ -212,6 +213,11 @@ private final class SwitcherViewModel {
         searchText = ""
         selectedIndex = 0
     }
+
+    func refreshForShow() {
+        // Force a list rebuild when showing the switcher to refresh ordering and reset scroll position.
+        refreshToken &+= 1
+    }
 }
 
 // MARK: - Window
@@ -291,21 +297,30 @@ final class SwitcherWindow {
     private func handleToggleSwitcher() {
         let editors = editorStore.getEditors()
 
-        if editors.count == 1, let editor = editors.first {
-            let frontApp = NSWorkspace.shared.frontmostApplication
-            if frontApp?.processIdentifier == editor.processIdentifier {
-                activationManager.activateTarget()
-            } else {
-                activationManager.setActivationTarget(
-                    currentApp: frontApp,
-                    switcherWindow: selfRef,
-                    editors: editors
-                )
-                editor.activate()
-            }
-        } else {
+        guard editors.count == 1, let editor = editors.first else {
             toggle()
+            return
         }
+
+        let frontApp = NSWorkspace.shared.frontmostApplication
+        if frontApp?.processIdentifier == editor.processIdentifier {
+            guard activationManager.activationTarget != nil else {
+                toggle()
+                return
+            }
+            activationManager.activateTarget()
+            if activationManager.activationTarget == nil {
+                toggle()
+            }
+            return
+        }
+
+        activationManager.setActivationTarget(
+            currentApp: frontApp,
+            switcherWindow: selfRef,
+            editors: editors
+        )
+        editor.activate()
     }
 
     private func handleToggleLastActive() {
@@ -341,6 +356,7 @@ final class SwitcherWindow {
             switcherWindow: selfRef,
             editors: editorStore.getEditors()
         )
+        viewModel.refreshForShow()
 
         isVisible = true
         viewModel.onAppear()
@@ -593,6 +609,7 @@ private struct SwitcherContentView: View {
                         }
                 }
             }
+            .id(viewModel.refreshToken)
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .onChange(of: viewModel.selectedIndex) { _, newIndex in

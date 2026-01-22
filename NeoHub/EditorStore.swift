@@ -185,21 +185,8 @@ final class EditorStore: ObservableObject {
                 } else if -startTime.timeIntervalSinceNow > timeout {
                     log.error("The editor wasn't removed from the store within the timeout. Canceling the restart.")
                     self.invalidateRestartPoller()
-
-                    let alert = NSAlert()
-
-                    alert.messageText = String(localized: "Failed to restart the editor")
-                    alert.informativeText = String(localized: "Please, report the issue on GitHub.")
-                    alert.alertStyle = .critical
-                    alert.addButton(withTitle: String(localized: "Report"))
-                    alert.addButton(withTitle: String(localized: "Dismiss"))
-
-                    switch alert.runModal() {
-                    case .alertFirstButtonReturn:
-                        let error = ReportableError("Failed to restart the editor")
-                        BugReporter.report(error)
-                    default: ()
-                    }
+                    let error = ReportableError("Failed to restart the editor")
+                    NotificationManager.send(kind: .failedToRestartEditor, error: error)
                 }
             }
         }
