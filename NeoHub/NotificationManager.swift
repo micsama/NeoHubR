@@ -46,24 +46,26 @@ enum NotificationKind: CaseIterable {
     var title: String {
         switch self {
         case .failedToLaunchServer:
-            return "Failed to launch the NeoHub server"
+            return String(localized: "Failed to launch the NeoHub server")
         case .failedToHandleRequestFromCLI, .failedToRunEditorProcess:
-            return "Failed to open Neovide"
+            return String(localized: "Failed to open Neovide")
         case .failedToGetRunningEditorApp, .failedToActivateEditorApp:
-            return "Failed to activate Neovide"
+            return String(localized: "Failed to activate Neovide")
         }
     }
 
     var body: String {
         switch self {
         case .failedToLaunchServer:
-            return "NeoHub won't be able to function properly. Please, create an issue in the GitHub repo."
+            return String(
+                localized: "NeoHub won't be able to function properly. Please, create an issue in the GitHub repo."
+            )
         case .failedToHandleRequestFromCLI, .failedToRunEditorProcess:
-            return "Please create an issue in the GitHub repo."
+            return String(localized: "Please create an issue in the GitHub repo.")
         case .failedToGetRunningEditorApp:
-            return "Requested Neovide instance is not running."
+            return String(localized: "Requested Neovide instance is not running.")
         case .failedToActivateEditorApp:
-            return "Please create an issue in GitHub repo."
+            return String(localized: "Please create an issue in GitHub repo.")
         }
     }
 
@@ -199,7 +201,7 @@ final class NotificationManager: NSObject {
         let actionMeta = ReportAction(error: reportable).meta
         scheduleNotification(
             categoryId: cliErrorCategoryId,
-            title: "CLI Error",
+            title: String(localized: "CLI Error"),
             body: report.message,
             meta: actionMeta
         )
@@ -276,7 +278,7 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
 
 struct ReportAction: NotificationAction {
     static let id: String = "REPORT_ACTION"
-    static let button: String = "Report"
+    static let button: String = String(localized: "Report")
 
     let title: String
     let error: String

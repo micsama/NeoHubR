@@ -236,7 +236,7 @@ private struct CLIStatusView: View {
 
     @ViewBuilder
     private func statusRow<Action: View, Subtitle: View>(
-        title: String,
+        title: LocalizedStringKey,
         @ViewBuilder subtitle: () -> Subtitle,
         useStatusIcon: Bool = true,
         @ViewBuilder action: () -> Action
@@ -273,7 +273,7 @@ private struct CLIStatusView: View {
                 .truncationMode(.tail)
                 .opacity(0)
                 .overlay(alignment: .leading) {
-                    Text(didCopyPath ? "Copied to clipboard" : CLI.binPath)
+                    Text(didCopyPath ? String(localized: "Copied to clipboard") : CLI.binPath)
                         .font(.caption)
                         .lineLimit(1)
                         .truncationMode(.tail)
