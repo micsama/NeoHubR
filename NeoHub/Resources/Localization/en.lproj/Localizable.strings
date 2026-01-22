@@ -61,6 +61,13 @@
 "Keep Settings Window on Top" = "Keep Settings Window on Top";
 "Show CLI errors in app" = "Show CLI errors in app";
 "Version" = "Version";
+"Notification Permission" = "Notification Permission";
+"Not Determined" = "Not Determined";
+"Denied" = "Denied";
+"Authorized" = "Authorized";
+"Provisional" = "Provisional";
+"Ephemeral" = "Ephemeral";
+"Unknown" = "Unknown";
 
 "Version %@ (%@)" = "Version %@ (%@)";
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";

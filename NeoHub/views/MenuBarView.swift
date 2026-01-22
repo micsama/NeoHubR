@@ -100,11 +100,11 @@ struct MenuBarView: View {
             default: ()
             }
 
-        case .failure(.failedToExecuteAppleScript(error: let error)):
+        case .failure(.failedToExecuteAppleScript(message: let message)):
             let alert = NSAlert()
 
             alert.messageText = String(localized: "Oh no!")
-            alert.informativeText = String(localized: "There was an issue during installation.")
+            alert.informativeText = message
             alert.alertStyle = .critical
             alert.addButton(withTitle: String(localized: "Report"))
             alert.addButton(withTitle: String(localized: "Dismiss"))
@@ -113,7 +113,7 @@ struct MenuBarView: View {
             case .alertFirstButtonReturn:
                 let error = ReportableError(
                     "Failed to execute installation Apple Script",
-                    meta: error.mapValues { $0 as Any }
+                    meta: ["AppleScriptError": message]
                 )
                 BugReporter.report(error)
             default: ()

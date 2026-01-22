@@ -1,5 +1,8 @@
 #  Changelog
 
+## Unreleased
+- Avoid activation errors when the previous activation target is no longer running/visible.
+
 ## 0.2.1
 - Add missing entitlement.
 
@@ -21,4 +24,3 @@
 
 ## 0.0.1
 Initial release.
-

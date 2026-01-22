@@ -61,6 +61,13 @@
 "Keep Settings Window on Top" = "设置窗口置顶";
 "Show CLI errors in app" = "在应用内显示 CLI 错误";
 "Version" = "版本";
+"Notification Permission" = "通知权限";
+"Not Determined" = "未询问";
+"Denied" = "已拒绝";
+"Authorized" = "已授权";
+"Provisional" = "临时授权";
+"Ephemeral" = "临时会话授权";
+"Unknown" = "未知";
 
 "Version %@ (%@)" = "版本 %@ (%@)";
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";

@@ -126,38 +126,31 @@ final class NotificationManager: NSObject {
         UNUserNotificationCenter.current().setNotificationCategories(categories)
     }
 
-    private enum AuthStatus {
-        case unknown
-        case granted
-        case rejected
-    }
-
-    private var status: AuthStatus = .unknown
-
     private func requestAuthorization(completion: @Sendable @escaping (Bool) -> Void) {
-        switch self.status {
-        case .unknown:
-            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
-                MainThread.run {
-                    switch (granted, error) {
-                    case (true, nil):
-                        self.status = .granted
-                        completion(true)
-                    case (true, .some(let error)):
-                        log.notice("There was an error during notification authorization request. \(error)")
-                        self.status = .granted
-                        completion(true)
-                    case (false, let error):
-                        log.info("Notification permission not granted. \(String(describing: error))")
-                        self.status = .rejected
-                        completion(false)
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .notDetermined:
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+                    MainThread.run {
+                        if let error {
+                            log.notice("There was an error during notification authorization request. \(error)")
+                        }
+                        completion(granted || error != nil)
                     }
                 }
+            case .authorized, .provisional, .ephemeral:
+                MainThread.run {
+                    completion(true)
+                }
+            case .denied:
+                MainThread.run {
+                    completion(false)
+                }
+            @unknown default:
+                MainThread.run {
+                    completion(false)
+                }
             }
-        case .granted:
-            completion(true)
-        case .rejected:
-            completion(false)
         }
     }
 
