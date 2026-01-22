@@ -82,7 +82,6 @@ private final class ConnectionHandler: @unchecked Sendable {
     private let queue: DispatchQueue
     private var buffer = Data()
     private var expectedLength: Int?
-    private var didHandle = false
     var onFinish: (() -> Void)?
 
     init(store: EditorStore, connection: NWConnection, queue: DispatchQueue) {
@@ -125,11 +124,10 @@ private final class ConnectionHandler: @unchecked Sendable {
                 return
             }
 
-            while let frame = self.nextFrame() {
+            // Single-frame per connection: process first frame, then reply+close.
+            if let frame = self.nextFrame() {
                 self.handleRequest(frame: frame)
-                if self.didHandle {
-                    return
-                }
+                return
             }
 
             if isComplete {
@@ -181,7 +179,6 @@ private final class ConnectionHandler: @unchecked Sendable {
             NotificationManager.send(kind: .failedToHandleRequestFromCLI, error: report)
         }
 
-        didHandle = true
         sendResponse("OK")
     }
 

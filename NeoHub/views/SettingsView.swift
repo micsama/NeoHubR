@@ -8,7 +8,7 @@ import UserNotifications
 // MARK: - Main Settings View
 
 struct SettingsView: View {
-    static let defaultWidth: CGFloat = 400
+    static let defaultWidth: CGFloat = 375
     static let defaultHeight: CGFloat = 450
 
     @ObservedObject var cli: CLI
@@ -99,7 +99,7 @@ private struct GeneralSettingsTab: View {
         VStack(spacing: 0) {
             // Header 放在 Form 外部，透明背景，垂直居中
             headerView
-                .frame(height: 60, alignment: .center)
+                .frame(height: 70, alignment: .center)
             Form {
                 Section {
                     Toggle("Launch at Login", isOn: $launchAtLoginEnabled)
@@ -127,7 +127,7 @@ private struct GeneralSettingsTab: View {
                 }
             }
             .formStyle(.grouped)
-            .padding(.top, -5)
+            .padding(.top, -10)
         }
     }
 

@@ -21,9 +21,8 @@
   - `ProjectEntry`：项目条目（路径、展示名、图标、颜色、最近打开时间、收藏/排序）。
   - `ProjectRegistry`：UserDefaults 序列化读写入口。
   - `ProjectRegistryStore`：App 侧可观察项目列表。
-- `IPCFrame.swift`
+- `IPCTools.swift`
   - `IPCFrame`：IPC 帧编码/解码工具，统一 CLI/App 的 frame 处理。
-- `IPCCodec.swift`
   - `IPCCodec`：统一 IPC JSON 编码/解码策略。
 
 ## 使用方式

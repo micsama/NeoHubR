@@ -20,9 +20,12 @@ public enum EditorNamingPolicy {
     public static func resolveLocation(workingDirectory: URL, path: String?) -> URL {
         switch path {
         case nil, "":
-            workingDirectory
+            return workingDirectory
         case .some(let path):
-            URL(fileURLWithPath: path, relativeTo: workingDirectory)
+            if path.hasPrefix("/") {
+                return URL(fileURLWithPath: path)
+            }
+            return workingDirectory.appendingPathComponent(path)
         }
     }
 

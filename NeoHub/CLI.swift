@@ -54,16 +54,39 @@ final class CLI: ObservableObject {
             return .error(reason: .notInstalled)
         }
 
-        let version = Self.getVersion()
+        let process = Process()
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
 
-        switch version {
-        case .success(let version):
+        process.executableURL = URL(filePath: Bin.destination)
+        process.arguments = ["--version"]
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            guard process.terminationStatus == 0 else {
+                let errorData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                let output = String(data: errorData, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? "Unknown error"
+                log.error("Failed to get CLI version. \(output)")
+                return .error(reason: .unexpectedError(NSError(
+                    domain: "CLI",
+                    code: Int(process.terminationStatus),
+                    userInfo: [NSLocalizedDescriptionKey: output]
+                )))
+            }
+
+            let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+            let version = String(data: data, encoding: .utf8)?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if version == APP_VERSION {
                 return .ok
-            } else {
-                return .error(reason: .versionMismatch)
             }
-        case .failure(let error):
+            return .error(reason: .versionMismatch)
+        } catch {
             log.error("Failed to get a CLI version. \(error)")
             return .error(reason: .unexpectedError(error))
         }
@@ -86,44 +109,6 @@ final class CLI: ObservableObject {
         let status = outcome.1 ?? self.status
         self.status = status
         return (outcome.0, status)
-    }
-
-    nonisolated private static func getVersion() -> Result<String, Error> {
-        let process = Process()
-        let stdoutPipe = Pipe()
-        let stderrPipe = Pipe()
-
-        process.executableURL = URL(filePath: Bin.destination)
-        process.arguments = ["--version"]
-        process.standardOutput = stdoutPipe
-        process.standardError = stderrPipe
-
-        do {
-            try process.run()
-
-            process.waitUntilExit()
-
-            if process.terminationStatus == 0 {
-                let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-                let result = String(data: data, encoding: .utf8)!.trimmingCharacters(in: .whitespacesAndNewlines)
-                return .success(result)
-            } else {
-                let errorData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-                let errorOutput = String(data: errorData, encoding: .utf8)!.trimmingCharacters(
-                    in: .whitespacesAndNewlines)
-
-                let error = ReportableError(
-                    "Failed to get CLI version",
-                    code: Int(process.terminationStatus),
-                    meta: [
-                        "StdErr": errorOutput.isEmpty ? "-" : errorOutput
-                    ]
-                )
-                return .failure(error)
-            }
-        } catch {
-            return .failure(error)
-        }
     }
 
     nonisolated private static func runAppleScript(_ script: String) -> Result<Void, CLIInstallationError> {
@@ -163,6 +148,7 @@ final class CLI: ObservableObject {
         }
         return parts.joined(separator: " | ")
     }
+
 }
 
 extension Result where Success == Void, Failure == CLIInstallationError {

@@ -34,8 +34,8 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "FA2AE4922AEBDA1D00D24008"
-               BuildableName = "NeoHubLibTests.xctest"
+               BlueprintIdentifier = "42B9FA9B27F14A6C8501A436"
+               BuildableName = "NeoHubLibTests"
                BlueprintName = "NeoHubLibTests"
                ReferencedContainer = "container:NeoHub.xcodeproj">
             </BuildableReference>
