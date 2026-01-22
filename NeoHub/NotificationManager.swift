@@ -3,8 +3,6 @@ import UserNotifications
 
 typealias NotificationMeta = [String: String]
 
-private let cliErrorCategoryId = "CLI_ERROR"
-
 extension NotificationMeta {
     init(userInfo: [AnyHashable: Any]) {
         var meta: NotificationMeta = [:]
@@ -28,6 +26,7 @@ enum NotificationKind: CaseIterable {
     case failedToGetRunningEditorApp
     case failedToActivateEditorApp
     case failedToRestartEditor
+    case cliError
 
     var id: String {
         switch self {
@@ -43,6 +42,8 @@ enum NotificationKind: CaseIterable {
             return "FAILED_TO_ACTIVATE_EDITOR_APP"
         case .failedToRestartEditor:
             return "FAILED_TO_RESTART_EDITOR"
+        case .cliError:
+            return "CLI_ERROR"
         }
     }
 
@@ -56,6 +57,8 @@ enum NotificationKind: CaseIterable {
             return String(localized: "Failed to activate Neovide")
         case .failedToRestartEditor:
             return String(localized: "Failed to restart the editor")
+        case .cliError:
+            return String(localized: "CLI Error")
         }
     }
 
@@ -73,6 +76,8 @@ enum NotificationKind: CaseIterable {
             return String(localized: "Please create an issue in GitHub repo.")
         case .failedToRestartEditor:
             return String(localized: "Please, report the issue on GitHub.")
+        case .cliError:
+            return String(localized: "Please create an issue in the GitHub repo.")
         }
     }
 
@@ -87,29 +92,6 @@ enum NotificationKind: CaseIterable {
     }
 }
 
-protocol NotificationAction: Sendable {
-    static var id: String { get }
-    static var button: String { get }
-
-    static var built: UNNotificationAction { get }
-
-    var meta: NotificationMeta { get }
-
-    init?(from meta: NotificationMeta)
-
-    func run()
-}
-
-extension NotificationAction {
-    static var built: UNNotificationAction {
-        UNNotificationAction(
-            identifier: Self.id,
-            title: Self.button,
-            options: []
-        )
-    }
-}
-
 @MainActor
 final class NotificationManager: NSObject {
     static let shared = NotificationManager()
@@ -120,16 +102,7 @@ final class NotificationManager: NSObject {
     }
 
     static func registerCategories() {
-        let cliErrorCategory = UNNotificationCategory(
-            identifier: cliErrorCategoryId,
-            actions: [ReportAction.built],
-            intentIdentifiers: [],
-            hiddenPreviewsBodyPlaceholder: "",
-            options: .customDismissAction
-        )
         let categories = Set(NotificationKind.allCases.map { $0.category })
-            .union([cliErrorCategory])
-
         UNUserNotificationCenter.current().setNotificationCategories(categories)
     }
 
@@ -200,8 +173,8 @@ final class NotificationManager: NSObject {
         let reportable = ReportableError(report.message, meta: meta)
         let actionMeta = ReportAction(error: reportable).meta
         scheduleNotification(
-            categoryId: cliErrorCategoryId,
-            title: String(localized: "CLI Error"),
+            categoryId: NotificationKind.cliError.id,
+            title: NotificationKind.cliError.title,
             body: report.message,
             meta: actionMeta
         )
@@ -259,26 +232,29 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        switch response.actionIdentifier {
-        case ReportAction.id:
+        if response.actionIdentifier == ReportAction.id {
             let meta = NotificationMeta(userInfo: response.notification.request.content.userInfo)
             if let action = ReportAction(from: meta) {
                 DispatchQueue.global().async {
                     action.run()
                 }
             }
-            break
-        default:
-            break
         }
 
         completionHandler()
     }
 }
 
-struct ReportAction: NotificationAction {
+struct ReportAction {
     static let id: String = "REPORT_ACTION"
     static let button: String = String(localized: "Report")
+    static var built: UNNotificationAction {
+        UNNotificationAction(
+            identifier: id,
+            title: button,
+            options: []
+        )
+    }
 
     let title: String
     let error: String

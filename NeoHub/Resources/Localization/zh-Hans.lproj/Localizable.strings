@@ -64,7 +64,6 @@
 "CLI Installed" = "CLI 已安装";
 "CLI Install Required" = "需要安装 CLI 工具";
 "CLI Update Required" = "CLI 需要更新";
-"CLI Error" = "CLI 出现错误";
 "NeoHub CLI is not installed" = "NeoHub CLI 未安装";
 "Please open Settings to install the CLI." = "请打开设置安装 CLI。";
 "NeoHub CLI needs to be updated" = "NeoHub CLI 需要更新";

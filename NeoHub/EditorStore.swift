@@ -50,9 +50,8 @@ final class EditorStore: ObservableObject {
             var sorted = editors.sorted { $0.lastAcceessTime > $1.lastAcceessTime }
 
             if sorted.count > 1,
-                let firstEditor = sorted.first,
                 case .neovide(let prevEditor) = activationManager.activationTarget,
-                firstEditor.processIdentifier == prevEditor.processIdentifier
+                sorted.first?.processIdentifier == prevEditor.processIdentifier
             {
                 // Swap the first editor with the second one
                 // so it would require just Enter to switch between two editors
@@ -84,17 +83,14 @@ final class EditorStore: ObservableObject {
 
                     process.executableURL = request.bin
 
-                    let nofork = "--no-fork"
-
-                    process.arguments = request.opts
-
-                    if !process.arguments!.contains(nofork) {
-                        process.arguments!.append(nofork)
+                    var args = request.opts
+                    if !args.contains("--no-fork") {
+                        args.append("--no-fork")
                     }
-
                     if let path = request.path {
-                        process.arguments!.append(path)
+                        args.append(path)
                     }
+                    process.arguments = args
 
                     process.currentDirectoryURL = request.wd
                     process.environment = request.env
@@ -274,15 +270,14 @@ final class EditorStore: ObservableObject {
         do {
             try process.run()
             process.waitUntilExit()
-
-            guard process.terminationStatus == 0 else {
-                return nil
-            }
+            guard process.terminationStatus == 0 else { return nil }
 
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let path = String(data: data, encoding: .utf8)?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let path, !path.isEmpty else { return nil }
+            guard
+                let path = String(data: data, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                !path.isEmpty
+            else { return nil }
             return URL(fileURLWithPath: path)
         } catch {
             return nil
@@ -335,21 +330,11 @@ final class Editor: Identifiable {
     var displayPath: String {
         let fullPath = self.id.path
         let pattern = "^/Users/[^/]+/"
-
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
-            log.warning("Invalid display path regular expression.")
-            return fullPath
-        }
-
-        let range = NSRange(fullPath.startIndex..., in: fullPath)
-        let result = regex.stringByReplacingMatches(
-            in: fullPath,
-            options: [],
-            range: range,
-            withTemplate: "~/"
+        return fullPath.replacingOccurrences(
+            of: pattern,
+            with: "~/",
+            options: .regularExpression
         )
-
-        return result
     }
 
     var processIdentifier: Int32 {

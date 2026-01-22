@@ -31,13 +31,17 @@ private enum SwitcherEntry: Identifiable {
     }
 
     var isEditor: Bool {
-        if case .editor = self { return true }
-        return false
+        switch self {
+        case .editor: return true
+        case .project: return false
+        }
     }
 
     var isStarred: Bool {
-        if case .project(let p) = self { return p.isStarred }
-        return false
+        switch self {
+        case .project(let p): return p.isStarred
+        case .editor: return false
+        }
     }
 
     private static func formatPath(_ url: URL) -> String {
@@ -165,8 +169,7 @@ private final class SwitcherViewModel {
     }
 
     func activateSelected() {
-        guard filteredEntries.indices.contains(selectedIndex) else { return }
-        activate(filteredEntries[selectedIndex])
+        activate(at: selectedIndex)
     }
 
     func activate(at index: Int) {
@@ -487,7 +490,7 @@ private struct SwitcherSearchField: NSViewRepresentable {
 
 // MARK: - Content View
 
-private struct SwitcherContentView: View {
+    private struct SwitcherContentView: View {
     @Bindable var viewModel: SwitcherViewModel
 
     var body: some View {
@@ -502,18 +505,15 @@ private struct SwitcherContentView: View {
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .onKeyPress(phases: .down) { press in
-            guard press.modifiers.contains(.command),
-                let char = press.characters.first,
+            guard press.modifiers.contains(.command) else { return .ignored }
+
+            if let char = press.characters.first,
                 let digit = char.wholeNumberValue,
                 digit >= 0 && digit <= 9
-            else {
-                return .ignored
+            {
+                viewModel.activate(at: digit == 0 ? 9 : digit - 1)
+                return .handled
             }
-            viewModel.activate(at: digit == 0 ? 9 : digit - 1)
-            return .handled
-        }
-        .onKeyPress(phases: .down) { press in
-            guard press.modifiers.contains(.command) else { return .ignored }
 
             switch press.key {
             case .delete:

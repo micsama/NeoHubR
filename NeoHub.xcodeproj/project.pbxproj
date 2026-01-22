@@ -40,8 +40,7 @@
 		FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0102C8F0A1A00000001 /* AppSettings.swift */; };
 		FAE1A0212C8F1A0000000002 /* EditorNamingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */; };
 		FAE1A0312C8F1B0000000004 /* ProjectRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */; };
-		FAE1A0412C8F1C0000000006 /* IPCFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0402C8F1C0000000005 /* IPCFrame.swift */; };
-		FAE1A0512C8F1D0000000008 /* IPCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0502C8F1D0000000007 /* IPCCodec.swift */; };
+		FAE1A0412C8F1C0000000006 /* IPCTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0402C8F1C0000000005 /* IPCTools.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -128,8 +127,7 @@
 		FAE1A0102C8F0A1A00000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorNamingPolicy.swift; sourceTree = "<group>"; };
 		FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRegistry.swift; sourceTree = "<group>"; };
-		FAE1A0402C8F1C0000000005 /* IPCFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPCFrame.swift; sourceTree = "<group>"; };
-		FAE1A0502C8F1D0000000007 /* IPCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPCCodec.swift; sourceTree = "<group>"; };
+		FAE1A0402C8F1C0000000005 /* IPCTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPCTools.swift; sourceTree = "<group>"; };
 		FAE1A0602C90000100000001 /* LoggerBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerBootstrap.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -242,8 +240,7 @@
 				FA2EADA52AED589F000F8F7A /* NeoHubLib.docc */,
 				FAE1A0102C8F0A1A00000001 /* AppSettings.swift */,
 				FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */,
-				FAE1A0402C8F1C0000000005 /* IPCFrame.swift */,
-				FAE1A0502C8F1D0000000007 /* IPCCodec.swift */,
+				FAE1A0402C8F1C0000000005 /* IPCTools.swift */,
 				FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */,
 				FA2EADAF2AED58C6000F8F7A /* Shared.swift */,
 				FAE1A0602C90000100000001 /* LoggerBootstrap.swift */,
@@ -478,8 +475,7 @@
 				FA2EADA62AED589F000F8F7A /* NeoHubLib.docc in Sources */,
 				FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */,
 				FAE1A0212C8F1A0000000002 /* EditorNamingPolicy.swift in Sources */,
-				FAE1A0412C8F1C0000000006 /* IPCFrame.swift in Sources */,
-				FAE1A0512C8F1D0000000008 /* IPCCodec.swift in Sources */,
+				FAE1A0412C8F1C0000000006 /* IPCTools.swift in Sources */,
 				FAE1A0312C8F1B0000000004 /* ProjectRegistry.swift in Sources */,
 				FA2EADB02AED58C6000F8F7A /* Shared.swift in Sources */,
 				FAE1A0612C90000100000002 /* LoggerBootstrap.swift in Sources */,
