@@ -15,8 +15,9 @@
   - 维护 `Editor` 列表与排序逻辑。
   - 负责启动、激活、重启 Neovide 进程。
   - 启动/激活时记录最近项目到 `ProjectRegistry`。
-- 激活目标管理：`ActivationManager.swift`
-  - 记录/恢复前台应用与窗口（用于切换器隐藏后的回切）。
+- 激活与主线程工具：`AppUtilities.swift`
+  - `ActivationManager` 记录/恢复前台应用与窗口（用于切换器隐藏后的回切）。
+  - `MainThread` 提供主线程断言与调度。
 - IPC：`SocketServer.swift`
   - 使用 Network.framework 监听 `/tmp/neohub.sock`，接收 CLI 请求并调用 `EditorStore.runEditor`。
 - CLI 安装管理：`CLI.swift`

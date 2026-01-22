@@ -56,11 +56,13 @@ struct MenuBarView: View {
             case .error(reason: .unexpectedError(_)):
                 Divider()
                 SettingsLink { Text("❗ CLI Error") }
+                    .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
             case .ok:
                 EmptyView()
             }
             Divider()
             SettingsLink { Text("Settings") }
+                .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
             Button("About") { aboutWindow.open() }
             Divider()
             Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }.disabled(editors.count == 0)
@@ -120,4 +122,5 @@ struct MenuBarView: View {
             }
         }
     }
+
 }
