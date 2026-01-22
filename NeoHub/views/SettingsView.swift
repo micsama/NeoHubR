@@ -59,12 +59,27 @@ struct SettingsView: View {
 private struct SettingsWindowLevelUpdater: NSViewRepresentable {
     let alwaysOnTop: Bool
 
-    func makeNSView(context _: Context) -> NSView {
-        NSView()
+    func makeNSView(context _: Context) -> SettingsWindowLevelView {
+        SettingsWindowLevelView()
     }
 
-    func updateNSView(_ nsView: NSView, context _: Context) {
-        guard let window = nsView.window else { return }
+    func updateNSView(_ nsView: SettingsWindowLevelView, context _: Context) {
+        nsView.alwaysOnTop = alwaysOnTop
+    }
+}
+
+private final class SettingsWindowLevelView: NSView {
+    var alwaysOnTop: Bool = false {
+        didSet { updateLevelIfNeeded() }
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateLevelIfNeeded()
+    }
+
+    private func updateLevelIfNeeded() {
+        guard let window = window else { return }
         let level: NSWindow.Level = alwaysOnTop ? .floating : .normal
         if window.level != level {
             window.level = level
