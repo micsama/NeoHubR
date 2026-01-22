@@ -68,7 +68,8 @@ private final class SwitcherViewModel {
     private let projectRegistry: ProjectRegistryStore
     private let appSettings: AppSettingsStore
     private let activationManager: ActivationManager
-    private weak var window: SwitcherWindow?
+    private var onDismiss: () -> Void = {}
+    private var onOpenSettings: () -> Void = {}
 
     var searchText = ""
     var selectedIndex: Int = 0
@@ -85,8 +86,12 @@ private final class SwitcherViewModel {
         self.activationManager = activationManager
     }
 
-    func setWindow(_ window: SwitcherWindow) {
-        self.window = window
+    func setActions(
+        onDismiss: @escaping () -> Void,
+        onOpenSettings: @escaping () -> Void
+    ) {
+        self.onDismiss = onDismiss
+        self.onOpenSettings = onOpenSettings
     }
 
     // MARK: - Computed
@@ -196,11 +201,11 @@ private final class SwitcherViewModel {
     }
 
     func dismiss() {
-        window?.hide()
+        onDismiss()
     }
 
     func openSettings() {
-        window?.openSettings()
+        onOpenSettings()
     }
 
     func onAppear() {
@@ -250,7 +255,10 @@ final class SwitcherWindow {
         )
 
         configurePanel()
-        viewModel.setWindow(self)
+        viewModel.setActions(
+            onDismiss: { [weak self] in self?.hide() },
+            onOpenSettings: { [weak self] in self?.openSettings() }
+        )
 
         let contentView = SwitcherContentView(viewModel: viewModel)
         panel.contentView = NSHostingView(rootView: contentView)

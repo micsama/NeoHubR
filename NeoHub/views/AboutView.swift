@@ -4,36 +4,37 @@ struct AboutView: View {
     static let defaultWidth: CGFloat = 300
     static let defaultHeight: CGFloat = 220
 
+    private let versionText = "Version \(APP_VERSION) (\(APP_BUILD))"
+
     var body: some View {
-        VStack(alignment: .center, spacing: 10) {
+        VStack(spacing: 12) {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
-                .aspectRatio(contentMode: .fit)
+                .scaledToFit()
                 .frame(width: 64, height: 64)
+
             Text(APP_NAME)
-                .font(.title)
-            if #available(macOS 14, *) {
-                Text("Version \(APP_VERSION) (\(APP_BUILD))")
-                    .foregroundColor(.gray)
-                    .selectionDisabled(false)
-            } else {
-                Text("Version \(APP_VERSION) (\(APP_BUILD))")
-                    .foregroundColor(.gray)
-            }
-            VStack {
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text(versionText)
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
+
+            VStack(spacing: 4) {
                 Text("© 2023 Alex Fedoseev")
-                HStack(spacing: 1) {
-                    Text("Icon by ")
-                    Link(
-                        "u/danbee",
-                        destination: URL(string: "https://www.reddit.com/user/danbee/")!
-                    )
-                    .focusable(false)
+
+                HStack(spacing: 2) {
+                    Text("Icon by")
+                    Link("u/danbee", destination: URL(string: "https://www.reddit.com/user/danbee/")!)
+                        .foregroundStyle(.link)
+                        .focusable(false)
                 }
             }
             .font(.caption)
+            .foregroundStyle(.secondary)
         }
-        .padding()
+        .padding(20)
         .frame(width: Self.defaultWidth, height: Self.defaultHeight)
     }
 }
