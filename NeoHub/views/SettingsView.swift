@@ -1,26 +1,25 @@
 import AppKit
 import KeyboardShortcuts
 import NeoHubLib
-import ServiceManagement
+import Observation
 import SwiftUI
 import UserNotifications
 
 // MARK: - Main Settings View
 
 struct SettingsView: View {
-    @ObservedObject var cli: CLI
-    @ObservedObject var appSettings: AppSettingsStore
-    @ObservedObject var projectRegistry: ProjectRegistryStore
+    @Bindable var cli: CLI
+    @Bindable var appSettings: AppSettingsStore
+    @Bindable var projectRegistry: ProjectRegistryStore
 
     @State private var runningCLIAction = false
-    @State private var launchAtLoginEnabled = false
 
     var body: some View {
         TabView {
             GeneralSettingsTab(
                 cli: cli,
                 runningCLIAction: $runningCLIAction,
-                launchAtLoginEnabled: $launchAtLoginEnabled
+                appSettings: appSettings
             )
             .tabItem {
                 Label("General", systemImage: "gearshape")
@@ -47,13 +46,7 @@ struct SettingsView: View {
         .fixedSize(horizontal: true, vertical: true)
         .onAppear {
             NSApp.activate(ignoringOtherApps: true)
-            launchAtLoginEnabled = isLaunchAtLoginEnabled()
         }
-    }
-
-    private func isLaunchAtLoginEnabled() -> Bool {
-        let status = SMAppService.mainApp.status
-        return status == .enabled || status == .requiresApproval
     }
 }
 
@@ -91,9 +84,9 @@ private final class SettingsWindowLevelView: NSView {
 // MARK: - General Tab
 
 private struct GeneralSettingsTab: View {
-    @ObservedObject var cli: CLI
+    @Bindable var cli: CLI
     @Binding var runningCLIAction: Bool
-    @Binding var launchAtLoginEnabled: Bool
+    @Bindable var appSettings: AppSettingsStore
 
     var body: some View {
         VStack(spacing: 0) {
@@ -102,10 +95,13 @@ private struct GeneralSettingsTab: View {
                 .frame(height: 70, alignment: .center)
             Form {
                 Section {
-                    Toggle("Launch at Login", isOn: $launchAtLoginEnabled)
-                        .onChange(of: launchAtLoginEnabled) { _, newValue in
-                            updateLaunchAtLogin(newValue)
-                        }
+                    Toggle(
+                        "Launch at Login",
+                        isOn: Binding(
+                            get: { appSettings.launchAtLogin },
+                            set: { appSettings.launchAtLogin = $0 }
+                        )
+                    )
                 }
 
                 Section {
@@ -147,28 +143,11 @@ private struct GeneralSettingsTab: View {
         }
     }
 
-    private func updateLaunchAtLogin(_ enabled: Bool) {
-        do {
-            if enabled {
-                try SMAppService.mainApp.register()
-            } else {
-                try SMAppService.mainApp.unregister()
-            }
-        } catch {
-            log.error("Failed to update launch at login: \(error)")
-            launchAtLoginEnabled = isLaunchAtLoginEnabled()
-        }
-    }
-
-    private func isLaunchAtLoginEnabled() -> Bool {
-        let status = SMAppService.mainApp.status
-        return status == .enabled || status == .requiresApproval
-    }
 }
 // MARK: - CLI Status View
 
 private struct CLIStatusView: View {
-    @ObservedObject var cli: CLI
+    @Bindable var cli: CLI
     @Binding var runningCLIAction: Bool
     @State private var didCopyPath = false
 
@@ -338,8 +317,8 @@ private struct CLIStatusView: View {
 // MARK: - Projects Tab
 
 private struct ProjectRegistryTab: View {
-    @ObservedObject var appSettings: AppSettingsStore
-    @ObservedObject var projectRegistry: ProjectRegistryStore
+    @Bindable var appSettings: AppSettingsStore
+    @Bindable var projectRegistry: ProjectRegistryStore
 
     var body: some View {
         VStack(spacing: 0) {
@@ -370,16 +349,16 @@ private struct ProjectRegistryTab: View {
             // Project List
             List {
                 Section("Starred") {
-                    if starredEntries.isEmpty {
+                    if projectRegistry.starredEntries.isEmpty {
                         Text("No starred projects")
                             .foregroundStyle(.secondary)
                             .font(.subheadline)
                     } else {
-                        ForEach(starredEntries) { entry in
+                        ForEach(projectRegistry.starredEntries) { entry in
                             ProjectRow(entry: entry, projectRegistry: projectRegistry)
                         }
                         .onMove { indices, newOffset in
-                            var ids = starredEntries.map { $0.id }
+                            var ids = projectRegistry.starredEntries.map { $0.id }
                             ids.move(fromOffsets: indices, toOffset: newOffset)
                             projectRegistry.updatePinnedOrder(ids: ids)
                         }
@@ -387,12 +366,12 @@ private struct ProjectRegistryTab: View {
                 }
 
                 Section("Recent") {
-                    if recentEntries.isEmpty {
+                    if projectRegistry.recentEntries.isEmpty {
                         Text("No recent projects")
                             .foregroundStyle(.secondary)
                             .font(.subheadline)
                     } else {
-                        ForEach(recentEntries) { entry in
+                        ForEach(projectRegistry.recentEntries) { entry in
                             ProjectRow(entry: entry, projectRegistry: projectRegistry)
                         }
                     }
@@ -401,31 +380,12 @@ private struct ProjectRegistryTab: View {
             .listStyle(.inset(alternatesRowBackgrounds: true))
         }
     }
-
-    private var starredEntries: [ProjectEntry] {
-        projectRegistry.entries
-            .filter { $0.isStarred }
-            .sorted { lhs, rhs in
-                let lhsOrder = lhs.pinnedOrder ?? Int.max
-                let rhsOrder = rhs.pinnedOrder ?? Int.max
-                if lhsOrder != rhsOrder {
-                    return lhsOrder < rhsOrder
-                }
-                return (lhs.lastOpenedAt ?? .distantPast) > (rhs.lastOpenedAt ?? .distantPast)
-            }
-    }
-
-    private var recentEntries: [ProjectEntry] {
-        projectRegistry.entries
-            .filter { !$0.isStarred }
-            .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
-    }
 }
 
 // MARK: - Advanced Tab
 
 private struct AdvancedSettingsTab: View {
-    @ObservedObject var appSettings: AppSettingsStore
+    @Bindable var appSettings: AppSettingsStore
     @State private var notificationStatusText = "Unknown"
 
     var body: some View {
@@ -480,7 +440,7 @@ private struct AdvancedSettingsTab: View {
 
 private struct ProjectRow: View {
     let entry: ProjectEntry
-    @ObservedObject var projectRegistry: ProjectRegistryStore
+    @Bindable var projectRegistry: ProjectRegistryStore
 
     var body: some View {
         HStack(spacing: 10) {
