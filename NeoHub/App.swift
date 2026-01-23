@@ -43,13 +43,6 @@ struct NeoHubApp: App {
                 projectRegistry: app.projectRegistry
             )
         }
-
-        Window("About", id: "about") {
-            AboutWindowContent()
-        }
-        .windowResizability(.contentSize)
-        .windowStyle(.hiddenTitleBar)
-        // TODO(macOS 15+): Consider enabling WindowDragGesture for background drag.
     }
 }
 

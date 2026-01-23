@@ -29,7 +29,6 @@
 		FA39371D2AF3A7CC001D9105 /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA39371C2AF3A7CC001D9105 /* Shell.swift */; };
 		FA54EB702AF4FD84001AE449 /* neohub in Embed CLI */ = {isa = PBXBuildFile; fileRef = FA2AE45D2AEB9CA000D24008 /* neohub */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		FA54EB722AF5033D001AE449 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB712AF5033D001AE449 /* CLI.swift */; };
-		FA54EB762AF654D7001AE449 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB752AF654D7001AE449 /* AboutView.swift */; };
 		FA54EB812AF789F6001AE449 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB802AF789F6001AE449 /* Logger.swift */; };
 		FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB822AF7A381001AE449 /* NotificationManager.swift */; };
 		FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB8C2AF7F689001AE449 /* BugReporter.swift */; };
@@ -114,7 +113,6 @@
 		FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppSettingsStore+LaunchAtLogin.swift"; sourceTree = "<group>"; };
 		FA39371C2AF3A7CC001D9105 /* Shell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shell.swift; sourceTree = "<group>"; };
 		FA54EB712AF5033D001AE449 /* CLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLI.swift; sourceTree = "<group>"; };
-		FA54EB752AF654D7001AE449 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		FA54EB802AF789F6001AE449 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		FA54EB822AF7A381001AE449 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		FA54EB8C2AF7F689001AE449 /* BugReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BugReporter.swift; sourceTree = "<group>"; };
@@ -248,7 +246,6 @@
 				FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */,
 				FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */,
 				FA3937162AF291A5001D9105 /* SettingsView.swift */,
-				FA54EB752AF654D7001AE449 /* AboutView.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -428,7 +425,6 @@
 			files = (
 				FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */,
 				FA7B6C122D0A111100000002 /* AppSettingsStore+LaunchAtLogin.swift in Sources */,
-				FA54EB762AF654D7001AE449 /* AboutView.swift in Sources */,
 				FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */,
 				FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */,
 				FA2AE44B2AEB980700D24008 /* App.swift in Sources */,
