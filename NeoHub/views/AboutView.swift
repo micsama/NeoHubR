@@ -38,16 +38,23 @@ struct AboutView: View {
         }
         .padding(20)
         .frame(width: Self.defaultWidth, height: Self.defaultHeight)
-        if #available(macOS 26.0, *) {
-            content
-                .background {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 18, style: .continuous))
-                        .ignoresSafeArea()
-                }
-        } else {
-            content
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        Group {
+            if #available(macOS 26.0, *) {
+                content
+                    .background {
+                        GlassEffectContainer {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .glassEffect(.regular, in: .rect(cornerRadius: 18, style: .continuous))
+                                .ignoresSafeArea()
+                        }
+                    }
+            } else {
+                content
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+        }
+        .onAppear {
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 }

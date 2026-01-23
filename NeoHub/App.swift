@@ -43,8 +43,6 @@ struct NeoHubApp: App {
                 projectRegistry: app.projectRegistry
             )
         }
-        .defaultSize(width: 375, height: 450)
-        .windowResizability(.contentSize)
 
         Window("About", id: "about") {
             AboutView()
