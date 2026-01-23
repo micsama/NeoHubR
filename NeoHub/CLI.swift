@@ -69,18 +69,22 @@ final class CLI: ObservableObject {
 
             guard process.terminationStatus == 0 else {
                 let errorData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-                let output = String(data: errorData, encoding: .utf8)?
+                let output =
+                    String(data: errorData, encoding: .utf8)?
                     .trimmingCharacters(in: .whitespacesAndNewlines) ?? "Unknown error"
                 log.error("Failed to get CLI version. \(output)")
-                return .error(reason: .unexpectedError(NSError(
-                    domain: "CLI",
-                    code: Int(process.terminationStatus),
-                    userInfo: [NSLocalizedDescriptionKey: output]
-                )))
+                return .error(
+                    reason: .unexpectedError(
+                        NSError(
+                            domain: "CLI",
+                            code: Int(process.terminationStatus),
+                            userInfo: [NSLocalizedDescriptionKey: output]
+                        )))
             }
 
             let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-            let version = String(data: data, encoding: .utf8)?
+            let version =
+                String(data: data, encoding: .utf8)?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if version == APP_VERSION {
                 return .ok

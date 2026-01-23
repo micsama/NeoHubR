@@ -89,7 +89,8 @@ public struct Logger: Sendable {
 private func resolvedLevel(envVar: String?, defaultLevel: LogLevel) -> LogLevel {
     guard let envVar else { return defaultLevel }
     guard let value = ProcessInfo.processInfo.environment[envVar],
-          let parsed = LogLevel.parse(value) else {
+        let parsed = LogLevel.parse(value)
+    else {
         return defaultLevel
     }
     return parsed

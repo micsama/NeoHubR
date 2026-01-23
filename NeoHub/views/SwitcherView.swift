@@ -490,7 +490,7 @@ private struct SwitcherSearchField: NSViewRepresentable {
 
 // MARK: - Content View
 
-    private struct SwitcherContentView: View {
+private struct SwitcherContentView: View {
     @Bindable var viewModel: SwitcherViewModel
 
     var body: some View {

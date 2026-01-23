@@ -21,7 +21,7 @@ struct MenuBarView: View {
     @ObservedObject var cli: CLI
     @ObservedObject var editorStore: EditorStore
 
-    let aboutWindow: RegularWindow<AboutView>
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         let editors = editorStore.getEditors(sortedFor: .menubar)
@@ -63,7 +63,7 @@ struct MenuBarView: View {
             SettingsLink { Text("Settings") }
                 // MenuBarExtra opens Settings without focus in accessory apps; activate to ensure key window.
                 .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
-            Button("About") { aboutWindow.open() }
+            Button("About") { openWindow(id: "about") }
             Divider()
             Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }
                 .disabled(editors.count == 0)
@@ -72,7 +72,8 @@ struct MenuBarView: View {
     }
 
     @MainActor
-    static func showCLIInstallationAlert(with response: (result: Result<Void, CLIInstallationError>, status: CLIStatus)) {
+    static func showCLIInstallationAlert(with response: (result: Result<Void, CLIInstallationError>, status: CLIStatus))
+    {
         switch response.result {
         case .success(()):
             let alert = NSAlert()
@@ -98,7 +99,7 @@ struct MenuBarView: View {
             case .failedToCreateAppleScript:
                 alert.informativeText = String(localized: "There was an issue during installation.")
                 reportError = ReportableError("Failed to build installation Apple Script")
-            case .failedToExecuteAppleScript(message: let message):
+            case .failedToExecuteAppleScript(let message):
                 alert.informativeText = message
                 reportError = ReportableError(
                     "Failed to execute installation Apple Script",

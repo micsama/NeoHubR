@@ -31,8 +31,7 @@ struct NeoHubApp: App {
             content: {
                 MenuBarView(
                     cli: app.cli,
-                    editorStore: app.editorStore,
-                    aboutWindow: app.aboutWindow
+                    editorStore: app.editorStore
                 )
             },
             label: { MenuBarIcon() }
@@ -46,6 +45,13 @@ struct NeoHubApp: App {
         }
         .defaultSize(width: 375, height: 450)
         .windowResizability(.contentSize)
+
+        Window("About", id: "about") {
+            AboutView()
+        }
+        .windowResizability(.contentSize)
+        .windowStyle(.hiddenTitleBar)
+        // TODO(macOS 15+): Consider enabling WindowDragGesture for background drag.
     }
 }
 
@@ -55,8 +61,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let editorStore: EditorStore
     let server: SocketServer
     let switcherWindow: SwitcherWindow
-    let aboutWindow: RegularWindow<AboutView>
-    let windowCounter: WindowCounter
     let activationManager: ActivationManager
     let appSettings: AppSettingsStore
     let projectRegistry: ProjectRegistryStore
@@ -66,7 +70,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.appSettings = appSettings
 
         let cli = CLI()
-        let windowCounter = WindowCounter()
         let activationManager = ActivationManager()
         let projectRegistry = ProjectRegistryStore()
 
@@ -81,11 +84,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.cli = cli
         self.server = SocketServer(store: editorStore)
         self.editorStore = editorStore
-        self.aboutWindow = RegularWindow(
-            width: AboutView.defaultWidth,
-            content: { AboutView() },
-            windowCounter: windowCounter
-        )
         self.switcherWindow = SwitcherWindow(
             editorStore: editorStore,
             selfRef: switcherWindowRef,
@@ -93,7 +91,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             appSettings: appSettings,
             projectRegistry: projectRegistry
         )
-        self.windowCounter = windowCounter
         self.activationManager = activationManager
         self.projectRegistry = projectRegistry
 

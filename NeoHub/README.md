@@ -22,9 +22,9 @@
   - 使用 Network.framework 监听 `/tmp/neohub.sock`，接收 CLI 请求并调用 `EditorStore.runEditor`。
 - CLI 安装管理：`CLI.swift`
   - 通过 AppleScript 复制二进制与框架到 `/usr/local`。
-- 窗口体系：`RegularWindow.swift` + `views/`
-  - Switcher 窗口为浮层；设置/安装/关于为独立窗口。
-  - RegularWindow 打开时会在当前屏幕居中，且同类窗口保持单实例。
+- 窗口体系：`views/` + SwiftUI Scenes
+  - Switcher 窗口为浮层（NSPanel）。
+  - Settings/About 使用系统 Scene 管理（Window/Settings）。
 - 设置模型：`NeoHubLib/AppSettings.swift`
   - 统一 App 侧设置 Key、默认值与可用性判断。
   - `AppSettingsStore` 作为可观察模型注入 Settings/Switcher。

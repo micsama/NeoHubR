@@ -9,7 +9,7 @@ struct AboutView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        let content = VStack(spacing: 12) {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
                 .scaledToFit()
@@ -38,5 +38,26 @@ struct AboutView: View {
         }
         .padding(20)
         .frame(width: Self.defaultWidth, height: Self.defaultHeight)
+        if #available(macOS 26.0, *) {
+            content
+                .background {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .glassEffect(.regular, in: .rect(cornerRadius: 18, style: .continuous))
+                        .ignoresSafeArea()
+                }
+        } else {
+            content
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+    }
+}
+#Preview {
+    if #available(macOS 26.0, *) {
+        GlassEffectContainer(spacing: 10) {
+            AboutView()
+                .glassEffect(.regular, in: .rect(cornerRadius: 20))
+        }
+    } else {
+        AboutView()
     }
 }
