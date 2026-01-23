@@ -1,5 +1,5 @@
-import Combine
 import Foundation
+import Observation
 
 public enum AppSettings {
     public enum Key {
@@ -30,14 +30,15 @@ public enum AppSettings {
 }
 
 @MainActor
-public final class AppSettingsStore: ObservableObject {
-    @Published public var forwardCLIErrors: Bool {
+@Observable
+public final class AppSettingsStore {
+    public var forwardCLIErrors: Bool {
         didSet {
             UserDefaults.standard.set(forwardCLIErrors, forKey: AppSettings.Key.forwardCLIErrors)
         }
     }
 
-    @Published public var switcherMaxItems: Int {
+    public var switcherMaxItems: Int {
         didSet {
             let value = AppSettings.clampSwitcherMaxItems(switcherMaxItems)
             if value != switcherMaxItems {
@@ -48,7 +49,7 @@ public final class AppSettingsStore: ObservableObject {
         }
     }
 
-    @Published public var settingsAlwaysOnTop: Bool {
+    public var settingsAlwaysOnTop: Bool {
         didSet {
             UserDefaults.standard.set(settingsAlwaysOnTop, forKey: AppSettings.Key.settingsAlwaysOnTop)
         }

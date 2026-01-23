@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 
 public struct ProjectEntry: Identifiable, Codable, Hashable, Sendable {
     public let id: URL
@@ -96,8 +97,9 @@ public enum ProjectRegistry {
 }
 
 @MainActor
-public final class ProjectRegistryStore: ObservableObject {
-    @Published public var entries: [ProjectEntry] {
+@Observable
+public final class ProjectRegistryStore {
+    public var entries: [ProjectEntry] {
         didSet {
             ProjectRegistry.save(entries)
         }
@@ -133,6 +135,25 @@ public final class ProjectRegistryStore: ObservableObject {
             updated.pinnedOrder = order[entry.id]
             return updated
         }
+    }
+
+    public var starredEntries: [ProjectEntry] {
+        entries
+            .filter { $0.isStarred }
+            .sorted { lhs, rhs in
+                let lhsOrder = lhs.pinnedOrder ?? Int.max
+                let rhsOrder = rhs.pinnedOrder ?? Int.max
+                if lhsOrder != rhsOrder {
+                    return lhsOrder < rhsOrder
+                }
+                return (lhs.lastOpenedAt ?? .distantPast) > (rhs.lastOpenedAt ?? .distantPast)
+            }
+    }
+
+    public var recentEntries: [ProjectEntry] {
+        entries
+            .filter { !$0.isStarred }
+            .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
     }
 
     private func nextPinnedOrder() -> Int {

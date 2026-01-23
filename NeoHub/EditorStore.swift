@@ -1,11 +1,13 @@
 import AppKit
 import KeyboardShortcuts
 import NeoHubLib
+import Observation
 import SwiftUI
 
 @MainActor
-final class EditorStore: ObservableObject {
-    @Published private var editors: [EditorID: Editor]
+@Observable
+final class EditorStore {
+    private var editors: [EditorID: Editor]
 
     let switcherWindow: SwitcherWindowRef
     let activationManager: ActivationManager

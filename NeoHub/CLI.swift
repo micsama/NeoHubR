@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import Observation
 
 private struct Bin {
     static let source = Bundle.main.bundlePath + "/Contents/SharedSupport/neohub"
@@ -29,8 +30,9 @@ enum CLIInstallationError: Error {
 }
 
 @MainActor
-final class CLI: ObservableObject {
-    @Published private(set) var status: CLIStatus = .ok
+@Observable
+final class CLI {
+    private(set) var status: CLIStatus = .ok
 
     nonisolated static var binPath: String {
         Bin.destination

@@ -1,4 +1,5 @@
 import NeoHubLib
+import Observation
 import SwiftUI
 
 struct MenuBarIcon: View {
@@ -19,8 +20,8 @@ struct MenuBarIcon: View {
 }
 
 struct MenuBarView: View {
-    @ObservedObject var cli: CLI
-    @ObservedObject var editorStore: EditorStore
+    @Bindable var cli: CLI
+    @Bindable var editorStore: EditorStore
 
     @Environment(\.openWindow) private var openWindow
 
