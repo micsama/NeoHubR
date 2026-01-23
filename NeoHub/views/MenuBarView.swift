@@ -1,3 +1,4 @@
+import NeoHubLib
 import SwiftUI
 
 struct MenuBarIcon: View {
@@ -38,34 +39,41 @@ struct MenuBarView: View {
             switch cli.status {
             case .error(reason: .notInstalled), .error(reason: .versionMismatch):
                 Divider()
-                let title: String = {
+                Text("CLI Action Required")
+                    .font(.headline)
+                let titleKey: LocalizedStringKey = {
                     switch cli.status {
                     case .error(reason: .versionMismatch):
-                        return "⚠️ Update CLI"
+                        return "Update CLI"
                     default:
-                        return "⚠️ Install CLI"
+                        return "Install CLI"
                     }
                 }()
-                Button(title) {
+                Button {
                     Task { @MainActor in
                         let response = await cli.run(.install)
                         Self.showCLIInstallationAlert(with: response)
                     }
+                } label: {
+                    Label(titleKey, systemImage: "exclamationmark.triangle.fill")
                 }
             case .error(reason: .unexpectedError(_)):
                 Divider()
-                SettingsLink { Text("❗ CLI Error") }
+                SettingsLink { Label("CLI Error", systemImage: "exclamationmark.triangle.fill") }
                     .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
             case .ok:
                 EmptyView()
             }
             Divider()
-            SettingsLink { Text("Settings") }
+            SettingsLink { Label("Settings", systemImage: "gearshape") }
                 // MenuBarExtra opens Settings without focus in accessory apps; activate to ensure key window.
                 .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
-            Button("About") {
+                .keyboardShortcut(",", modifiers: .command)
+            Button {
                 openWindow(id: "about")
                 NSApp.activate(ignoringOtherApps: true)
+            } label: {
+                Label("About", systemImage: "info.circle")
             }
             Divider()
             Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }
@@ -73,20 +81,15 @@ struct MenuBarView: View {
             Button("Quit NeoHub") { NSApplication.shared.terminate(nil) }
         }
     }
-
     @MainActor
     static func showCLIInstallationAlert(with response: (result: Result<Void, CLIInstallationError>, status: CLIStatus))
     {
         switch response.result {
         case .success(()):
-            let alert = NSAlert()
-
-            alert.messageText = String(localized: "Boom!")
-            alert.informativeText = String(localized: "The CLI is ready to roll 🚀")
-            alert.alertStyle = .informational
-            alert.addButton(withTitle: String(localized: "OK"))
-
-            alert.runModal()
+            NotificationManager.sendInfo(
+                title: String(localized: "Boom!"),
+                body: String(localized: "The CLI is ready to roll 🚀")
+            )
 
         case .failure(.userCanceledOperation): ()
 

@@ -25,9 +25,7 @@
 
 "No editors" = "No editors";
 "Editors" = "Editors";
-"⚠️ Install CLI" = "⚠️ Install CLI";
-"⚠️ Update CLI" = "⚠️ Update CLI";
-"❗ CLI Error" = "❗ CLI Error";
+"CLI Action Required" = "CLI tool required";
 "About" = "About";
 "Quit All Editors" = "Quit All Editors";
 "Quit NeoHub" = "Quit NeoHub";
@@ -65,12 +63,12 @@
 "CLI Install Required" = "CLI Install Required";
 "CLI Update Required" = "CLI Update Required";
 "NeoHub CLI is not installed" = "NeoHub CLI is not installed";
-"Please open Settings to install the CLI." = "Please open Settings to install the CLI.";
+"Please open Settings to install the CLI." = "Please open Settings from the menu bar to install the CLI.";
 "NeoHub CLI needs to be updated" = "NeoHub CLI needs to be updated";
-"Please open Settings to update the CLI." = "Please open Settings to update the CLI.";
+"Please open Settings to update the CLI." = "Please open Settings from the menu bar to update the CLI.";
 "NeoHub CLI error" = "NeoHub CLI error";
-"Please open Settings and check logs." = "Please open Settings and check logs.";
-"Open Settings" = "Open Settings";
+"Please open Settings and check logs." = "Please open Settings from the menu bar and check logs.";
+"Open Settings" = "Go to Settings";
 "Notification Permission" = "Notification Permission";
 "Not Determined" = "Not Determined";
 "Denied" = "Denied";
