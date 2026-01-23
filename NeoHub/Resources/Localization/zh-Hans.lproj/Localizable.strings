@@ -25,9 +25,7 @@
 
 "No editors" = "没有编辑器";
 "Editors" = "编辑器";
-"⚠️ Install CLI" = "⚠️ 安装 CLI";
-"⚠️ Update CLI" = "⚠️ 更新 CLI";
-"❗ CLI Error" = "❗ CLI 错误";
+"CLI Action Required" = "需要安装命令行工具";
 "About" = "关于";
 "Quit All Editors" = "退出所有编辑器";
 "Quit NeoHub" = "退出 NeoHub";
@@ -65,12 +63,12 @@
 "CLI Install Required" = "需要安装 CLI 工具";
 "CLI Update Required" = "CLI 需要更新";
 "NeoHub CLI is not installed" = "NeoHub CLI 未安装";
-"Please open Settings to install the CLI." = "请打开设置安装 CLI。";
+"Please open Settings to install the CLI." = "请从菜单栏打开设置以安装 CLI。";
 "NeoHub CLI needs to be updated" = "NeoHub CLI 需要更新";
-"Please open Settings to update the CLI." = "请打开设置更新 CLI。";
+"Please open Settings to update the CLI." = "请从菜单栏打开设置以更新 CLI。";
 "NeoHub CLI error" = "NeoHub CLI 出现错误";
-"Please open Settings and check logs." = "请打开设置并查看日志。";
-"Open Settings" = "打开设置";
+"Please open Settings and check logs." = "请从菜单栏打开设置并查看日志。";
+"Open Settings" = "去设置";
 "Notification Permission" = "通知权限";
 "Not Determined" = "未询问";
 "Denied" = "已拒绝";

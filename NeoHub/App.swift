@@ -104,9 +104,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         Task { @MainActor in
             let status = await self.cli.refreshStatus()
-            if case .error(_) = status {
-                self.showCLIAlert(status)
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            if case .error(let reason) = status {
+                switch reason {
+                case .notInstalled:
+                    NotificationManager.sendInfo(
+                        title: String(localized: "NeoHub CLI is not installed"),
+                        body: String(localized: "Please open Settings to install the CLI.")
+                    )
+                case .versionMismatch:
+                    NotificationManager.sendInfo(
+                        title: String(localized: "NeoHub CLI needs to be updated"),
+                        body: String(localized: "Please open Settings to update the CLI.")
+                    )
+                case .unexpectedError(let err):
+                    let error = ReportableError("CLI unexpected error", error: err)
+                    NotificationManager.send(kind: .cliUnexpectedError, error: error)
+                }
             }
         }
     }
@@ -119,24 +132,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         server.stop()
     }
 
-    private func showCLIAlert(_ status: CLIStatus) {
-        guard case .error(let reason) = status else { return }
-
-        let alert = NSAlert()
-        switch reason {
-        case .notInstalled:
-            alert.messageText = String(localized: "NeoHub CLI is not installed")
-            alert.informativeText = String(localized: "Please open Settings to install the CLI.")
-        case .versionMismatch:
-            alert.messageText = String(localized: "NeoHub CLI needs to be updated")
-            alert.informativeText = String(localized: "Please open Settings to update the CLI.")
-        case .unexpectedError:
-            alert.messageText = String(localized: "NeoHub CLI error")
-            alert.informativeText = String(localized: "Please open Settings and check logs.")
-        }
-
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: String(localized: "Open Settings"))
-        alert.runModal()
-    }
+    // CLI error alert handled in MenuBarView using SwiftUI + openSettings.
 }

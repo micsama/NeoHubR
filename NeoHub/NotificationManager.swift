@@ -26,6 +26,7 @@ enum NotificationKind: CaseIterable {
     case failedToGetRunningEditorApp
     case failedToActivateEditorApp
     case failedToRestartEditor
+    case cliUnexpectedError
     case cliError
 
     var id: String {
@@ -42,6 +43,8 @@ enum NotificationKind: CaseIterable {
             return "FAILED_TO_ACTIVATE_EDITOR_APP"
         case .failedToRestartEditor:
             return "FAILED_TO_RESTART_EDITOR"
+        case .cliUnexpectedError:
+            return "CLI_UNEXPECTED_ERROR"
         case .cliError:
             return "CLI_ERROR"
         }
@@ -57,6 +60,8 @@ enum NotificationKind: CaseIterable {
             return String(localized: "Failed to activate Neovide")
         case .failedToRestartEditor:
             return String(localized: "Failed to restart the editor")
+        case .cliUnexpectedError:
+            return String(localized: "NeoHub CLI error")
         case .cliError:
             return String(localized: "CLI Error")
         }
@@ -76,6 +81,8 @@ enum NotificationKind: CaseIterable {
             return String(localized: "Please create an issue in GitHub repo.")
         case .failedToRestartEditor:
             return String(localized: "Please, report the issue on GitHub.")
+        case .cliUnexpectedError:
+            return String(localized: "Please open Settings and check logs.")
         case .cliError:
             return String(localized: "Please create an issue in the GitHub repo.")
         }
@@ -211,6 +218,22 @@ final class NotificationManager: NSObject {
                 }
             }
         }
+    }
+
+    nonisolated static func sendInfo(title: String, body: String) {
+        Task { @MainActor in
+            NotificationManager.shared.sendInfoOnMain(title: title, body: body)
+        }
+    }
+
+    private func sendInfoOnMain(title: String, body: String) {
+        MainThread.assert()
+        scheduleNotification(
+            categoryId: "",
+            title: title,
+            body: body,
+            meta: [:]
+        )
     }
 }
 
