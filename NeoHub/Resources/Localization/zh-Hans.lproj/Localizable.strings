@@ -1,6 +1,7 @@
 "Search" = "搜索";
 "No running Neovide instances" = "没有运行中的 Neovide 实例";
 "Settings" = "设置";
+"Settings…" = "设置…";
 "Close" = "关闭";
 "Quit Selected" = "退出所选";
 "Quit All" = "退出全部";

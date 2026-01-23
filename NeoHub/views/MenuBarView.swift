@@ -65,7 +65,7 @@ struct MenuBarView: View {
                 EmptyView()
             }
             Divider()
-            SettingsLink { Label("Settings", systemImage: "gearshape") }
+            SettingsLink { Label("Settings…", systemImage: "gearshape") }
                 // MenuBarExtra opens Settings without focus in accessory apps; activate to ensure key window.
                 .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
                 .keyboardShortcut(",", modifiers: .command)
