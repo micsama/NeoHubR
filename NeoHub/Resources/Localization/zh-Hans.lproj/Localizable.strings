@@ -36,6 +36,8 @@
 "Oh no!" = "糟糕！";
 "There was an issue during installation." = "安装过程中出现问题。";
 "Dismiss" = "关闭";
+"CLI Removed" = "CLI 已移除";
+"The CLI has been removed." = "CLI 已被移除。";
 
 "General" = "通用";
 "Projects" = "项目";
@@ -92,3 +94,7 @@
 "Please create an issue in GitHub repo." = "请在 GitHub 仓库创建一个 issue。";
 "Requested Neovide instance is not running." = "请求的 Neovide 实例未在运行。";
 "CLI Error" = "CLI 错误";
+
+"NeoHubR" = "NeoHubR";
+"Quit NeoHubR" = "退出 NeoHubR";
+"Alex Fedoseev · © 2026 micsama" = "Alex Fedoseev · © 2026 micsama";
