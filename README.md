@@ -1,54 +1,67 @@
 <h1 align="center">NeoHub</h1>
 
 <p align="center">
-    <img width="600" alt="NeoHub" src="https://user-images.githubusercontent.com/4244251/281020657-ab8ceed5-8b4e-4366-89e0-4640b1887c2c.png">
+    <!-- Image placeholder: replace after updates -->
+    <!-- <img width="720" alt="NeoHub" src="YOUR_IMAGE_URL"> -->
 </p>
 
-## Why?
-[Neovide](https://neovide.dev/) is a sweeeeet GUI for [Neovim](https://neovim.io/), but I had two annoying issues.
-1. When multiple instances are running, it is hard to switch between them as each instance is a separate macOS process, and all the processes are named `neovide` in the `⌘ ⇥` list.
-2. Often, I accidentally run a project that is already running, resulting in a Neovim error related to existing swap files.
+<p align="center">
+  <a href="README_CN.md">简体中文</a>
+</p>
 
-## Features
-So, what NeoHub offers?
-1. Global hotkey to show a switcher between Neovide instances. You can hit this hotkey from anywhere and activate a project you need.
-2. Global hotkey to activate last used editor, if there are mulitple.
-3. Hotkey to restart current editor.
-4. CLI, which executes new Neovide instances, and if an instance at the current path is already running, it activates it instead of spawning a new one.
+---
+
+NeoHub (app name shown as **NeoHubR**) is a menu bar companion for **Neovide** on macOS.  
+This README focuses on **user-visible features** first.
+
+## Features (User-Facing)
+- **Menu bar workflow**: instant access, editor list, and quick actions.
+- **Editor switcher**: global hotkeys to summon and jump between editors.
+- **Smart launch**: CLI de-duplicates by project path and re-activates existing instances.
+- **Project registry**: Starred / Recent project lists integrated into switcher & settings.
+- **Restart shortcuts**: restart current editor with a dedicated hotkey.
+- **Notifications**: clear system notifications for CLI and editor lifecycle events.
+- **Modern Settings**: native SwiftUI Settings scene with General / Projects / Advanced tabs.
+- **Liquid Glass direction**: modern macOS visuals with fallbacks for older systems.
+
+## Why NeoHub
+Neovide is fantastic, but on macOS:
+1. Multiple instances are hard to distinguish in `⌘⇥` because every process is just `neovide`.
+2. Reopening an existing project often creates swap‑file conflicts.
 
 ## Requirements
-- `macOS 14+`.
-- Administrative privileges to install the CLI.
-- `neovide` available in your `PATH`.
+- macOS 14+
+- Neovide in your `PATH`
+- CLI installed once (from Settings)
 
-## Download
-Get it from the [Releases](https://github.com/alex35mil/NeoHub/releases).
+## Install
+Download the latest `.dmg` from GitHub Releases (or build locally with Xcode).  
+Open the DMG, drag `NeoHub.app` into `/Applications`, then launch it.  
+On first run, install the CLI from Settings.
 
-## Installation
-This a macOS app. Unzip the `NeoHub.zip` and move `NeoHub.app` to the `Applications` folder.
-
-On the very first launch, you will be asked to install the CLI. You will need to enter an administrative password. 
+Note: This build is not notarized.  
+If macOS blocks it, right‑click the app → Open, or allow it in System Settings → Privacy & Security.
 
 ## Usage
-### CLI
-Once installed, the `neohub` command should become available in your shell. This is the only way to launch a Neovide through the NeoHub, so use `neohub` instead of `neovide` to launch editors. Otherwise, things won't work.
+**CLI**  
+Use `neohub` to launch editors. It de‑duplicates by project path and activates existing instances.
 
-See `neovide --help` for available options.
+**App**
+- `⌘⌃N` opens the switcher.
+- `⌘⌃Z` activates the last editor.
+- All shortcuts are configurable in Settings.
+- Switcher supports `⌘Q` (quit all), `⌘⌫` (quit selected), and `⇥` (cycle).
 
-### App
-Hit `⌘ ⌃ N` (`Command + Control + N`) to open the editor switcher.
-Hit `⌘ ⌃ Z` (`Command + Control + Z`) to activate last active editor.
-
-All hotkeys are configurable.
-
-When in the switcher, you can quit all editors at once by pressing `⌘ Q`, or just a selected one with `⌘ ⌫`. Also, you can use `⇥` (`Tab`) to cycle through the editors in the list.
-
-You can set a hotkey to restart current editor in the Settings. Keep in mind, that if you updated env vars and restart the editor - it won't pick up the new env. In this case, you need to shut down the editor and relaunch it from the CLI.
-
-P.S. When you press the editor switcher hotkey and there is only one Neovide instance is running, NeoHub will activate it instead of showing the switcher.
+## Build
+```bash
+open NeoHub.xcodeproj
+xcodebuild -project NeoHub.xcodeproj -scheme NeoHub -configuration Debug build
+xcodebuild -project NeoHub.xcodeproj -scheme NeoHubCLI -configuration Debug build
+```
 
 ## Credits
-App icon is by [u/danbee](https://www.reddit.com/user/danbee/).
+- App icon: u/danbee
+- Original project: alex35mil/NeoHub (forked and heavily refactored)
 
 ## License
-MIT.
+MIT

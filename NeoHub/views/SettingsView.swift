@@ -37,11 +37,6 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Advanced", systemImage: "gearshape.2")
                 }
-
-            AboutSettingsTab()
-                .tabItem {
-                    Label("About", systemImage: "info.circle")
-                }
         }
         .background(SettingsWindowLevelUpdater(alwaysOnTop: appSettings.settingsAlwaysOnTop))
         .frame(minWidth: 375, idealWidth: 375, minHeight: 350, idealHeight: 350)
@@ -131,16 +126,21 @@ private struct GeneralSettingsTab: View {
 
     private var headerView: some View {
         HStack(spacing: 12) {
-            Image("EditorIcon")
+            Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 48, height: 48)
+                .frame(width: 64, height: 64)
             VStack(alignment: .leading, spacing: 2) {
-                Text("NeoHub")
+                Text(String(localized: "NeoHubR"))
                     .font(.system(size: 18, weight: .semibold))
-                Text("v\(APP_VERSION) (\(APP_BUILD))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 2) {
+                    Text(String(localized: "Icon by"))
+                    Link(String(localized: "u/danbee"), destination: URL(string: "https://www.reddit.com/user/danbee/")!)
+                        .foregroundStyle(.link)
+                        .focusable(false)
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
             }
         }
     }
@@ -414,16 +414,21 @@ private struct AdvancedSettingsTab: View {
                 Toggle("Show CLI errors in app", isOn: $appSettings.forwardCLIErrors)
             }
 
-            Section("About") {
+            Section {
+                LabeledContent("Notification Permission") {
+                    Text(notificationStatusText)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Section {
                 LabeledContent("Version") {
                     Text("\(APP_VERSION) (\(APP_BUILD))")
                         .foregroundStyle(.secondary)
                 }
-            }
-
-            Section {
-                LabeledContent("Notification Permission") {
-                    Text(notificationStatusText)
+                HStack {
+                    Spacer()
+                    Text(String(localized: "Alex Fedoseev · © 2026 micsama"))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -451,46 +456,6 @@ private struct AdvancedSettingsTab: View {
                 notificationStatusText = text
             }
         }
-    }
-}
-
-// MARK: - About Tab
-
-private struct AboutSettingsTab: View {
-    private var versionText: String {
-        String(format: String(localized: "Version %@ (%@)"), APP_VERSION, APP_BUILD)
-    }
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 64, height: 64)
-
-            Text(APP_NAME)
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            Text(versionText)
-                .foregroundStyle(.secondary)
-                .textSelection(.enabled)
-
-            VStack(spacing: 4) {
-                Text("© 2023 Alex Fedoseev")
-
-                HStack(spacing: 2) {
-                    Text("Icon by")
-                    Link("u/danbee", destination: URL(string: "https://www.reddit.com/user/danbee/")!)
-                        .foregroundStyle(.link)
-                        .focusable(false)
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

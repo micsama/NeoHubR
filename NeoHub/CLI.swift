@@ -114,6 +114,21 @@ final class CLI {
 
         let status = outcome.1 ?? self.status
         self.status = status
+
+        if outcome.0.isSuccess {
+            switch operation {
+            case .install:
+                NotificationManager.sendInfo(
+                    title: String(localized: "Boom!"),
+                    body: String(localized: "The CLI is ready to roll 🚀")
+                )
+            case .uninstall:
+                NotificationManager.sendInfo(
+                    title: String(localized: "CLI Removed"),
+                    body: String(localized: "The CLI has been removed.")
+                )
+            }
+        }
         return (outcome.0, status)
     }
 

@@ -68,12 +68,10 @@ struct MenuBarView: View {
                 // MenuBarExtra opens Settings without focus in accessory apps; activate to ensure key window.
                 .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
                 .keyboardShortcut(",", modifiers: .command)
-            SettingsLink { Label("About", systemImage: "info.circle") }
-                .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
             Divider()
             Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }
                 .disabled(editors.isEmpty)
-            Button("Quit NeoHub") { NSApplication.shared.terminate(nil) }
+            Button(String(localized: "Quit NeoHubR")) { NSApplication.shared.terminate(nil) }
         }
     }
     @MainActor

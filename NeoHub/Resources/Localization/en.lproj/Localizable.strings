@@ -36,6 +36,8 @@
 "Oh no!" = "Oh no!";
 "There was an issue during installation." = "There was an issue during installation.";
 "Dismiss" = "Dismiss";
+"CLI Removed" = "CLI Removed";
+"The CLI has been removed." = "The CLI has been removed.";
 
 "General" = "General";
 "Projects" = "Projects";
@@ -92,3 +94,7 @@
 "Please create an issue in GitHub repo." = "Please create an issue in GitHub repo.";
 "Requested Neovide instance is not running." = "Requested Neovide instance is not running.";
 "CLI Error" = "CLI Error";
+
+"NeoHubR" = "NeoHubR";
+"Quit NeoHubR" = "Quit NeoHubR";
+"Alex Fedoseev · © 2026 micsama" = "Alex Fedoseev · © 2026 micsama";
