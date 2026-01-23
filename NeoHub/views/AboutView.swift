@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct AboutView: View {
-    static let defaultWidth: CGFloat = 300
-    static let defaultHeight: CGFloat = 220
+    static let defaultWidth: CGFloat = 200
+    static let defaultHeight: CGFloat = 200
 
     private var versionText: String {
         String(format: String(localized: "Version %@ (%@)"), APP_VERSION, APP_BUILD)
