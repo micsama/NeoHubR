@@ -38,33 +38,39 @@ struct AboutView: View {
         }
         .padding(20)
         .frame(width: Self.defaultWidth, height: Self.defaultHeight)
-        Group {
-            if #available(macOS 26.0, *) {
-                content
-                    .background {
-                        GlassEffectContainer {
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .glassEffect(.regular, in: .rect(cornerRadius: 18, style: .continuous))
-                                .ignoresSafeArea()
-                        }
+        content
+    }
+}
+
+struct AboutWindowContent: View {
+    var body: some View {
+        let content = AboutView()
+            .background {
+                if #available(macOS 26.0, *) {
+                    GlassEffectContainer {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .glassEffect(
+                                .clear  // 使用 regular 提供基础的背景模糊（防干扰）
+                                    .interactive(true)  // 解决拖动闪烁
+                                    .tint(Color.white.opacity(0.35)),  // 增加到 35%，确保深色背景下有底色
+                                in: .rect(cornerRadius: 18, style: .continuous)
+                            )
+                            .ignoresSafeArea()
                     }
-            } else {
-                content
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                } else {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(.regularMaterial)
+                }
             }
-        }
-        .onAppear {
-            NSApp.activate(ignoringOtherApps: true)
+
+        if #available(macOS 15.0, *) {
+            content.containerBackground(.clear, for: .window)
+        } else {
+            content
         }
     }
 }
+
 #Preview {
-    if #available(macOS 26.0, *) {
-        GlassEffectContainer(spacing: 10) {
-            AboutView()
-                .glassEffect(.regular, in: .rect(cornerRadius: 20))
-        }
-    } else {
-        AboutView()
-    }
+    AboutWindowContent()
 }
