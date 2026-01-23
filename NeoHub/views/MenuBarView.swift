@@ -63,7 +63,10 @@ struct MenuBarView: View {
             SettingsLink { Text("Settings") }
                 // MenuBarExtra opens Settings without focus in accessory apps; activate to ensure key window.
                 .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
-            Button("About") { openWindow(id: "about") }
+            Button("About") {
+                openWindow(id: "about")
+                NSApp.activate(ignoringOtherApps: true)
+            }
             Divider()
             Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }
                 .disabled(editors.count == 0)

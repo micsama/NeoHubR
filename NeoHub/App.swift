@@ -45,7 +45,7 @@ struct NeoHubApp: App {
         }
 
         Window("About", id: "about") {
-            AboutView()
+            AboutWindowContent()
         }
         .windowResizability(.contentSize)
         .windowStyle(.hiddenTitleBar)
