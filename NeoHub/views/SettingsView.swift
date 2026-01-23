@@ -154,64 +154,80 @@ private struct CLIStatusView: View {
     var body: some View {
         switch cli.status {
         case .ok:
-            statusRow(
-                title: { statusTitle("CLI Installed", color: .primary, bold: false) },
-                subtitle: { pathSubtitle }
-            ) {
-                HStack(spacing: 12) {
-                    Button("Reinstall") { runCLI(.install) }
-                        .buttonStyle(.bordered)
-                        .tint(.blue)
-                    Button("Uninstall") { runCLI(.uninstall) }
-                        .buttonStyle(.bordered)
-                        .tint(.red)
-                }
-                .disabled(runningCLIAction)
-            }
+            installedView
 
         case .error(reason: .notInstalled):
-            statusRow(
-                title: { Text("CLI Install Required").font(.title3).foregroundStyle(.red) },
-                subtitle: { EmptyView() }
-            ) {
-                Button("Install") { runCLI(.install) }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
-                    .disabled(runningCLIAction)
-            }
+            installRequiredView
 
         case .error(reason: .versionMismatch):
-            statusRow(
-                title: { statusTitle("CLI Update Required", color: .orange, bold: true) },
-                subtitle: { pathSubtitle }
-            ) {
-                HStack(spacing: 12) {
-                    Button("Update") { runCLI(.install) }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.blue)
-                    Button("Uninstall") { runCLI(.uninstall) }
-                        .buttonStyle(.bordered)
-                        .tint(.red)
-                }
-                .disabled(runningCLIAction)
-            }
+            updateRequiredView
 
         case .error(reason: .unexpectedError(let error)):
-            statusRow(
-                title: { statusTitle("CLI Error", color: .red, bold: true) },
-                subtitle: {
-                    Text("Check logs for details")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                },
-                useStatusIcon: false
-            ) {
-                Button("Report Issue") {
-                    BugReporter.report(ReportableError("CLI failed to report a status", error: error))
-                }
-            }
+            errorView(error)
         }
 
+    }
+
+    private var installedView: some View {
+        statusRow(
+            title: { statusTitle("CLI Installed", color: .primary, bold: false) },
+            subtitle: { pathSubtitle }
+        ) {
+            HStack(spacing: 12) {
+                Button("Reinstall") { runCLI(.install) }
+                    .buttonStyle(.bordered)
+                    .tint(.blue)
+                Button("Uninstall") { runCLI(.uninstall) }
+                    .buttonStyle(.bordered)
+                    .tint(.red)
+            }
+            .disabled(runningCLIAction)
+        }
+    }
+
+    private var installRequiredView: some View {
+        statusRow(
+            title: { Text("CLI Install Required").font(.title3).foregroundStyle(.red) },
+            subtitle: { EmptyView() }
+        ) {
+            Button("Install") { runCLI(.install) }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+                .disabled(runningCLIAction)
+        }
+    }
+
+    private var updateRequiredView: some View {
+        statusRow(
+            title: { statusTitle("CLI Update Required", color: .orange, bold: true) },
+            subtitle: { pathSubtitle }
+        ) {
+            HStack(spacing: 12) {
+                Button("Update") { runCLI(.install) }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+                Button("Uninstall") { runCLI(.uninstall) }
+                    .buttonStyle(.bordered)
+                    .tint(.red)
+            }
+            .disabled(runningCLIAction)
+        }
+    }
+
+    private func errorView(_ error: Error) -> some View {
+        statusRow(
+            title: { statusTitle("CLI Error", color: .red, bold: true) },
+            subtitle: {
+                Text("Check logs for details")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            },
+            useStatusIcon: false
+        ) {
+            Button("Report Issue") {
+                BugReporter.report(ReportableError("CLI failed to report a status", error: error))
+            }
+        }
     }
 
     @ViewBuilder
