@@ -50,9 +50,7 @@ struct AboutWindowContent: View {
                     GlassEffectContainer {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .glassEffect(
-                                .clear  // 使用 regular 提供基础的背景模糊（防干扰）
-                                    .interactive(true)  // 解决拖动闪烁
-                                    .tint(Color.white.opacity(0.35)),  // 增加到 35%，确保深色背景下有底色
+                                .clear.interactive(true).tint(Color.white.opacity(0.35)),
                                 in: .rect(cornerRadius: 18, style: .continuous)
                             )
                             .ignoresSafeArea()
