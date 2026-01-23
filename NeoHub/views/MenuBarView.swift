@@ -27,7 +27,7 @@ struct MenuBarView: View {
         let editors = editorStore.getEditors(sortedFor: .menubar)
 
         Group {
-            if editors.count == 0 {
+            if editors.isEmpty {
                 Text("No editors").font(.headline)
             } else {
                 Text("Editors").font(.headline)
@@ -69,7 +69,7 @@ struct MenuBarView: View {
             }
             Divider()
             Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }
-                .disabled(editors.count == 0)
+                .disabled(editors.isEmpty)
             Button("Quit NeoHub") { NSApplication.shared.terminate(nil) }
         }
     }
