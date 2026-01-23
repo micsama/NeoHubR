@@ -23,8 +23,6 @@ struct MenuBarView: View {
     @Bindable var cli: CLI
     @Bindable var editorStore: EditorStore
 
-    @Environment(\.openWindow) private var openWindow
-
     var body: some View {
         let editors = editorStore.getEditors(sortedFor: .menubar)
 
@@ -70,12 +68,8 @@ struct MenuBarView: View {
                 // MenuBarExtra opens Settings without focus in accessory apps; activate to ensure key window.
                 .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
                 .keyboardShortcut(",", modifiers: .command)
-            Button {
-                openWindow(id: "about")
-                NSApp.activate(ignoringOtherApps: true)
-            } label: {
-                Label("About", systemImage: "info.circle")
-            }
+            SettingsLink { Label("About", systemImage: "info.circle") }
+                .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
             Divider()
             Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }
                 .disabled(editors.isEmpty)
