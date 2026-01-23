@@ -172,8 +172,10 @@ private struct CLIStatusView: View {
     var body: some View {
         switch cli.status {
         case .ok:
-            statusRow(title: { statusTitle("CLI Installed", color: .primary, bold: false) },
-                      subtitle: { pathSubtitle }) {
+            statusRow(
+                title: { statusTitle("CLI Installed", color: .primary, bold: false) },
+                subtitle: { pathSubtitle }
+            ) {
                 HStack(spacing: 12) {
                     Button("Reinstall") { runCLI(.install) }
                         .buttonStyle(.bordered)
@@ -197,8 +199,10 @@ private struct CLIStatusView: View {
             }
 
         case .error(reason: .versionMismatch):
-            statusRow(title: { statusTitle("CLI Update Required", color: .orange, bold: true) },
-                      subtitle: { pathSubtitle }) {
+            statusRow(
+                title: { statusTitle("CLI Update Required", color: .orange, bold: true) },
+                subtitle: { pathSubtitle }
+            ) {
                 HStack(spacing: 12) {
                     Button("Update") { runCLI(.install) }
                         .buttonStyle(.borderedProminent)
@@ -300,8 +304,6 @@ private struct CLIStatusView: View {
         }
         .buttonStyle(.plain)
     }
-
-
 
     private func copyPath() {
         let pasteboard = NSPasteboard.general
