@@ -25,13 +25,13 @@
 		FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */; };
 		FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */; };
 		FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3937162AF291A5001D9105 /* SettingsView.swift */; };
-		FA7B6C122D0A111100000002 /* AppSettingsStore+LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */; };
 		FA39371D2AF3A7CC001D9105 /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA39371C2AF3A7CC001D9105 /* Shell.swift */; };
 		FA54EB702AF4FD84001AE449 /* neohub in Embed CLI */ = {isa = PBXBuildFile; fileRef = FA2AE45D2AEB9CA000D24008 /* neohub */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		FA54EB722AF5033D001AE449 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB712AF5033D001AE449 /* CLI.swift */; };
 		FA54EB812AF789F6001AE449 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB802AF789F6001AE449 /* Logger.swift */; };
 		FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB822AF7A381001AE449 /* NotificationManager.swift */; };
 		FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB8C2AF7F689001AE449 /* BugReporter.swift */; };
+		FA7B6C122D0A111100000002 /* AppSettingsStore+LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */; };
 		FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0102C8F0A1A00000001 /* AppSettings.swift */; };
 		FAE1A0212C8F1A0000000002 /* EditorNamingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */; };
 		FAE1A0312C8F1B0000000004 /* ProjectRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */; };
@@ -110,13 +110,13 @@
 		FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitcherView.swift; sourceTree = "<group>"; };
 		FA3937162AF291A5001D9105 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppSettingsStore+LaunchAtLogin.swift"; sourceTree = "<group>"; };
 		FA39371C2AF3A7CC001D9105 /* Shell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shell.swift; sourceTree = "<group>"; };
 		FA54EB712AF5033D001AE449 /* CLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLI.swift; sourceTree = "<group>"; };
 		FA54EB802AF789F6001AE449 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		FA54EB822AF7A381001AE449 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		FA54EB8C2AF7F689001AE449 /* BugReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BugReporter.swift; sourceTree = "<group>"; };
 		FA728EF32AFF716E0013610E /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
+		FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppSettingsStore+LaunchAtLogin.swift"; sourceTree = "<group>"; };
 		FAE1A0102C8F0A1A00000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorNamingPolicy.swift; sourceTree = "<group>"; };
 		FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRegistry.swift; sourceTree = "<group>"; };
@@ -337,7 +337,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					FA2AE4462AEB980700D24008 = {
 						CreatedOnToolsVersion = 15.0.1;
@@ -500,6 +500,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -529,7 +530,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = SL42XX68Z7;
 				ENABLE_CODE_COVERAGE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -553,7 +556,8 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx26.2;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -564,6 +568,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -593,7 +598,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = SL42XX68Z7;
 				ENABLE_CODE_COVERAGE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -610,7 +617,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				SDKROOT = macosx26.2;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -618,7 +626,6 @@
 		FA2AE4572AEB980800D24008 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -627,8 +634,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"NeoHub/Preview Content\"";
-				DEVELOPMENT_TEAM = SL42XX68Z7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -646,7 +653,7 @@
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alex35mil.NeoHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx26.2;
+				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
@@ -656,7 +663,6 @@
 		FA2AE4582AEB980800D24008 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -665,8 +671,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"NeoHub/Preview Content\"";
-				DEVELOPMENT_TEAM = SL42XX68Z7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -684,7 +690,7 @@
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.alex35mil.NeoHub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx26.2;
+				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
@@ -699,7 +705,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = SL42XX68Z7;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_ARCHS = x86_64;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -729,7 +735,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = SL42XX68Z7;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_ARCHS = x86_64;
 				GCC_PREPROCESSOR_DEFINITIONS = "";
@@ -754,8 +760,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = SL42XX68Z7;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -789,8 +795,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = SL42XX68Z7;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
