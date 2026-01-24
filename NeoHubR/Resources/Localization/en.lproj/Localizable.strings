@@ -81,6 +81,7 @@
 "Unknown" = "Unknown";
 "Project not accessible" = "Project not accessible";
 "The project path is missing or not accessible." = "The project path is missing or not accessible.";
+"Not available" = "Not available";
 
 "Version %@ (%@)" = "Version %@ (%@)";
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";

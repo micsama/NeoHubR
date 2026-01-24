@@ -476,6 +476,8 @@ private struct ProjectRow: View {
     let entry: ProjectEntry
     let isInvalid: Bool
     @Bindable var projectRegistry: ProjectRegistryStore
+    @State private var deleteArmed = false
+    @State private var deleteResetTask: Task<Void, Never>?
 
     var body: some View {
         HStack(spacing: 10) {
@@ -483,9 +485,14 @@ private struct ProjectRow: View {
                 .foregroundStyle(isInvalid ? .tertiary : .secondary)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(entry.name ?? entry.id.lastPathComponent)
-                    .lineLimit(1)
-                    .foregroundStyle(isInvalid ? .secondary : .primary)
+                HStack(spacing: 6) {
+                    titleText
+                    if isInvalid {
+                        Text("(\(String(localized: "Not available")))")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
 
                 Text(entry.id.path(percentEncoded: false).replacingOccurrences(of: NSHomeDirectory(), with: "~"))
                     .font(.caption)
@@ -504,14 +511,41 @@ private struct ProjectRow: View {
             .buttonStyle(.plain)
 
             Button {
-                projectRegistry.remove(id: entry.id)
+                handleDeleteTap()
             } label: {
-                Image(systemName: "trash")
-                    .foregroundStyle(.secondary)
+                Image(systemName: deleteArmed ? "trash.fill" : "trash")
+                    .foregroundStyle(.red)
+                    .symbolEffect(.bounce, value: deleteArmed)
             }
             .buttonStyle(.plain)
         }
         .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private var titleText: some View {
+        let text = Text(entry.name ?? entry.id.lastPathComponent)
+            .lineLimit(1)
+            .foregroundStyle(isInvalid ? .secondary : .primary)
+
+        if isInvalid {
+            text.strikethrough().italic()
+        } else {
+            text
+        }
+    }
+
+    private func handleDeleteTap() {
+        if deleteArmed {
+            projectRegistry.remove(id: entry.id)
+            return
+        }
+        deleteArmed = true
+        deleteResetTask?.cancel()
+        deleteResetTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2))
+            deleteArmed = false
+        }
     }
 }
 
