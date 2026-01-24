@@ -86,10 +86,15 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ## 🧭 Roadmap (Short)
 
-- **v0.3.1**: Switcher wrap‑around navigation + search highlighting; real‑path project deduplication; delete Recent/Starred items; validity checks on launch/switcher/settings with disabled styling; notify when opening a missing/unreachable project from the Switcher.
-- **v0.4.0**: Manual project add (folder / Session.vim); label Session‑based projects; per‑project icon & color with Switcher display.
+### Latest Release (v0.3.1)
+- Path normalization so `neohubr`, `neohubr .`, and `neohubr <file>` map to the same project.
+- Persistent validity checks with visual invalid styling and “Not available” label.
+- Red trash deletion in Projects list with two‑step confirmation.
+
+### Next
+- **v0.4.0**: Manual project add (folder / Session.vim); Session labeling; project editor (path/icon/color); per‑project icon & color with Switcher display.
 - **v0.4.1**: Attach to running Neovide instances (hybrid strategy); GUI launch environment inheritance (default: inherit on Switcher launch; implementation to be finalized).
-- **v0.5.0**: Switcher visuals & interaction polish.
+- **v0.5.0**: Switcher visuals & interaction polish; single‑file mode.
 
 ## 🤝 Credits
 
