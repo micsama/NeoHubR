@@ -79,6 +79,8 @@
 "Provisional" = "临时授权";
 "Ephemeral" = "临时会话授权";
 "Unknown" = "未知";
+"Project not accessible" = "项目不可访问";
+"The project path is missing or not accessible." = "项目路径不存在或没有访问权限。";
 
 "Version %@ (%@)" = "版本 %@ (%@)";
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";
