@@ -7,6 +7,8 @@ public struct ProjectEntry: Identifiable, Codable, Hashable, Sendable {
     public var icon: String?
     public var colorHex: String?
     public var lastOpenedAt: Date?
+    public var validity: ProjectValidity?
+    public var lastCheckedAt: Date?
     public var isStarred: Bool
     public var pinnedOrder: Int?
 
@@ -16,6 +18,8 @@ public struct ProjectEntry: Identifiable, Codable, Hashable, Sendable {
         icon: String? = nil,
         colorHex: String? = nil,
         lastOpenedAt: Date? = nil,
+        validity: ProjectValidity? = nil,
+        lastCheckedAt: Date? = nil,
         isStarred: Bool = false,
         pinnedOrder: Int? = nil
     ) {
@@ -24,9 +28,16 @@ public struct ProjectEntry: Identifiable, Codable, Hashable, Sendable {
         self.icon = icon
         self.colorHex = colorHex
         self.lastOpenedAt = lastOpenedAt
+        self.validity = validity
+        self.lastCheckedAt = lastCheckedAt
         self.isStarred = isStarred
         self.pinnedOrder = pinnedOrder
     }
+}
+
+public enum ProjectValidity: String, Codable, Sendable {
+    case valid
+    case invalid
 }
 
 public enum ProjectRegistry {
@@ -107,6 +118,18 @@ public enum ProjectRegistry {
             if let date = entry.lastOpenedAt, (combined.lastOpenedAt ?? .distantPast) < date {
                 combined.lastOpenedAt = date
             }
+            if let checkedAt = entry.lastCheckedAt,
+                (combined.lastCheckedAt ?? .distantPast) < checkedAt
+            {
+                combined.lastCheckedAt = checkedAt
+            }
+            if let validity = entry.validity {
+                if combined.validity == nil {
+                    combined.validity = validity
+                } else if combined.validity == .invalid, validity == .valid {
+                    combined.validity = .valid
+                }
+            }
             combined.isStarred = combined.isStarred || entry.isStarred
             if let orderValue = entry.pinnedOrder {
                 if combined.pinnedOrder == nil || orderValue < (combined.pinnedOrder ?? orderValue) {
@@ -119,6 +142,9 @@ public enum ProjectRegistry {
 
         return order.compactMap { id in
             guard var entry = merged[id] else { return nil }
+            if entry.name == "." {
+                entry.name = nil
+            }
             if !entry.isStarred {
                 entry.pinnedOrder = nil
             }
@@ -135,14 +161,12 @@ public final class ProjectRegistryStore {
             ProjectRegistry.save(entries)
         }
     }
-    public private(set) var invalidIDs: Set<URL> = []
-    public private(set) var lastValidityCheck: Date?
 
     public init() {
         let loaded = ProjectRegistry.load()
         let deduped = ProjectRegistry.deduplicate(loaded)
         self.entries = deduped
-        if deduped.count != loaded.count {
+        if deduped != loaded {
             ProjectRegistry.save(deduped)
         }
     }
@@ -196,32 +220,31 @@ public final class ProjectRegistryStore {
 
     public func remove(id: URL) {
         entries.removeAll { $0.id == id }
-        invalidIDs.remove(id)
     }
 
     public func refreshValidity() {
-        var invalid: Set<URL> = []
-        for entry in entries {
-            if !ProjectRegistry.isAccessible(entry.id) {
-                invalid.insert(entry.id)
-            }
+        let now = Date()
+        entries = entries.map { entry in
+            var updated = entry
+            let isValid = ProjectRegistry.isAccessible(entry.id)
+            updated.validity = isValid ? .valid : .invalid
+            updated.lastCheckedAt = now
+            return updated
         }
-        invalidIDs = invalid
-        lastValidityCheck = Date()
     }
 
     public func isInvalid(_ entry: ProjectEntry) -> Bool {
-        invalidIDs.contains(entry.id)
+        entry.validity == .invalid
     }
 
     public func validateNow(_ entry: ProjectEntry) -> Bool {
         let isValid = ProjectRegistry.isAccessible(entry.id)
-        if isValid {
-            invalidIDs.remove(entry.id)
-        } else {
-            invalidIDs.insert(entry.id)
+        if let index = entries.firstIndex(where: { $0.id == entry.id }) {
+            var updated = entries[index]
+            updated.validity = isValid ? .valid : .invalid
+            updated.lastCheckedAt = Date()
+            entries[index] = updated
         }
-        lastValidityCheck = Date()
         return isValid
     }
 }

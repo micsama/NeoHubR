@@ -678,9 +678,14 @@ private struct SwitcherRowView: View {
             icon
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(highlightedText(for: entry.name, query: query))
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(nameColor)
+                HStack(spacing: 6) {
+                    nameText
+                    if entry.isInvalid {
+                        Text("(\(String(localized: "Not available")))")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
 
                 Text(highlightedText(for: entry.displayPath, query: query))
                     .font(.system(size: 11))
@@ -724,6 +729,19 @@ private struct SwitcherRowView: View {
             return .primary
         }
         return entry.isInvalid ? .secondary : .orange
+    }
+
+    @ViewBuilder
+    private var nameText: some View {
+        let text = Text(highlightedText(for: entry.name, query: query))
+            .font(.system(size: 14, weight: .medium))
+            .foregroundColor(nameColor)
+
+        if entry.isInvalid {
+            text.strikethrough().italic()
+        } else {
+            text
+        }
     }
 
     private func highlightedText(for text: String, query: String) -> AttributedString {
