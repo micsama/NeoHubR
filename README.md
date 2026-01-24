@@ -84,6 +84,13 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ```
 
+## 🧭 Roadmap (Short)
+
+- **v0.3.1**: Switcher wrap‑around navigation + search highlighting; real‑path project deduplication; delete Recent/Starred items; validity checks on launch/switcher/settings with disabled styling; notify when opening a missing/unreachable project from the Switcher.
+- **v0.4.0**: Manual project add (folder / Session.vim); label Session‑based projects; per‑project icon & color with Switcher display.
+- **v0.4.1**: Attach to running Neovide instances (hybrid strategy); GUI launch environment inheritance (default: inherit on Switcher launch; implementation to be finalized).
+- **v0.5.0**: Switcher visuals & interaction polish.
+
 ## 🤝 Credits
 
 * App Icon: [u/danbee](https://www.reddit.com/user/danbee/)
