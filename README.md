@@ -1,18 +1,21 @@
-<h1 align="center">NeoHub</h1>
+# NeoHub
 
 <p align="center">
-    <!-- Image placeholder: replace after updates -->
-    <!-- <img width="720" alt="NeoHub" src="YOUR_IMAGE_URL"> -->
+    <img width="757" height="418" alt="NeoHub Demo" src="https://github.com/user-attachments/assets/724d0e7f-ca91-4759-9e15-5005f82038fc" />
 </p>
 
-<p align="center">
-  <a href="README_CN.md">简体中文</a>
-</p>
+> 简体中文: [README_CN.md](README_CN.md)
 
 ---
 
 NeoHub (app name shown as **NeoHubR**) is a menu bar companion for **Neovide** on macOS.  
 This README focuses on **user-visible features** first.
+
+## Screenshots
+<p>
+  <img width="411" height="474" alt="NeoHub Screenshot 1" src="https://github.com/user-attachments/assets/eaf9400f-1ee9-4522-9048-1039604c8a6e" />
+  <img width="411" height="474" alt="NeoHub Screenshot 2" src="https://github.com/user-attachments/assets/8257b402-1d5d-4f86-9fdd-c509d59650cd" />
+</p>
 
 ## Features (User-Facing)
 - **Menu bar workflow**: instant access, editor list, and quick actions.
