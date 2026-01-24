@@ -86,10 +86,15 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ## 🧭 路线图（简版）
 
-- **v0.3.1**：Switcher 循环导航 + 搜索高亮；项目去重（真实路径）；Recent/Star 删除；启动/打开时检测失效项目并置灰；从 Switcher 打开失效项目时发系统通知。
-- **v0.4.0**：Projects 手动添加（目录 / Session.vim）；Session 项目标注；项目自定义图标/颜色并在 Switcher 展示。
+### 最新版本（v0.3.1）
+- 路径归一：`neohubr` / `neohubr .` / `neohubr <file>` 统一为同一项目。
+- 失效检测持久化，失效项目置灰并显示 “Not available” 提示。
+- Projects 列表红色垃圾桶删除，二次确认防误删。
+
+### 下一步
+- **v0.4.0**：Projects 手动添加（目录 / Session.vim）；Session 项目标注；项目编辑窗口（路径/图标/颜色）；项目自定义图标/颜色并在 Switcher 展示。
 - **v0.4.1**：运行中 Neovide 实例接管（混合方案）；GUI 启动环境继承（默认每次从 Switcher 打开时继承，具体实现待评估）。
-- **v0.5.0**：Switcher 视觉与交互体验整体优化。
+- **v0.5.0**：Switcher 视觉与交互体验整体优化；单文件模式。
 
 ## 🤝 致谢
 
