@@ -6,27 +6,35 @@ import SwiftUI
 
 @MainActor
 private enum SwitcherEntry: Identifiable {
-    case editor(Editor)
-    case project(ProjectEntry, isInvalid: Bool)
+    case editor(Editor, ProjectEntry?, isStarred: Bool)
+    case project(ProjectEntry, isInvalid: Bool, isStarred: Bool)
 
     nonisolated var id: String {
         switch self {
-        case .editor(let e): return "editor:\(ObjectIdentifier(e))"
-        case .project(let p, _): return "project:\(p.id.absoluteString)"
+        case .editor(let e, _, _): return "editor:\(ObjectIdentifier(e))"
+        case .project(let p, _, _): return "project:\(p.id.absoluteString)"
         }
     }
 
     var name: String {
         switch self {
-        case .editor(let e): return e.name
-        case .project(let p, _): return p.name ?? p.id.lastPathComponent
+        case .editor(let e, let project, _):
+            if let project, let name = project.name, !name.isEmpty {
+                return name
+            }
+            return e.name
+        case .project(let p, _, _): return p.name ?? p.id.lastPathComponent
         }
     }
 
     var displayPath: String {
         switch self {
-        case .editor(let e): return e.displayPath
-        case .project(let p, _): return Self.formatPath(p.id)
+        case .editor(let e, let project, _):
+            if let project {
+                return ProjectPathFormatter.displayPath(project.id)
+            }
+            return e.displayPath
+        case .project(let p, _, _): return ProjectPathFormatter.displayPath(p.id)
         }
     }
 
@@ -39,25 +47,34 @@ private enum SwitcherEntry: Identifiable {
 
     var isStarred: Bool {
         switch self {
-        case .project(let p, _): return p.isStarred
-        case .editor: return false
+        case .project(_, _, let isStarred): return isStarred
+        case .editor(_, _, let isStarred): return isStarred
+        }
+    }
+
+    var isSession: Bool {
+        switch self {
+        case .project(let p, _, _): return p.isSession
+        case .editor(_, let project, _): return project?.isSession ?? false
         }
     }
 
     var isInvalid: Bool {
         switch self {
-        case .project(_, let isInvalid): return isInvalid
+        case .project(_, let isInvalid, _): return isInvalid
         case .editor: return false
         }
     }
 
-    private static func formatPath(_ url: URL) -> String {
-        url.path(percentEncoded: false).replacingOccurrences(
-            of: "^/Users/[^/]+/",
-            with: "~/",
-            options: .regularExpression
-        )
+    var projectEntry: ProjectEntry? {
+        switch self {
+        case .project(let project, _, _):
+            return project
+        case .editor(_, let project, _):
+            return project
+        }
     }
+
 }
 
 extension SwitcherEntry: Hashable {
@@ -111,28 +128,34 @@ private final class SwitcherViewModel {
     var entries: [SwitcherEntry] {
         let maxItems = AppSettings.clampSwitcherMaxItems(appSettings.switcherMaxItems)
         let editors = editorStore.getEditors(sortedFor: .switcher)
-        var result = editors.map { SwitcherEntry.editor($0) }
+        let starredMap = Dictionary(uniqueKeysWithValues: projectRegistry.starredEntries.map { ($0.id, $0) })
+        let recentMap = Dictionary(uniqueKeysWithValues: projectRegistry.recentEntries.map { ($0.id, $0) })
+        var result = editors.map { editor in
+            let normalizedID = ProjectRegistry.normalizeID(editor.id.id)
+            if let entry = starredMap[normalizedID] {
+                return SwitcherEntry.editor(editor, entry, isStarred: true)
+            }
+            if let entry = recentMap[normalizedID] {
+                return SwitcherEntry.editor(editor, entry, isStarred: false)
+            }
+            return SwitcherEntry.editor(editor, nil, isStarred: false)
+        }
 
         guard result.count < maxItems else {
             return Array(result.prefix(maxItems))
         }
 
-        let editorLocations = Set(editors.map { $0.id.id })
-        let projects = projectRegistry.entries.filter { !editorLocations.contains($0.id) }
+        let editorLocations = Set(editors.map { ProjectRegistry.normalizeID($0.id.id) })
+        
+        let starred = projectRegistry.starredEntries.filter { !editorLocations.contains($0.id) }
+        let recent = projectRegistry.recentEntries.filter { !editorLocations.contains($0.id) }
 
-        let starred = projects.filter { $0.isStarred }.sorted {
-            let lOrder = $0.pinnedOrder ?? .max
-            let rOrder = $1.pinnedOrder ?? .max
-            if lOrder != rOrder { return lOrder < rOrder }
-            return ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast)
+        for project in starred where result.count < maxItems {
+            result.append(.project(project, isInvalid: projectRegistry.isInvalid(project), isStarred: true))
         }
 
-        let recent = projects.filter { !$0.isStarred }.sorted {
-            ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast)
-        }
-
-        for project in starred + recent where result.count < maxItems {
-            result.append(.project(project, isInvalid: projectRegistry.isInvalid(project)))
+        for project in recent where result.count < maxItems {
+            result.append(.project(project, isInvalid: projectRegistry.isInvalid(project), isStarred: false))
         }
 
         return result
@@ -176,9 +199,9 @@ private final class SwitcherViewModel {
 
     func activate(_ entry: SwitcherEntry) {
         switch entry {
-        case .editor(let editor):
+        case .editor(let editor, _, _):
             editor.activate()
-        case .project(let project, _):
+        case .project(let project, _, _):
             editorStore.openProject(project)
         }
     }
@@ -196,7 +219,7 @@ private final class SwitcherViewModel {
     func quitSelected() {
         let entries = filteredEntries
         guard entries.indices.contains(selectedIndex),
-            case .editor(let editor) = entries[selectedIndex]
+            case .editor(let editor, _, _) = entries[selectedIndex]
         else { return }
 
         let editorCount = entries.filter { $0.isEditor }.count
@@ -531,23 +554,15 @@ private struct SwitcherContentView: View {
                 return .handled
             }
 
-            switch press.key {
-            case .delete:
-                viewModel.quitSelected()
-                return .handled
-            default:
-                break
-            }
-
             switch press.characters {
-            case "q":
-                viewModel.quitAll()
-                return .handled
-            case ",":
-                viewModel.openSettings()
-                return .handled
             case "w":
                 viewModel.dismiss()
+                return .handled
+            case "d":
+                viewModel.quitSelected()
+                return .handled
+            case "D":
+                viewModel.quitAll()
                 return .handled
             default:
                 return .ignored
@@ -647,7 +662,7 @@ private struct SwitcherContentView: View {
             } label: {
                 HStack(spacing: 4) {
                     Text("Quit Selected")
-                    Text("⌘⌫").foregroundStyle(.tertiary)
+                    Text("⌘D").foregroundStyle(.tertiary)
                 }
             }
 
@@ -656,7 +671,7 @@ private struct SwitcherContentView: View {
             } label: {
                 HStack(spacing: 4) {
                     Text("Quit All")
-                    Text("⌘Q").foregroundStyle(.tertiary)
+                    Text("⇧⌘D").foregroundStyle(.tertiary)
                 }
             }
         }
@@ -682,6 +697,11 @@ private struct SwitcherRowView: View {
                     nameText
                     if entry.isInvalid {
                         Text("(\(String(localized: "Not available")))")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.tertiary)
+                    }
+                    if entry.isSession {
+                        Text("(\(String(localized: "Session")))")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.tertiary)
                     }
@@ -717,10 +737,16 @@ private struct SwitcherRowView: View {
                 .scaledToFit()
                 .frame(width: 20, height: 20)
         } else {
-            Image(systemName: entry.isStarred ? "star.circle.fill" : "folder.fill")
-                .font(.system(size: 16))
-                .foregroundStyle(entry.isInvalid ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.orange))
+            if let projectEntry = entry.projectEntry {
+                ProjectIconView(
+                    entry: projectEntry,
+                    fallbackSystemName: entry.isStarred ? "star.circle.fill" : "folder.fill",
+                    size: 16,
+                    isInvalid: entry.isInvalid,
+                    fallbackColor: .orange
+                )
                 .frame(width: 20, height: 20)
+            }
         }
     }
 
@@ -728,7 +754,10 @@ private struct SwitcherRowView: View {
         if entry.isEditor {
             return .primary
         }
-        return entry.isInvalid ? .secondary : .orange
+        if entry.isInvalid {
+            return .secondary
+        }
+        return entry.projectEntry?.customColor ?? .orange
     }
 
     @ViewBuilder

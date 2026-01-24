@@ -9,5 +9,7 @@
 	</array>
 	<key>GitCommitHash</key>
 	<string></string>
+	<key>LSMultipleInstancesProhibited</key>
+	<true/>
 </dict>
 </plist>

@@ -6,32 +6,26 @@ public struct ProjectEntry: Identifiable, Codable, Hashable, Sendable {
     public var name: String?
     public var icon: String?
     public var colorHex: String?
-    public var lastOpenedAt: Date?
+    public var sessionPath: URL?
     public var validity: ProjectValidity?
     public var lastCheckedAt: Date?
-    public var isStarred: Bool
-    public var pinnedOrder: Int?
 
     public init(
         id: URL,
         name: String? = nil,
         icon: String? = nil,
         colorHex: String? = nil,
-        lastOpenedAt: Date? = nil,
+        sessionPath: URL? = nil,
         validity: ProjectValidity? = nil,
-        lastCheckedAt: Date? = nil,
-        isStarred: Bool = false,
-        pinnedOrder: Int? = nil
+        lastCheckedAt: Date? = nil
     ) {
         self.id = id
         self.name = name
         self.icon = icon
         self.colorHex = colorHex
-        self.lastOpenedAt = lastOpenedAt
+        self.sessionPath = sessionPath
         self.validity = validity
         self.lastCheckedAt = lastCheckedAt
-        self.isStarred = isStarred
-        self.pinnedOrder = pinnedOrder
     }
 }
 
@@ -40,41 +34,134 @@ public enum ProjectValidity: String, Codable, Sendable {
     case invalid
 }
 
+public struct ProjectRegistryStorage: Codable, Sendable, Hashable {
+    public var version: Int
+    public var starred: [ProjectEntry]
+    public var recent: [ProjectEntry]
+
+    public init(version: Int = 1, starred: [ProjectEntry] = [], recent: [ProjectEntry] = []) {
+        self.version = version
+        self.starred = starred
+        self.recent = recent
+    }
+}
+
 public enum ProjectRegistry {
     public static let defaultsKey = "ProjectRegistry"
 
-    public static func load() -> [ProjectEntry] {
+    public static func loadStorage() -> ProjectRegistryStorage {
         guard let data = UserDefaults.standard.data(forKey: defaultsKey) else {
-            return []
+            return ProjectRegistryStorage()
         }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return (try? decoder.decode([ProjectEntry].self, from: data)) ?? []
+        if let storage = try? decoder.decode(ProjectRegistryStorage.self, from: data) {
+            return storage
+        }
+        UserDefaults.standard.removeObject(forKey: defaultsKey)
+        return ProjectRegistryStorage()
     }
 
-    public static func save(_ entries: [ProjectEntry]) {
+    public static func saveStorage(_ storage: ProjectRegistryStorage) {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        let data = try? encoder.encode(entries)
+        let data = try? encoder.encode(storage)
         UserDefaults.standard.set(data, forKey: defaultsKey)
     }
 
     public static func normalizeID(_ url: URL) -> URL {
         let expandedPath = (url.path(percentEncoded: false) as NSString).expandingTildeInPath
-        let trimmedPath = ProjectRegistry.trimTrailingSlash(expandedPath)
+        let trimmedPath = trimTrailingSlash(expandedPath)
         var normalized = URL(fileURLWithPath: trimmedPath).standardizedFileURL
 
         if FileManager.default.fileExists(atPath: normalized.path) {
             normalized = normalized.resolvingSymlinksInPath()
         }
 
-        if let isCaseSensitive = ProjectRegistry.isCaseSensitiveVolume(for: normalized),
-            !isCaseSensitive
-        {
+        if let isCaseSensitive = isCaseSensitiveVolume(for: normalized), !isCaseSensitive {
             normalized = URL(fileURLWithPath: normalized.path.lowercased())
         }
 
         return normalized
+    }
+
+    public static func normalizeSessionPath(_ url: URL) -> URL {
+        let standardized = url.standardizedFileURL
+        if FileManager.default.fileExists(atPath: standardized.path) {
+            return standardized.resolvingSymlinksInPath()
+        }
+        return standardized
+    }
+
+    public static func resolveSessionPath(workingDirectory: URL, path: String?) -> URL? {
+        guard let path, !path.isEmpty else { return nil }
+        let rawURL: URL
+        if path.hasPrefix("~") {
+            let expanded = (path as NSString).expandingTildeInPath
+            rawURL = URL(fileURLWithPath: expanded)
+        } else if path.hasPrefix("/") {
+            rawURL = URL(fileURLWithPath: path)
+        } else {
+            rawURL = workingDirectory.appendingPathComponent(path)
+        }
+        let standardized = rawURL.standardizedFileURL
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: standardized.path, isDirectory: &isDirectory),
+            !isDirectory.boolValue
+        else {
+            return nil
+        }
+        guard standardized.lastPathComponent == "Session.vim" else {
+            return nil
+        }
+        return normalizeSessionPath(standardized)
+    }
+
+    public static func isAccessible(_ url: URL) -> Bool {
+        let path = url.path(percentEncoded: false)
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) else {
+            return false
+        }
+
+        if isDirectory.boolValue {
+            return FileManager.default.isReadableFile(atPath: path)
+                && FileManager.default.isExecutableFile(atPath: path)
+        }
+
+        return FileManager.default.isReadableFile(atPath: path)
+    }
+
+    public static func mergeEntry(base: ProjectEntry, incoming: ProjectEntry) -> ProjectEntry {
+        var result = base
+        if (result.name ?? "").isEmpty, let name = incoming.name, !name.isEmpty {
+            result.name = name
+        }
+        if (result.icon ?? "").isEmpty, let icon = incoming.icon, !icon.isEmpty {
+            result.icon = icon
+        }
+        if (result.colorHex ?? "").isEmpty, let colorHex = incoming.colorHex, !colorHex.isEmpty {
+            result.colorHex = colorHex
+        }
+        if result.sessionPath == nil, let sessionPath = incoming.sessionPath {
+            result.sessionPath = normalizeSessionPath(sessionPath)
+        }
+        if let checkedAt = incoming.lastCheckedAt,
+            (result.lastCheckedAt ?? .distantPast) < checkedAt
+        {
+            result.lastCheckedAt = checkedAt
+        }
+        if let validity = incoming.validity {
+            if result.validity == nil {
+                result.validity = validity
+            } else if result.validity == .invalid, validity == .valid {
+                result.validity = .valid
+            }
+        }
+        if result.name == "." {
+            result.name = nil
+        }
+        return result
     }
 
     private static func trimTrailingSlash(_ path: String) -> String {
@@ -94,143 +181,68 @@ public enum ProjectRegistry {
             return nil
         }
     }
-
-    public static func deduplicate(_ entries: [ProjectEntry]) -> [ProjectEntry] {
-        var order: [URL] = []
-        var merged: [URL: ProjectEntry] = [:]
-
-        for entry in entries {
-            let id = normalizeID(entry.id)
-            if merged[id] == nil {
-                order.append(id)
-            }
-
-            var combined = merged[id] ?? ProjectEntry(id: id)
-            if (combined.name ?? "").isEmpty, let name = entry.name, !name.isEmpty {
-                combined.name = name
-            }
-            if (combined.icon ?? "").isEmpty, let icon = entry.icon, !icon.isEmpty {
-                combined.icon = icon
-            }
-            if (combined.colorHex ?? "").isEmpty, let colorHex = entry.colorHex, !colorHex.isEmpty {
-                combined.colorHex = colorHex
-            }
-            if let date = entry.lastOpenedAt, (combined.lastOpenedAt ?? .distantPast) < date {
-                combined.lastOpenedAt = date
-            }
-            if let checkedAt = entry.lastCheckedAt,
-                (combined.lastCheckedAt ?? .distantPast) < checkedAt
-            {
-                combined.lastCheckedAt = checkedAt
-            }
-            if let validity = entry.validity {
-                if combined.validity == nil {
-                    combined.validity = validity
-                } else if combined.validity == .invalid, validity == .valid {
-                    combined.validity = .valid
-                }
-            }
-            combined.isStarred = combined.isStarred || entry.isStarred
-            if let orderValue = entry.pinnedOrder {
-                if combined.pinnedOrder == nil || orderValue < (combined.pinnedOrder ?? orderValue) {
-                    combined.pinnedOrder = orderValue
-                }
-            }
-
-            merged[id] = combined
-        }
-
-        return order.compactMap { id in
-            guard var entry = merged[id] else { return nil }
-            if entry.name == "." {
-                entry.name = nil
-            }
-            if !entry.isStarred {
-                entry.pinnedOrder = nil
-            }
-            return entry
-        }
-    }
 }
 
 @MainActor
 @Observable
 public final class ProjectRegistryStore {
-    public var entries: [ProjectEntry] {
+    private var storage: ProjectRegistryStorage {
         didSet {
-            ProjectRegistry.save(entries)
+            ProjectRegistry.saveStorage(storage)
         }
     }
 
     public init() {
-        let loaded = ProjectRegistry.load()
-        let deduped = ProjectRegistry.deduplicate(loaded)
-        self.entries = deduped
-        if deduped != loaded {
-            ProjectRegistry.save(deduped)
-        }
-    }
-
-    public func toggleStar(id: URL) {
-        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
-        var entry = entries[index]
-        entry.isStarred.toggle()
-        if entry.isStarred, entry.pinnedOrder == nil {
-            entry.pinnedOrder = nextPinnedOrder()
-        }
-        if !entry.isStarred {
-            entry.pinnedOrder = nil
-        }
-        entries[index] = entry
-    }
-
-    public func updatePinnedOrder(ids: [URL]) {
-        let order = Dictionary(uniqueKeysWithValues: ids.enumerated().map { ($0.element, $0.offset) })
-        entries = entries.map { entry in
-            guard entry.isStarred else { return entry }
-            var updated = entry
-            updated.pinnedOrder = order[entry.id]
-            return updated
-        }
+        self.storage = ProjectRegistry.loadStorage()
     }
 
     public var starredEntries: [ProjectEntry] {
-        entries
-            .filter { $0.isStarred }
-            .sorted { lhs, rhs in
-                let lhsOrder = lhs.pinnedOrder ?? Int.max
-                let rhsOrder = rhs.pinnedOrder ?? Int.max
-                if lhsOrder != rhsOrder {
-                    return lhsOrder < rhsOrder
-                }
-                return (lhs.lastOpenedAt ?? .distantPast) > (rhs.lastOpenedAt ?? .distantPast)
-            }
+        storage.starred
     }
 
     public var recentEntries: [ProjectEntry] {
-        entries
-            .filter { !$0.isStarred }
-            .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
+        storage.recent
     }
 
-    private func nextPinnedOrder() -> Int {
-        let maxOrder = entries.compactMap { $0.pinnedOrder }.max() ?? -1
-        return maxOrder + 1
+    public var entries: [ProjectEntry] {
+        storage.starred + storage.recent
+    }
+
+    public func lookup(id: URL) -> (entry: ProjectEntry, isStarred: Bool)? {
+        let normalized = ProjectRegistry.normalizeID(id)
+        if let entry = storage.starred.first(where: { $0.id == normalized }) {
+            return (entry, true)
+        }
+        if let entry = storage.recent.first(where: { $0.id == normalized }) {
+            return (entry, false)
+        }
+        return nil
     }
 
     public func remove(id: URL) {
-        entries.removeAll { $0.id == id }
+        let normalized = ProjectRegistry.normalizeID(id)
+        let starred = storage.starred.filter { $0.id != normalized }
+        let recent = storage.recent.filter { $0.id != normalized }
+        storage = ProjectRegistryStorage(starred: starred, recent: recent)
     }
 
     public func refreshValidity() {
         let now = Date()
-        entries = entries.map { entry in
+        let starred = storage.starred.map { entry in
             var updated = entry
             let isValid = ProjectRegistry.isAccessible(entry.id)
             updated.validity = isValid ? .valid : .invalid
             updated.lastCheckedAt = now
             return updated
         }
+        let recent = storage.recent.map { entry in
+            var updated = entry
+            let isValid = ProjectRegistry.isAccessible(entry.id)
+            updated.validity = isValid ? .valid : .invalid
+            updated.lastCheckedAt = now
+            return updated
+        }
+        storage = ProjectRegistryStorage(starred: starred, recent: recent)
     }
 
     public func isInvalid(_ entry: ProjectEntry) -> Bool {
@@ -239,29 +251,164 @@ public final class ProjectRegistryStore {
 
     public func validateNow(_ entry: ProjectEntry) -> Bool {
         let isValid = ProjectRegistry.isAccessible(entry.id)
-        if let index = entries.firstIndex(where: { $0.id == entry.id }) {
-            var updated = entries[index]
+        let now = Date()
+        let normalized = ProjectRegistry.normalizeID(entry.id)
+        let starred = storage.starred.map { existing in
+            guard existing.id == normalized else { return existing }
+            var updated = existing
             updated.validity = isValid ? .valid : .invalid
-            updated.lastCheckedAt = Date()
-            entries[index] = updated
+            updated.lastCheckedAt = now
+            return updated
         }
+        let recent = storage.recent.map { existing in
+            guard existing.id == normalized else { return existing }
+            var updated = existing
+            updated.validity = isValid ? .valid : .invalid
+            updated.lastCheckedAt = now
+            return updated
+        }
+        storage = ProjectRegistryStorage(starred: starred, recent: recent)
         return isValid
+    }
+
+    public func moveStarred(fromOffsets: IndexSet, toOffset: Int) {
+        var starred = storage.starred
+        starred.move(fromOffsets: fromOffsets, toOffset: toOffset)
+        storage = ProjectRegistryStorage(starred: starred, recent: storage.recent)
+    }
+
+    public func toggleStar(id: URL) {
+        let normalized = ProjectRegistry.normalizeID(id)
+        var starred = storage.starred
+        var recent = storage.recent
+
+        if let index = starred.firstIndex(where: { $0.id == normalized }) {
+            let entry = starred.remove(at: index)
+            recent.insert(entry, at: 0)
+            storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            return
+        }
+
+        if let index = recent.firstIndex(where: { $0.id == normalized }) {
+            let entry = recent.remove(at: index)
+            starred.append(entry)
+            storage = ProjectRegistryStorage(starred: starred, recent: recent)
+        }
+    }
+
+    public func touchRecent(root: URL, name: String? = nil, sessionPath: URL? = nil) {
+        let normalizedRoot = ProjectRegistry.normalizeID(root)
+        let normalizedSession = sessionPath.map { ProjectRegistry.normalizeSessionPath($0) }
+        let entryName = name ?? normalizedRoot.lastPathComponent
+        let incoming = ProjectEntry(
+            id: normalizedRoot,
+            name: entryName,
+            sessionPath: normalizedSession
+        )
+
+        var starred = storage.starred
+        var recent = storage.recent
+
+        if let index = starred.firstIndex(where: { $0.id == normalizedRoot }) {
+            let merged = ProjectRegistry.mergeEntry(base: starred[index], incoming: incoming)
+            starred[index] = merged
+            storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            return
+        }
+
+        if let index = recent.firstIndex(where: { $0.id == normalizedRoot }) {
+            let merged = ProjectRegistry.mergeEntry(base: recent[index], incoming: incoming)
+            recent.remove(at: index)
+            recent.insert(merged, at: 0)
+            storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            return
+        }
+
+        recent.insert(incoming, at: 0)
+        storage = ProjectRegistryStorage(starred: starred, recent: recent)
+    }
+
+    public func entry(for id: URL) -> ProjectEntry? {
+        lookup(id: id)?.entry
+    }
+
+    public func addProject(root: URL, name: String? = nil, sessionPath: URL? = nil) {
+        let normalizedRoot = ProjectRegistry.normalizeID(root)
+        let normalizedSession = sessionPath.map { ProjectRegistry.normalizeSessionPath($0) }
+        let entryName = name ?? normalizedRoot.lastPathComponent
+        let now = Date()
+        var entry = ProjectEntry(
+            id: normalizedRoot,
+            name: entryName,
+            icon: nil,
+            colorHex: nil,
+            sessionPath: normalizedSession
+        )
+        entry.validity = ProjectRegistry.isAccessible(normalizedRoot) ? .valid : .invalid
+        entry.lastCheckedAt = now
+
+        var starred = storage.starred
+        var recent = storage.recent
+
+        if let index = starred.firstIndex(where: { $0.id == normalizedRoot }) {
+            let merged = ProjectRegistry.mergeEntry(base: starred[index], incoming: entry)
+            starred[index] = merged
+            storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            return
+        }
+
+        if let index = recent.firstIndex(where: { $0.id == normalizedRoot }) {
+            let merged = ProjectRegistry.mergeEntry(base: recent[index], incoming: entry)
+            recent.remove(at: index)
+            recent.insert(merged, at: 0)
+            storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            return
+        }
+
+        recent.insert(entry, at: 0)
+        storage = ProjectRegistryStorage(starred: starred, recent: recent)
+    }
+
+    public func updateEntry(_ entry: ProjectEntry, replacing oldID: URL? = nil) {
+        let normalizedEntry = ProjectRegistry.mergeEntry(
+            base: ProjectEntry(id: ProjectRegistry.normalizeID(entry.id)),
+            incoming: entry
+        )
+
+        var starred = storage.starred
+        var recent = storage.recent
+
+        let targetID = oldID.map { ProjectRegistry.normalizeID($0) } ?? normalizedEntry.id
+
+        if targetID != normalizedEntry.id {
+            starred.removeAll { $0.id == normalizedEntry.id }
+            recent.removeAll { $0.id == normalizedEntry.id }
+        }
+
+        if let index = starred.firstIndex(where: { $0.id == targetID }) {
+            starred[index] = ProjectRegistry.mergeEntry(base: starred[index], incoming: normalizedEntry)
+            storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            return
+        }
+
+        if let index = recent.firstIndex(where: { $0.id == targetID }) {
+            recent[index] = ProjectRegistry.mergeEntry(base: recent[index], incoming: normalizedEntry)
+            storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            return
+        }
+
+        recent.insert(normalizedEntry, at: 0)
+        storage = ProjectRegistryStorage(starred: starred, recent: recent)
     }
 }
 
-extension ProjectRegistry {
-    public static func isAccessible(_ url: URL) -> Bool {
-        let path = url.path(percentEncoded: false)
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) else {
-            return false
+private extension Array {
+    mutating func move(fromOffsets offsets: IndexSet, toOffset: Int) {
+        let elements = offsets.map { self[$0] }
+        let adjustedOffset = toOffset - offsets.filter { $0 < toOffset }.count
+        for index in offsets.sorted(by: >) {
+            remove(at: index)
         }
-
-        if isDirectory.boolValue {
-            return FileManager.default.isReadableFile(atPath: path)
-                && FileManager.default.isExecutableFile(atPath: path)
-        }
-
-        return FileManager.default.isReadableFile(atPath: path)
+        insert(contentsOf: elements, at: adjustedOffset)
     }
 }

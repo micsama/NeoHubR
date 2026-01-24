@@ -23,6 +23,9 @@
 		FA2EADB12AED65A6000F8F7A /* libNeoHubRLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* libNeoHubRLib.a */; };
 		FA30F2282AEED1E7004EC6E9 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */; };
 		FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */; };
+		FABC00012D12300100000001 /* ProjectAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00042D12300100000004 /* ProjectAppearance.swift */; };
+		FABC00022D12300100000002 /* ProjectEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00052D12300100000005 /* ProjectEditorView.swift */; };
+		FABC00032D12300100000003 /* ProjectIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00062D12300100000006 /* ProjectIconView.swift */; };
 		FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */; };
 		FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3937162AF291A5001D9105 /* SettingsView.swift */; };
 		FA39371D2AF3A7CC001D9105 /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA39371C2AF3A7CC001D9105 /* Shell.swift */; };
@@ -117,6 +120,9 @@
 		FA54EB8C2AF7F689001AE449 /* BugReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BugReporter.swift; sourceTree = "<group>"; };
 		FA728EF32AFF716E0013610E /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppSettingsStore+LaunchAtLogin.swift"; sourceTree = "<group>"; };
+		FABC00042D12300100000004 /* ProjectAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectAppearance.swift; sourceTree = "<group>"; };
+		FABC00052D12300100000005 /* ProjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectEditorView.swift; sourceTree = "<group>"; };
+		FABC00062D12300100000006 /* ProjectIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectIconView.swift; sourceTree = "<group>"; };
 		FAE1A0102C8F0A1A00000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorNamingPolicy.swift; sourceTree = "<group>"; };
 		FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRegistry.swift; sourceTree = "<group>"; };
@@ -183,6 +189,7 @@
 				FA2AE4A92AEBDDB800D24008 /* Info.plist */,
 				FA30F2262AEED1C5004EC6E9 /* views */,
 				FA2AE44A2AEB980700D24008 /* App.swift */,
+				FABC00042D12300100000004 /* ProjectAppearance.swift */,
 				FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */,
 				FA54EB712AF5033D001AE449 /* CLI.swift */,
 				FA54EB802AF789F6001AE449 /* Logger.swift */,
@@ -246,6 +253,8 @@
 				FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */,
 				FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */,
 				FA3937162AF291A5001D9105 /* SettingsView.swift */,
+				FABC00052D12300100000005 /* ProjectEditorView.swift */,
+				FABC00062D12300100000006 /* ProjectIconView.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -424,10 +433,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */,
+				FABC00022D12300100000002 /* ProjectEditorView.swift in Sources */,
+				FABC00032D12300100000003 /* ProjectIconView.swift in Sources */,
 				FA7B6C122D0A111100000002 /* AppSettingsStore+LaunchAtLogin.swift in Sources */,
 				FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */,
 				FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */,
 				FA2AE44B2AEB980700D24008 /* App.swift in Sources */,
+				FABC00012D12300100000001 /* ProjectAppearance.swift in Sources */,
 				FA54EB722AF5033D001AE449 /* CLI.swift in Sources */,
 				FA54EB812AF789F6001AE449 /* Logger.swift in Sources */,
 				FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */,

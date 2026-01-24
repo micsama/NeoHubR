@@ -23,7 +23,10 @@ public enum EditorNamingPolicy {
             return workingDirectory.standardizedFileURL
         case .some(let path):
             let rawURL: URL
-            if path.hasPrefix("/") {
+            if path.hasPrefix("~") {
+                let expanded = (path as NSString).expandingTildeInPath
+                rawURL = URL(fileURLWithPath: expanded)
+            } else if path.hasPrefix("/") {
                 rawURL = URL(fileURLWithPath: path)
             } else {
                 rawURL = workingDirectory.appendingPathComponent(path)

@@ -67,9 +67,13 @@ final class EditorStore {
     func runEditor(request: RunRequest) {
         MainThread.assert()
         let naming = EditorNamingPolicy.resolve(for: request)
+        let sessionPath = ProjectRegistry.resolveSessionPath(
+            workingDirectory: request.wd,
+            path: request.path
+        )
         let editorID = EditorID(naming.location)
         let editorName = naming.displayName
-        updateProjectRegistry(location: naming.location, displayName: editorName)
+        updateProjectRegistry(location: naming.location, displayName: editorName, sessionPath: sessionPath)
 
         switch editors[editorID] {
         case .some(let editor):
@@ -89,12 +93,22 @@ final class EditorStore {
                     if !args.contains("--no-fork") {
                         args.append("--no-fork")
                     }
-                    if let path = request.path {
+                    if let sessionPath {
+                        if !args.contains("--") {
+                            args.append("--")
+                        }
+                        args.append("-S")
+                        args.append(sessionPath.path(percentEncoded: false))
+                    } else if let path = request.path {
                         args.append(path)
                     }
                     process.arguments = args
 
-                    process.currentDirectoryURL = request.wd
+                    if let sessionPath {
+                        process.currentDirectoryURL = sessionPath.deletingLastPathComponent()
+                    } else {
+                        process.currentDirectoryURL = request.wd
+                    }
                     process.environment = request.env
 
                     process.terminationHandler = { [editorID, self] _ in
@@ -201,24 +215,8 @@ final class EditorStore {
         self.restartPoller?.invalidate()
     }
 
-    private func updateProjectRegistry(location: URL, displayName: String) {
-        var entries = projectRegistry.entries
-        let now = Date()
-        let normalizedLocation = ProjectRegistry.normalizeID(location)
-
-        if let index = entries.firstIndex(where: { $0.id == normalizedLocation }) {
-            var entry = entries[index]
-            if (entry.name ?? "").isEmpty {
-                entry.name = displayName
-            }
-            entry.lastOpenedAt = now
-            entries[index] = entry
-        } else {
-            entries.append(ProjectEntry(id: normalizedLocation, name: displayName, lastOpenedAt: now))
-        }
-
-        entries.sort { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
-        projectRegistry.entries = entries
+    private func updateProjectRegistry(location: URL, displayName: String, sessionPath: URL?) {
+        projectRegistry.touchRecent(root: location, name: displayName, sessionPath: sessionPath)
     }
 
     func openProject(_ project: ProjectEntry) {
@@ -244,12 +242,19 @@ final class EditorStore {
             wd = project.id.deletingLastPathComponent()
         }
 
+        var opts: [String] = []
+        if let sessionPath = project.sessionPath {
+            opts.append("--")
+            opts.append("-S")
+            opts.append(sessionPath.path(percentEncoded: false))
+        }
+
         let request = RunRequest(
             wd: wd,
             bin: bin,
             name: project.name,
             path: path,
-            opts: [],
+            opts: opts,
             env: ProcessInfo.processInfo.environment
         )
         runEditor(request: request)
@@ -337,13 +342,7 @@ final class Editor: Identifiable {
     }
 
     var displayPath: String {
-        let fullPath = self.id.path
-        let pattern = "^/Users/[^/]+/"
-        return fullPath.replacingOccurrences(
-            of: pattern,
-            with: "~/",
-            options: .regularExpression
-        )
+        ProjectPathFormatter.displayPath(self.id.path)
     }
 
     var processIdentifier: Int32 {
