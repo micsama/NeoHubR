@@ -14,13 +14,13 @@
 
 ---
 
-**NeoHubR** (**NeoHub Reboot**) is a dedicated menu bar companion for **Neovide** on macOS. It’s designed to rescue you from window chaos, helping you manage multiple editor instances and teleport between projects with buttery-smooth hotkeys.
+**NeoHubR** (**Reboot**) is a dedicated menu bar companion for **Neovide** on macOS. It’s designed to rescue you from window chaos, helping you manage multiple editor instances and teleport between projects with buttery-smooth hotkeys.
 
 ## 📸 Screenshots
 
 <p align="center">
-<img width="411" height="474" alt="NeoHub Screenshot 1" src="https://github.com/user-attachments/assets/eaf9400f-1ee9-4522-9048-1039604c8a6e" />
-<img width="411" height="474" alt="NeoHub Screenshot 2" src="https://github.com/user-attachments/assets/8257b402-1d5d-4f86-9fdd-c509d59650cd" />
+<img width="411" height="474" alt="NeoHubR Screenshot 1" src="https://github.com/user-attachments/assets/eaf9400f-1ee9-4522-9048-1039604c8a6e" />
+<img width="411" height="474" alt="NeoHubR Screenshot 2" src="https://github.com/user-attachments/assets/8257b402-1d5d-4f86-9fdd-c509d59650cd" />
 </p>
 
 ## ✨ Feature Highlights
@@ -58,7 +58,7 @@ Neovide is amazing, but it has two major "quality of life" issues on macOS:
 
 ### Command Line (CLI)
 
-Use `neohub` instead of `neovide` in your terminal. It handles de-duplication and brings existing windows to the front automatically.
+Use `neohubr` instead of `neovide` in your terminal. It handles de-duplication and brings existing windows to the front automatically.
 
 ### Hotkeys (Default)
 
@@ -77,10 +77,10 @@ Use `neohub` instead of `neovide` in your terminal. It handles de-duplication an
 ## 🏗️ Build from Source
 
 ```bash
-open NeoHub.xcodeproj
+open NeoHubR.xcodeproj
 # Build the App and CLI separately
-xcodebuild -project NeoHub.xcodeproj -scheme NeoHub -configuration Debug build
-xcodebuild -project NeoHub.xcodeproj -scheme NeoHubCLI -configuration Debug build
+xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubR -configuration Debug build
+xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug build
 
 ```
 
