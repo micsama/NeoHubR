@@ -337,6 +337,8 @@ private struct CLIStatusView: View {
 private struct ProjectRegistryTab: View {
     @Bindable var appSettings: AppSettingsStore
     @Bindable var projectRegistry: ProjectRegistryStore
+    @State private var showAddError = false
+    @State private var addErrorMessage = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -364,6 +366,18 @@ private struct ProjectRegistryTab: View {
             .formStyle(.grouped)
             .frame(height: 72)
 
+            HStack(spacing: 12) {
+                Spacer()
+                Button("Add Folder") {
+                    openAddFolderPanel()
+                }
+                Button("Add Session") {
+                    openAddSessionPanel()
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
+
             // Project List
             List {
                 Section("Starred") {
@@ -375,14 +389,13 @@ private struct ProjectRegistryTab: View {
                         ForEach(projectRegistry.starredEntries) { entry in
                             ProjectRow(
                                 entry: entry,
+                                isStarred: true,
                                 isInvalid: projectRegistry.isInvalid(entry),
                                 projectRegistry: projectRegistry
                             )
                         }
                         .onMove { indices, newOffset in
-                            var ids = projectRegistry.starredEntries.map { $0.id }
-                            ids.move(fromOffsets: indices, toOffset: newOffset)
-                            projectRegistry.updatePinnedOrder(ids: ids)
+                            projectRegistry.moveStarred(fromOffsets: indices, toOffset: newOffset)
                         }
                     }
                 }
@@ -396,6 +409,7 @@ private struct ProjectRegistryTab: View {
                         ForEach(projectRegistry.recentEntries) { entry in
                             ProjectRow(
                                 entry: entry,
+                                isStarred: false,
                                 isInvalid: projectRegistry.isInvalid(entry),
                                 projectRegistry: projectRegistry
                             )
@@ -407,6 +421,40 @@ private struct ProjectRegistryTab: View {
         }
         .onAppear {
             projectRegistry.refreshValidity()
+        }
+        .alert("Add Project Failed", isPresented: $showAddError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(addErrorMessage)
+        }
+    }
+
+    private func openAddFolderPanel() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Add"
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            projectRegistry.addProject(root: url)
+        }
+    }
+
+    private func openAddSessionPanel() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Add"
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            guard url.lastPathComponent == "Session.vim" else {
+                addErrorMessage = String(localized: "Please select Session.vim.")
+                showAddError = true
+                return
+            }
+            projectRegistry.addProject(root: url.deletingLastPathComponent(), sessionPath: url)
         }
     }
 }
@@ -474,15 +522,22 @@ private struct AdvancedSettingsTab: View {
 
 private struct ProjectRow: View {
     let entry: ProjectEntry
+    let isStarred: Bool
     let isInvalid: Bool
     @Bindable var projectRegistry: ProjectRegistryStore
+    @Environment(\.openWindow) private var openWindow
     @State private var deleteArmed = false
     @State private var deleteResetTask: Task<Void, Never>?
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "folder.fill")
-                .foregroundStyle(isInvalid ? .tertiary : .secondary)
+            ProjectIconView(
+                entry: entry,
+                fallbackSystemName: "folder.fill",
+                size: 16,
+                isInvalid: isInvalid,
+                fallbackColor: .secondary
+            )
 
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 6) {
@@ -492,12 +547,27 @@ private struct ProjectRow: View {
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
+                    if entry.isSession {
+                        Text("(\(String(localized: "Session")))")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
                 }
 
-                Text(entry.id.path(percentEncoded: false).replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                Text(ProjectPathFormatter.displayPath(entry.id))
                     .font(.caption)
                     .foregroundStyle(isInvalid ? .quaternary : .tertiary)
                     .lineLimit(1)
+
+                if let sessionPath = entry.sessionPath {
+                    HStack(spacing: 4) {
+                        Text("Session")
+                        Text(ProjectPathFormatter.displayPath(sessionPath))
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                }
             }
 
             Spacer()
@@ -505,8 +575,16 @@ private struct ProjectRow: View {
             Button {
                 projectRegistry.toggleStar(id: entry.id)
             } label: {
-                Image(systemName: entry.isStarred ? "star.fill" : "star")
-                    .foregroundStyle(entry.isStarred ? .yellow : .secondary)
+                Image(systemName: isStarred ? "star.fill" : "star")
+                    .foregroundStyle(isStarred ? .yellow : .secondary)
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                openWindow(id: "project-editor", value: entry.id)
+            } label: {
+                Image(systemName: "pencil")
+                    .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
 
@@ -526,7 +604,7 @@ private struct ProjectRow: View {
     private var titleText: some View {
         let text = Text(entry.name ?? entry.id.lastPathComponent)
             .lineLimit(1)
-            .foregroundStyle(isInvalid ? .secondary : .primary)
+            .foregroundStyle(isInvalid ? .secondary : (entry.customColor ?? .primary))
 
         if isInvalid {
             text.strikethrough().italic()

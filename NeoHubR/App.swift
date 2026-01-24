@@ -36,6 +36,13 @@ struct NeoHubRApp: App {
             },
             label: { MenuBarIcon() }
         )
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                SettingsLink {
+                    Text("Settings…")
+                }
+            }
+        }
         Settings {
             SettingsView(
                 cli: app.cli,
@@ -43,6 +50,16 @@ struct NeoHubRApp: App {
                 projectRegistry: app.projectRegistry
             )
         }
+
+        WindowGroup("Project Editor", id: "project-editor", for: URL.self) { value in
+            if let projectID = value.wrappedValue {
+                ProjectEditorView(
+                    projectID: projectID,
+                    projectRegistry: app.projectRegistry
+                )
+            }
+        }
+        .windowResizability(.contentSize)
     }
 }
 
