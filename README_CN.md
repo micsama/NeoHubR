@@ -3,14 +3,19 @@
 > English: [README.md](README.md)
 
 <p align="center">
-    <!-- 图片占位，后续替换 -->
-    <!-- <img width="720" alt="NeoHub" src="YOUR_IMAGE_URL"> -->
+    <img width="757" height="418" alt="NeoHub 演示图" src="https://github.com/user-attachments/assets/724d0e7f-ca91-4759-9e15-5005f82038fc" />
 </p>
 
 ---
 
 NeoHub（应用内显示名 **NeoHubR**）是 **Neovide** 的 macOS 菜单栏助手。  
 本 README 先聚焦 **用户可感知的功能**。
+
+## 截图
+<p>
+  <img width="411" height="474" alt="NeoHub 截图 1" src="https://github.com/user-attachments/assets/eaf9400f-1ee9-4522-9048-1039604c8a6e" />
+  <img width="411" height="474" alt="NeoHub 截图 2" src="https://github.com/user-attachments/assets/8257b402-1d5d-4f86-9fdd-c509d59650cd" />
+</p>
 
 ## 功能（用户视角）
 - **菜单栏工作流**：常驻入口、编辑器列表与快捷操作。
