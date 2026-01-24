@@ -114,6 +114,8 @@
 "Choose" = "选择";
 "Untitled" = "未命名";
 "Custom" = "自定义";
+"Emoji / Character" = "Emoji / 字符";
+"Choose Color" = "选择颜色";
 
 "Version %@ (%@)" = "版本 %@ (%@)";
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";

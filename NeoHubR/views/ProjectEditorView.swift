@@ -1,3 +1,4 @@
+import AppKit
 import NeoHubRLib
 import SwiftUI
 import UniformTypeIdentifiers
@@ -19,7 +20,7 @@ struct ProjectEditorView: View {
             actionsBar
         }
         .padding(16)
-        .frame(width: 380)
+        .frame(width: 255, height: 350)
         .task { loadInitialData() }
     }
 
@@ -36,303 +37,314 @@ struct ProjectEditorView: View {
     }
 
     private var nameField: some View {
-        let title: LocalizedStringKey = "Project Name"
-        return fieldGroup(title) {
-            TextField(title, text: $state.name)
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Project Name")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            TextField("Project Name", text: $state.name)
                 .textFieldStyle(.roundedBorder)
         }
     }
 
     private var projectField: some View {
-        pathField(
-            title: "Project Path",
-            path: $state.projectPath,
-            allowedTypes: [.folder],
-            expectsDirectory: true,
-            isValid: state.isProjectPathValid
-        )
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Project Path")
+                .foregroundStyle(state.isProjectPathValid ? Color.primary : Color.red)
+                .font(.caption)
+                .fontWeight(state.isProjectPathValid ? .regular : .bold)
+            PathField(
+                path: $state.projectPath,
+                allowedTypes: [.folder],
+                expectsDirectory: true
+            )
+        }
     }
 
     private var sessionField: some View {
-        pathField(
-            title: "Session.vim Path",
-            path: $state.sessionPath,
-            allowedTypes: [.data],
-            expectsDirectory: false
-        )
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Session.vim Path")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            PathField(
+                path: $state.sessionPath,
+                allowedTypes: [.data],
+                expectsDirectory: false
+            )
+        }
     }
 
+    @ViewBuilder
     private var iconField: some View {
-        fieldGroup("Icon") {
-            Button {
-                isIconPickerPresented = true
-            } label: {
-                HStack(spacing: 8) {
-                    iconPreview
-                    Text(iconTitle)
-                        .foregroundStyle(.primary)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .foregroundStyle(.secondary)
+        let emojiTooLong = state.emojiValue.count > 2
+        let emojiBorder: Color = {
+            if emojiTooLong { return .red }
+            return state.iconMode == .emoji ? .accentColor : .clear
+        }()
+
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Icon")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                if state.iconMode == .default {
+                    Button(String(localized: "Default")) {
+                        state.iconMode = .default
+                        state.symbolName = "folder.fill"
+                        state.emojiValue = ""
+                    }
+                    .buttonStyle(.borderedProminent)
+                } else {
+                    Button(String(localized: "Default")) {
+                        state.iconMode = .default
+                        state.symbolName = "folder.fill"
+                        state.emojiValue = ""
+                    }
+                    .buttonStyle(.bordered)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(.quaternary)
-                )
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $isIconPickerPresented, arrowEdge: .bottom) {
-                iconPickerPopover
+
+                if state.iconMode == .symbol {
+                Button {
+                    state.iconMode = .symbol
+                    isIconPickerPresented = true
+                } label: {
+                    Image(systemName: "square.grid.2x2")
+                }
+                    .buttonStyle(.borderedProminent)
+                    .popover(isPresented: $isIconPickerPresented, arrowEdge: .bottom) {
+                        iconPickerPopover
+                    }
+                } else {
+                    Button {
+                        state.iconMode = .symbol
+                        isIconPickerPresented = true
+                    } label: {
+                        Image(systemName: "square.grid.2x2")
+                    }
+                    .buttonStyle(.bordered)
+                    .popover(isPresented: $isIconPickerPresented, arrowEdge: .bottom) {
+                        iconPickerPopover
+                    }
+                }
+
+                TextField(String(localized: "Emoji / Character"), text: $state.emojiValue)
+                    .textFieldStyle(.roundedBorder)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(emojiBorder, lineWidth: 1)
+                    )
+                    .frame(maxWidth: .infinity)
+                    .onChange(of: state.emojiValue) { _, newValue in
+                        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        if isValidSymbolName(trimmed) {
+                            state.iconMode = .symbol
+                            state.symbolName = trimmed
+                        } else {
+                            state.iconMode = .emoji
+                        }
+                    }
             }
         }
     }
 
     private var colorField: some View {
-        fieldGroup("Color") {
-            HStack(spacing: 8) {
-                ColorSwatch(
-                    color: nil,
-                    isSelected: !state.useCustomColor
-                ) {
-                    state.selectNoneColor()
-                }
+        let presets = EditorState.colorPresets
+        let palette: [(color: Color?, presetIndex: Int?)] = [
+            (color: nil, presetIndex: nil)
+        ] + presets.enumerated().map { (color: $0.element, presetIndex: $0.offset) }
+        let firstRow = palette.prefix(6)
+        let secondRow = palette.dropFirst(6).prefix(6)
 
-                ForEach(ColorOption.presets) { option in
-                    ColorSwatch(
-                        color: option.color,
-                        isSelected: state.useCustomColor && state.selectedPresetID == option.id
-                    ) {
-                        state.selectPresetColor(option)
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("Color")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        ForEach(Array(firstRow.enumerated()), id: \.offset) { _, item in
+                            ColorSwatch(
+                                color: item.color,
+                                isSelected: item.presetIndex == nil
+                                    ? !state.useCustomColor
+                                    : state.useCustomColor && state.selectedPresetIndex == item.presetIndex
+                            ) {
+                                if let presetIndex = item.presetIndex, let color = item.color {
+                                    state.selectPresetColor(color, index: presetIndex)
+                                } else {
+                                    state.selectNoneColor()
+                                }
+                            }
+                        }
+                    }
+
+                    HStack(spacing: 6) {
+                        ForEach(Array(secondRow.enumerated()), id: \.offset) { _, item in
+                            ColorSwatch(
+                                color: item.color,
+                                isSelected: item.presetIndex == nil
+                                    ? !state.useCustomColor
+                                    : state.useCustomColor && state.selectedPresetIndex == item.presetIndex
+                            ) {
+                                if let presetIndex = item.presetIndex, let color = item.color {
+                                    state.selectPresetColor(color, index: presetIndex)
+                                } else {
+                                    state.selectNoneColor()
+                                }
+                            }
+                        }
                     }
                 }
+                .frame(width: 140, alignment: .leading)
 
-                Divider()
-                    .frame(height: 18)
-                    .padding(.horizontal, 4)
-
-                HStack(spacing: 6) {
-                    Image(systemName: "paintpalette")
-                        .foregroundStyle(.secondary)
-                    ColorPicker("Custom", selection: customColorBinding, supportsOpacity: false)
-                        .labelsHidden()
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "paintpalette")
+                            .foregroundStyle(.secondary)
+                        Text(String(localized: "Custom"))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    ColorPicker(String(localized: "Choose Color"), selection: $state.color, supportsOpacity: false)
+                        .controlSize(.small)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .onTapGesture {
+                            state.selectCustomColor(state.color)
+                        }
+                        .onChange(of: state.color) { _, newValue in
+                            state.selectCustomColor(newValue)
+                        }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
 
     private var actionsBar: some View {
         HStack {
-            Spacer()
             Button("Cancel", role: .cancel) { dismiss() }
                 .keyboardShortcut(.escape, modifiers: [])
+                .frame(maxWidth: .infinity)
             Button("Save") { save() }
                 .keyboardShortcut(.return, modifiers: .command)
                 .buttonStyle(.borderedProminent)
                 .disabled(!state.canSave)
+                .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity)
         .padding(.top, 4)
     }
 
-    private var previewCard: some View {
-        let previewEntry = state.previewEntry(fallback: loadedEntry)
-        let displayName = state.displayName(fallback: loadedEntry)
-        let displayPath = state.displayPath(fallback: loadedEntry)
-
-        return glassCard {
-            HStack(spacing: 12) {
-                ProjectIconView(
-                    entry: previewEntry,
-                    fallbackSystemName: "folder.fill",
-                    size: 28,
-                    isInvalid: false,
-                    fallbackColor: .secondary
-                )
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(displayName)
-                        .font(.headline)
-                    Text(displayPath)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-
-                Spacer()
-            }
-            .padding(12)
-        }
-    }
-
-    private func fieldGroup<Content: View>(
-        _ title: LocalizedStringKey,
-        isValid: Bool? = nil,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            fieldLabel(title, isValid: isValid)
-            content()
-        }
-    }
-
     @ViewBuilder
-    private func fieldLabel(_ title: LocalizedStringKey, isValid: Bool?) -> some View {
-        if let isValid {
-            Text(title)
-                .foregroundStyle(isValid ? AnyShapeStyle(.primary) : AnyShapeStyle(.red))
-                .font(.caption)
-                .fontWeight(isValid ? .regular : .bold)
-        } else {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private func pathField(
-        title: LocalizedStringKey,
-        path: Binding<String>,
-        allowedTypes: [UTType],
-        expectsDirectory: Bool,
-        isValid: Bool? = nil
-    ) -> some View {
-        fieldGroup(title, isValid: isValid) {
-            PathField(
-                path: path,
-                allowedTypes: allowedTypes,
-                expectsDirectory: expectsDirectory
-            )
-        }
-    }
-
-    private var iconPreview: some View {
-        Group {
-            switch state.iconMode {
-            case .default:
-                Image(systemName: "folder.fill")
-            case .symbol:
-                Image(systemName: state.symbolName)
-            case .emoji:
-                Text(state.emojiValue.isEmpty ? "🙂" : state.emojiValue)
+    private var previewCard: some View {
+        let trimmedName = state.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolvedURL = state.normalizedProjectURL ?? loadedEntry?.id
+        let emojiText = state.emojiValue.isEmpty ? "🙂" : state.emojiValue
+        let emojiFontSize: CGFloat = emojiText.count > 1 ? 20 : 28
+        let displayName: String = {
+            if !trimmedName.isEmpty {
+                return trimmedName
             }
-        }
-        .font(.system(size: 14))
-        .frame(width: 18, height: 18)
-    }
+            if let entryName = loadedEntry?.name, !entryName.isEmpty {
+                return entryName
+            }
+            if let resolvedURL {
+                return resolvedURL.lastPathComponent
+            }
+            return String(localized: "Untitled")
+        }()
 
-    private var iconTitle: String {
-        switch state.iconMode {
-        case .default:
-            return String(localized: "Default")
-        case .symbol:
-            return state.symbolName
-        case .emoji:
-            return state.emojiValue.isEmpty ? String(localized: "Emoji") : state.emojiValue
+        let displayPath: String = {
+            if let resolvedURL {
+                return ProjectPathFormatter.displayPath(resolvedURL)
+            }
+            return "-"
+        }()
+
+        let iconColor = state.useCustomColor ? state.color : Color.secondary
+
+        let card = HStack(spacing: 12) {
+            Group {
+                switch state.iconMode {
+                case .default:
+                    Image(systemName: "folder.fill")
+                case .symbol:
+                    Image(systemName: state.symbolName)
+                case .emoji:
+                    Text(emojiText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .allowsTightening(true)
+                }
+            }
+            .font(.system(size: state.iconMode == .emoji ? emojiFontSize : 28))
+            .foregroundStyle(iconColor)
+            .frame(width: 28, height: 28)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(displayName)
+                    .font(.headline)
+                Text(displayPath)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+        }
+        .padding(12)
+
+        if #available(macOS 26.0, *) {
+            card.glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        } else {
+            card.background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
     private var iconPickerPopover: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Symbol")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            LazyVGrid(columns: iconGridColumns, spacing: 8) {
-                ForEach(iconOptions, id: \.self) { symbol in
-                    Button {
-                        state.iconMode = .symbol
-                        state.symbolName = symbol
-                    } label: {
-                        Image(systemName: symbol)
-                            .font(.system(size: 16))
-                            .frame(width: 28, height: 24)
-                            .foregroundStyle(.primary)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(
-                                        state.iconMode == .symbol && state.symbolName == symbol
-                                            ? Color.accentColor.opacity(0.18)
-                                            : Color.clear
-                                    )
-                            )
-                    }
-                    .buttonStyle(.plain)
+        LazyVGrid(
+            columns: Array(repeating: GridItem(.fixed(32), spacing: 8), count: 6),
+            spacing: 8
+        ) {
+            ForEach(iconOptions, id: \.self) { symbol in
+                Button {
+                    state.iconMode = .symbol
+                    state.symbolName = symbol
+                } label: {
+                    Image(systemName: symbol)
+                        .font(.system(size: 16))
+                        .frame(width: 28, height: 24)
+                        .foregroundStyle(.primary)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(
+                                    state.iconMode == .symbol && state.symbolName == symbol
+                                        ? Color.accentColor.opacity(0.18)
+                                        : Color.clear
+                                )
+                        )
                 }
-            }
-
-            Divider()
-
-            HStack(spacing: 8) {
-                Button(String(localized: "Default")) {
-                    state.iconMode = .default
-                    state.symbolName = "folder.fill"
-                    state.emojiValue = ""
-                }
-                .buttonStyle(.bordered)
-
-                Spacer()
-
-                TextField(String(localized: "Emoji"), text: $state.emojiValue)
-                    .frame(width: 80)
-                    .textFieldStyle(.roundedBorder)
-                    .onChange(of: state.emojiValue) { _, newValue in
-                        if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            state.iconMode = .emoji
-                        }
-                    }
+                .buttonStyle(.plain)
             }
         }
         .padding(12)
-        .frame(width: 260)
-    }
-
-    private var iconGridColumns: [GridItem] {
-        Array(repeating: GridItem(.fixed(32), spacing: 8), count: 6)
+        .frame(width: 240)
     }
 
     private var iconOptions: [String] {
         [
-            "folder.fill",
-            "folder",
-            "terminal.fill",
-            "hammer.fill",
-            "wrench.and.screwdriver.fill",
-            "gearshape.fill",
-            "chevron.left.slash.chevron.right",
-            "curlybraces",
-            "swift",
-            "shippingbox.fill",
-            "link",
-            "sparkles",
-            "bolt.fill",
-            "doc.text.fill",
-            "tray.full.fill",
-            "bookmark.fill",
-            "paperplane.fill",
-            "cube.transparent.fill"
+            "folder", "terminal", "doc.text", "tray", "cube", "memorychip",
+            "gearshape", "wrench.and.screwdriver", "hammer", "bolt", "sparkles",
+            "tag", "bookmark", "link", "paperplane", "star", "heart", "flame",
+            "leaf", "globe", "briefcase", "camera", "paintbrush", "chart.bar",
+            "map", "music.note", "gamecontroller", "graduationcap"
         ]
     }
 
-    private var customColorBinding: Binding<Color> {
-        Binding(
-            get: { state.color },
-            set: { newValue in
-                state.selectCustomColor(newValue)
-            }
-        )
+    private func isValidSymbolName(_ name: String) -> Bool {
+        NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil
     }
 
-    @ViewBuilder
-    private func glassCard<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        if #available(macOS 26.0, *) {
-            content()
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        } else {
-            content()
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        }
-    }
 }
 
 // MARK: - Actions
@@ -399,31 +411,8 @@ private struct PathField: View {
 
 // MARK: - IconMode
 
-private enum IconMode: String, CaseIterable {
+private enum IconMode {
     case `default`, symbol, emoji
-}
-
-// MARK: - ColorOption
-
-private struct ColorOption: Identifiable {
-    let id: String
-    let color: Color
-
-    static let presets: [ColorOption] = [
-        .init(id: "red", color: .red),
-        .init(id: "orange", color: .orange),
-        .init(id: "yellow", color: .yellow),
-        .init(id: "green", color: .green),
-        .init(id: "mint", color: .mint),
-        .init(id: "blue", color: .blue),
-        .init(id: "indigo", color: .indigo),
-        .init(id: "purple", color: .purple)
-    ]
-
-    static func matchingID(for color: Color) -> String? {
-        guard let hex = color.hexString() else { return nil }
-        return presets.first { $0.color.hexString() == hex }?.id
-    }
 }
 
 // MARK: - ColorSwatch
@@ -465,6 +454,20 @@ private struct ColorSwatch: View {
 // MARK: - EditorState
 
 private struct EditorState {
+    static let colorPresets: [Color] = [
+        .black,
+        .white,
+        .red,
+        .orange,
+        .yellow,
+        .green,
+        .mint,
+        .teal,
+        .blue,
+        .indigo,
+        .purple
+    ]
+
     var name = ""
     var projectPath = ""
     var sessionPath = ""
@@ -473,7 +476,7 @@ private struct EditorState {
     var emojiValue = ""
     var useCustomColor = false
     var color: Color = .orange
-    var selectedPresetID: String?
+    var selectedPresetIndex: Int?
 
     init() {}
 
@@ -485,7 +488,8 @@ private struct EditorState {
         if let customColor = entry.customColor {
             useCustomColor = true
             color = customColor
-            selectedPresetID = ColorOption.matchingID(for: customColor)
+            let hex = customColor.hexString()
+            selectedPresetIndex = Self.colorPresets.firstIndex { $0.hexString() == hex }
         }
 
         if let icon = entry.iconDescriptor {
@@ -509,18 +513,18 @@ private struct EditorState {
 
     mutating func selectNoneColor() {
         useCustomColor = false
-        selectedPresetID = nil
+        selectedPresetIndex = nil
     }
 
-    mutating func selectPresetColor(_ option: ColorOption) {
+    mutating func selectPresetColor(_ preset: Color, index: Int) {
         useCustomColor = true
-        selectedPresetID = option.id
-        color = option.color
+        selectedPresetIndex = index
+        color = preset
     }
 
     mutating func selectCustomColor(_ newColor: Color) {
         useCustomColor = true
-        selectedPresetID = nil
+        selectedPresetIndex = nil
         color = newColor
     }
 
@@ -543,40 +547,7 @@ private struct EditorState {
         )
     }
 
-    func previewEntry(fallback entry: ProjectEntry?) -> ProjectEntry {
-        let fallbackURL = entry?.id ?? URL(fileURLWithPath: "/")
-        let previewURL = normalizedProjectURL ?? fallbackURL
-        return ProjectEntry(
-            id: previewURL,
-            name: displayName(fallback: entry),
-            icon: buildIconValue(),
-            colorHex: useCustomColor ? color.hexString() : nil
-        )
-    }
-
-    func displayName(fallback entry: ProjectEntry?) -> String {
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedName.isEmpty {
-            return trimmedName
-        }
-        if let entryName = entry?.name, !entryName.isEmpty {
-            return entryName
-        }
-        let fallbackURL = normalizedProjectURL ?? entry?.id
-        return fallbackURL?.lastPathComponent ?? String(localized: "Untitled")
-    }
-
-    func displayPath(fallback entry: ProjectEntry?) -> String {
-        if let url = normalizedProjectURL {
-            return ProjectPathFormatter.displayPath(url)
-        }
-        if let id = entry?.id {
-            return ProjectPathFormatter.displayPath(id)
-        }
-        return "-"
-    }
-
-    private var normalizedProjectURL: URL? {
+    var normalizedProjectURL: URL? {
         let trimmed = projectPath.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         let expanded = ProjectPathFormatter.expandTilde(trimmed)
