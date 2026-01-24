@@ -94,6 +94,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationManager.shared.registerDelegate()
 
         self.server.start()
+        self.projectRegistry.refreshValidity()
 
         Task { @MainActor in
             let status = await self.cli.refreshStatus()

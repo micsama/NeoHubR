@@ -373,7 +373,11 @@ private struct ProjectRegistryTab: View {
                             .font(.subheadline)
                     } else {
                         ForEach(projectRegistry.starredEntries) { entry in
-                            ProjectRow(entry: entry, projectRegistry: projectRegistry)
+                            ProjectRow(
+                                entry: entry,
+                                isInvalid: projectRegistry.isInvalid(entry),
+                                projectRegistry: projectRegistry
+                            )
                         }
                         .onMove { indices, newOffset in
                             var ids = projectRegistry.starredEntries.map { $0.id }
@@ -390,12 +394,19 @@ private struct ProjectRegistryTab: View {
                             .font(.subheadline)
                     } else {
                         ForEach(projectRegistry.recentEntries) { entry in
-                            ProjectRow(entry: entry, projectRegistry: projectRegistry)
+                            ProjectRow(
+                                entry: entry,
+                                isInvalid: projectRegistry.isInvalid(entry),
+                                projectRegistry: projectRegistry
+                            )
                         }
                     }
                 }
             }
             .listStyle(.inset(alternatesRowBackgrounds: true))
+        }
+        .onAppear {
+            projectRegistry.refreshValidity()
         }
     }
 }
@@ -463,20 +474,22 @@ private struct AdvancedSettingsTab: View {
 
 private struct ProjectRow: View {
     let entry: ProjectEntry
+    let isInvalid: Bool
     @Bindable var projectRegistry: ProjectRegistryStore
 
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "folder.fill")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(isInvalid ? .tertiary : .secondary)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(entry.name ?? entry.id.lastPathComponent)
                     .lineLimit(1)
+                    .foregroundStyle(isInvalid ? .secondary : .primary)
 
                 Text(entry.id.path(percentEncoded: false).replacingOccurrences(of: NSHomeDirectory(), with: "~"))
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(isInvalid ? .quaternary : .tertiary)
                     .lineLimit(1)
             }
 
@@ -487,6 +500,14 @@ private struct ProjectRow: View {
             } label: {
                 Image(systemName: entry.isStarred ? "star.fill" : "star")
                     .foregroundStyle(entry.isStarred ? .yellow : .secondary)
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                projectRegistry.remove(id: entry.id)
+            } label: {
+                Image(systemName: "trash")
+                    .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
         }

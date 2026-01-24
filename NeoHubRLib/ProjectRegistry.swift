@@ -49,8 +49,39 @@ public enum ProjectRegistry {
     }
 
     public static func normalizeID(_ url: URL) -> URL {
-        let standardized = url.standardizedFileURL
-        return URL(fileURLWithPath: standardized.path)
+        let expandedPath = (url.path(percentEncoded: false) as NSString).expandingTildeInPath
+        let trimmedPath = ProjectRegistry.trimTrailingSlash(expandedPath)
+        var normalized = URL(fileURLWithPath: trimmedPath).standardizedFileURL
+
+        if FileManager.default.fileExists(atPath: normalized.path) {
+            normalized = normalized.resolvingSymlinksInPath()
+        }
+
+        if let isCaseSensitive = ProjectRegistry.isCaseSensitiveVolume(for: normalized),
+            !isCaseSensitive
+        {
+            normalized = URL(fileURLWithPath: normalized.path.lowercased())
+        }
+
+        return normalized
+    }
+
+    private static func trimTrailingSlash(_ path: String) -> String {
+        guard path.count > 1 else { return path }
+        var result = path
+        while result.hasSuffix("/") && result.count > 1 {
+            result.removeLast()
+        }
+        return result
+    }
+
+    private static func isCaseSensitiveVolume(for url: URL) -> Bool? {
+        do {
+            let values = try url.resourceValues(forKeys: [.volumeSupportsCaseSensitiveNamesKey])
+            return values.volumeSupportsCaseSensitiveNames
+        } catch {
+            return nil
+        }
     }
 
     public static func deduplicate(_ entries: [ProjectEntry]) -> [ProjectEntry] {
@@ -104,6 +135,8 @@ public final class ProjectRegistryStore {
             ProjectRegistry.save(entries)
         }
     }
+    public private(set) var invalidIDs: Set<URL> = []
+    public private(set) var lastValidityCheck: Date?
 
     public init() {
         let loaded = ProjectRegistry.load()
@@ -159,5 +192,53 @@ public final class ProjectRegistryStore {
     private func nextPinnedOrder() -> Int {
         let maxOrder = entries.compactMap { $0.pinnedOrder }.max() ?? -1
         return maxOrder + 1
+    }
+
+    public func remove(id: URL) {
+        entries.removeAll { $0.id == id }
+        invalidIDs.remove(id)
+    }
+
+    public func refreshValidity() {
+        var invalid: Set<URL> = []
+        for entry in entries {
+            if !ProjectRegistry.isAccessible(entry.id) {
+                invalid.insert(entry.id)
+            }
+        }
+        invalidIDs = invalid
+        lastValidityCheck = Date()
+    }
+
+    public func isInvalid(_ entry: ProjectEntry) -> Bool {
+        invalidIDs.contains(entry.id)
+    }
+
+    public func validateNow(_ entry: ProjectEntry) -> Bool {
+        let isValid = ProjectRegistry.isAccessible(entry.id)
+        if isValid {
+            invalidIDs.remove(entry.id)
+        } else {
+            invalidIDs.insert(entry.id)
+        }
+        lastValidityCheck = Date()
+        return isValid
+    }
+}
+
+extension ProjectRegistry {
+    public static func isAccessible(_ url: URL) -> Bool {
+        let path = url.path(percentEncoded: false)
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) else {
+            return false
+        }
+
+        if isDirectory.boolValue {
+            return FileManager.default.isReadableFile(atPath: path)
+                && FileManager.default.isExecutableFile(atPath: path)
+        }
+
+        return FileManager.default.isReadableFile(atPath: path)
     }
 }

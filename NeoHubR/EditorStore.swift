@@ -222,6 +222,13 @@ final class EditorStore {
     }
 
     func openProject(_ project: ProjectEntry) {
+        if !projectRegistry.validateNow(project) {
+            NotificationManager.sendInfo(
+                title: String(localized: "Project not accessible"),
+                body: String(localized: "The project path is missing or not accessible.")
+            )
+            return
+        }
         guard let bin = resolveNeovideBinary() else {
             let error = ReportableError("Failed to locate Neovide binary in PATH.")
             log.error("\(error)")

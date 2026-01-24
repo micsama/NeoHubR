@@ -7,26 +7,26 @@ import SwiftUI
 @MainActor
 private enum SwitcherEntry: Identifiable {
     case editor(Editor)
-    case project(ProjectEntry)
+    case project(ProjectEntry, isInvalid: Bool)
 
     nonisolated var id: String {
         switch self {
         case .editor(let e): return "editor:\(ObjectIdentifier(e))"
-        case .project(let p): return "project:\(p.id.absoluteString)"
+        case .project(let p, _): return "project:\(p.id.absoluteString)"
         }
     }
 
     var name: String {
         switch self {
         case .editor(let e): return e.name
-        case .project(let p): return p.name ?? p.id.lastPathComponent
+        case .project(let p, _): return p.name ?? p.id.lastPathComponent
         }
     }
 
     var displayPath: String {
         switch self {
         case .editor(let e): return e.displayPath
-        case .project(let p): return Self.formatPath(p.id)
+        case .project(let p, _): return Self.formatPath(p.id)
         }
     }
 
@@ -39,7 +39,14 @@ private enum SwitcherEntry: Identifiable {
 
     var isStarred: Bool {
         switch self {
-        case .project(let p): return p.isStarred
+        case .project(let p, _): return p.isStarred
+        case .editor: return false
+        }
+    }
+
+    var isInvalid: Bool {
+        switch self {
+        case .project(_, let isInvalid): return isInvalid
         case .editor: return false
         }
     }
@@ -125,7 +132,7 @@ private final class SwitcherViewModel {
         }
 
         for project in starred + recent where result.count < maxItems {
-            result.append(.project(project))
+            result.append(.project(project, isInvalid: projectRegistry.isInvalid(project)))
         }
 
         return result
@@ -146,14 +153,22 @@ private final class SwitcherViewModel {
     // MARK: - Navigation
 
     func selectPrevious() {
+        let count = filteredEntries.count
+        guard count > 0 else { return }
         if selectedIndex > 0 {
             selectedIndex -= 1
+        } else {
+            selectedIndex = count - 1
         }
     }
 
     func selectNext() {
-        if selectedIndex < filteredEntries.count - 1 {
+        let count = filteredEntries.count
+        guard count > 0 else { return }
+        if selectedIndex < count - 1 {
             selectedIndex += 1
+        } else {
+            selectedIndex = 0
         }
     }
 
@@ -163,7 +178,7 @@ private final class SwitcherViewModel {
         switch entry {
         case .editor(let editor):
             editor.activate()
-        case .project(let project):
+        case .project(let project, _):
             editorStore.openProject(project)
         }
     }
@@ -218,6 +233,7 @@ private final class SwitcherViewModel {
     }
 
     func refreshForShow() {
+        projectRegistry.refreshValidity()
         // Force a list rebuild when showing the switcher to refresh ordering and reset scroll position.
         refreshToken &+= 1
     }
@@ -596,7 +612,7 @@ private struct SwitcherContentView: View {
         ScrollViewReader { proxy in
             List {
                 ForEach(Array(viewModel.filteredEntries.enumerated()), id: \.element.id) { index, entry in
-                    SwitcherRowView(entry: entry, index: index)
+                    SwitcherRowView(entry: entry, index: index, query: viewModel.searchText)
                         .id(entry.id)
                         .listRowBackground(
                             RoundedRectangle(cornerRadius: 8)
@@ -655,19 +671,20 @@ private struct SwitcherContentView: View {
 private struct SwitcherRowView: View {
     let entry: SwitcherEntry
     let index: Int
+    let query: String
 
     var body: some View {
         HStack(spacing: 12) {
             icon
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.name)
+                Text(highlightedText(for: entry.name, query: query))
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(entry.isEditor ? .primary : .orange)
+                    .foregroundColor(nameColor)
 
-                Text(entry.displayPath)
+                Text(highlightedText(for: entry.displayPath, query: query))
                     .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(entry.isInvalid ? .tertiary : .secondary)
                     .lineLimit(1)
             }
 
@@ -697,9 +714,33 @@ private struct SwitcherRowView: View {
         } else {
             Image(systemName: entry.isStarred ? "star.circle.fill" : "folder.fill")
                 .font(.system(size: 16))
-                .foregroundColor(.orange)
+                .foregroundStyle(entry.isInvalid ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.orange))
                 .frame(width: 20, height: 20)
         }
+    }
+
+    private var nameColor: Color {
+        if entry.isEditor {
+            return .primary
+        }
+        return entry.isInvalid ? .secondary : .orange
+    }
+
+    private func highlightedText(for text: String, query: String) -> AttributedString {
+        guard !query.isEmpty else { return AttributedString(text) }
+        var attributed = AttributedString(text)
+        let lowerText = text.lowercased()
+        let lowerQuery = query.lowercased()
+        var searchRange = lowerText.startIndex..<lowerText.endIndex
+
+        while let range = lowerText.range(of: lowerQuery, options: [], range: searchRange) {
+            if let attrRange = Range(range, in: attributed) {
+                attributed[attrRange].foregroundColor = .accentColor
+            }
+            searchRange = range.upperBound..<lowerText.endIndex
+        }
+
+        return attributed
     }
 }
 
