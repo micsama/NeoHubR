@@ -39,7 +39,7 @@ struct SettingsView: View {
                 }
         }
         .background(SettingsWindowLevelUpdater(alwaysOnTop: appSettings.settingsAlwaysOnTop))
-        .frame(minWidth: 375, idealWidth: 375, minHeight: 350, idealHeight: 350)
+        .frame(minWidth: 350, idealWidth: 350, minHeight: 345, idealHeight: 345)
         .fixedSize(horizontal: true, vertical: true)
         .onAppear {
             NSApp.activate(ignoringOtherApps: true)
@@ -339,12 +339,13 @@ private struct ProjectRegistryTab: View {
     @Bindable var projectRegistry: ProjectRegistryStore
     @State private var showAddError = false
     @State private var addErrorMessage = ""
+    @State private var isAddHovering = false
 
     var body: some View {
         VStack(spacing: 0) {
             // Slider Section
             Form {
-                LabeledContent("Switcher Items") {
+                LabeledContent("Items") {
                     HStack(spacing: 8) {
                         Text("\(appSettings.switcherMaxItems)")
                             .monospacedDigit()
@@ -360,23 +361,35 @@ private struct ProjectRegistryTab: View {
                             step: 1
                         )
                         .frame(width: 140)
+
+                        Spacer(minLength: 8)
+
+                        Menu {
+                            Button("Add Folder") {
+                                openAddFolderPanel()
+                            }
+                            Button("Add Session") {
+                                openAddSessionPanel()
+                            }
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color.accentColor)
+                                .frame(width: 20, height: 20)
+                                .background(
+                                    isAddHovering ? Color.secondary.opacity(0.12) : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                )
+                                .onHover { isAddHovering = $0 }
+                        }
+                        .buttonStyle(.plain)
+                        .help("Add Project")
                     }
                 }
             }
             .formStyle(.grouped)
-            .frame(height: 72)
-
-            HStack(spacing: 12) {
-                Spacer()
-                Button("Add Folder") {
-                    openAddFolderPanel()
-                }
-                Button("Add Session") {
-                    openAddSessionPanel()
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 8)
+            .scrollDisabled(true)
+            .frame(height: 64)
 
             // Project List
             List {
@@ -418,6 +431,7 @@ private struct ProjectRegistryTab: View {
                 }
             }
             .listStyle(.inset(alternatesRowBackgrounds: true))
+            .padding(.top, -6)
         }
         .onAppear {
             projectRegistry.refreshValidity()
@@ -459,6 +473,7 @@ private struct ProjectRegistryTab: View {
         }
     }
 }
+
 
 // MARK: - Advanced Tab
 

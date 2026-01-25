@@ -350,13 +350,15 @@ struct ProjectEditorView: View {
     }
 
     private var iconOptions: [String] {
-        [
-            "folder", "terminal", "doc.text", "tray", "cube", "memorychip",
-            "gearshape", "wrench.and.screwdriver", "hammer", "bolt", "sparkles",
-            "tag", "bookmark", "link", "paperplane", "star", "heart", "flame",
-            "leaf", "globe", "briefcase", "camera", "paintbrush", "chart.bar",
-            "map", "music.note", "gamecontroller", "graduationcap"
+        let candidates = [
+            "folder.fill", "terminal.fill", "doc.text.fill", "tray.fill",
+            "shippingbox.fill", "cube.fill", "memorychip.fill",
+            "gearshape.fill", "wrench.and.screwdriver.fill", "hammer.fill", "bolt.fill", "sparkles",
+            "tag.fill", "bookmark.fill", "link", "paperplane.fill", "star.fill", "heart.fill", "flame.fill",
+            "leaf.fill", "globe", "briefcase.fill", "camera.fill", "paintbrush.fill", "chart.bar.fill",
+            "map.fill", "music.note", "gamecontroller.fill", "graduationcap.fill"
         ]
+        return candidates.filter(isValidSymbolName)
     }
 
     private func isValidSymbolName(_ name: String) -> Bool {
