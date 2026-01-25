@@ -53,7 +53,10 @@ extension ProjectEntry {
     }
 
     var isSession: Bool {
-        sessionPath != nil
+        if sessionPath != nil {
+            return true
+        }
+        return id.pathExtension.lowercased() == "vim"
     }
 }
 

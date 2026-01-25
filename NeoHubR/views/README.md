@@ -7,7 +7,7 @@
   - 菜单栏下拉菜单：列出编辑器、设置/关于入口、CLI 状态与安装按钮。
 - `SwitcherView.swift`
   - 编辑器切换器主界面与热键处理；管理切换/激活逻辑。
-  - 统一使用 Liquid Glass 视觉风格；macOS 26 自动启用玻璃效果，旧版本采用兼容背景。
+  - 使用 ScrollView + LazyVStack 渲染列表，通过 ScrollViewReader 保证选中项可滚动对齐。
   - 支持 Tab 循环与 `⌘1~⌘0` 快捷切换（列表右侧显示提示）。
   - 列表可混合展示已打开编辑器与最近项目（不足 N 条时补齐）。
 - `SettingsView.swift`

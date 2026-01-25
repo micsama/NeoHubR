@@ -31,6 +31,9 @@ public enum EditorNamingPolicy {
             } else {
                 rawURL = workingDirectory.appendingPathComponent(path)
             }
+            if rawURL.pathExtension.lowercased() == "vim" {
+                return rawURL.standardizedFileURL
+            }
             return resolveProjectRoot(candidate: rawURL)
         }
     }
@@ -38,9 +41,12 @@ public enum EditorNamingPolicy {
     public static func resolveDisplayName(explicitName: String?, location: URL) -> String {
         switch explicitName {
         case nil, "":
-            location.lastPathComponent
+            if location.pathExtension.lowercased() == "vim" {
+                return location.deletingPathExtension().lastPathComponent
+            }
+            return location.lastPathComponent
         case .some(let name):
-            name
+            return name
         }
     }
 

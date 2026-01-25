@@ -90,7 +90,7 @@
 "Not available" = "Not available";
 "Add Project Failed" = "Add Project Failed";
 "The selected path does not exist." = "The selected path does not exist.";
-"Please select Session.vim." = "Please select Session.vim.";
+"Please select a .vim file." = "Please select a .vim file.";
 "Session" = "Session";
 
 "Project Editor" = "Project Editor";
@@ -99,7 +99,7 @@
 "Project Path" = "Project Path";
 "Browse" = "Browse";
 "Session" = "Session";
-"Session.vim Path" = "Session.vim Path";
+"Session (.vim) Path" = "Session (.vim) Path";
 "Icon" = "Icon";
 "Icon Type" = "Icon Type";
 "Default" = "Default";

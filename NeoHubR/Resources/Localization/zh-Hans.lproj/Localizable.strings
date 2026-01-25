@@ -90,7 +90,7 @@
 "Not available" = "不可用";
 "Add Project Failed" = "添加项目失败";
 "The selected path does not exist." = "所选路径不存在。";
-"Please select Session.vim." = "请选择 Session.vim。";
+"Please select a .vim file." = "请选择 .vim 文件。";
 "Session" = "会话";
 
 "Project Editor" = "项目编辑";
@@ -98,7 +98,7 @@
 "Project Name" = "项目名称";
 "Project Path" = "项目路径";
 "Browse" = "浏览";
-"Session.vim Path" = "Session.vim 路径";
+"Session (.vim) Path" = "Session (.vim) 路径";
 "Icon" = "图标";
 "Icon Type" = "图标类型";
 "Default" = "默认";

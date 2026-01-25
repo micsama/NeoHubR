@@ -7,31 +7,20 @@ public struct ProjectEntry: Identifiable, Codable, Hashable, Sendable {
     public var icon: String?
     public var colorHex: String?
     public var sessionPath: URL?
-    public var validity: ProjectValidity?
-    public var lastCheckedAt: Date?
 
     public init(
         id: URL,
         name: String? = nil,
         icon: String? = nil,
         colorHex: String? = nil,
-        sessionPath: URL? = nil,
-        validity: ProjectValidity? = nil,
-        lastCheckedAt: Date? = nil
+        sessionPath: URL? = nil
     ) {
         self.id = id
         self.name = name
         self.icon = icon
         self.colorHex = colorHex
         self.sessionPath = sessionPath
-        self.validity = validity
-        self.lastCheckedAt = lastCheckedAt
     }
-}
-
-public enum ProjectValidity: String, Codable, Sendable {
-    case valid
-    case invalid
 }
 
 public struct ProjectRegistryStorage: Codable, Sendable, Hashable {
@@ -111,7 +100,7 @@ public enum ProjectRegistry {
         else {
             return nil
         }
-        guard standardized.lastPathComponent == "Session.vim" else {
+        guard standardized.pathExtension.lowercased() == "vim" else {
             return nil
         }
         return normalizeSessionPath(standardized)
@@ -146,21 +135,6 @@ public enum ProjectRegistry {
         if result.sessionPath == nil, let sessionPath = incoming.sessionPath {
             result.sessionPath = normalizeSessionPath(sessionPath)
         }
-        if let checkedAt = incoming.lastCheckedAt,
-            (result.lastCheckedAt ?? .distantPast) < checkedAt
-        {
-            result.lastCheckedAt = checkedAt
-        }
-        if let validity = incoming.validity {
-            if result.validity == nil {
-                result.validity = validity
-            } else if result.validity == .invalid, validity == .valid {
-                result.validity = .valid
-            }
-        }
-        if result.name == "." {
-            result.name = nil
-        }
         return result
     }
 
@@ -186,6 +160,7 @@ public enum ProjectRegistry {
 @MainActor
 @Observable
 public final class ProjectRegistryStore {
+    private var invalidIDs: Set<URL> = []
     private var storage: ProjectRegistryStorage {
         didSet {
             ProjectRegistry.saveStorage(storage)
@@ -224,51 +199,23 @@ public final class ProjectRegistryStore {
         let starred = storage.starred.filter { $0.id != normalized }
         let recent = storage.recent.filter { $0.id != normalized }
         storage = ProjectRegistryStorage(starred: starred, recent: recent)
+        invalidIDs.remove(normalized)
     }
 
     public func refreshValidity() {
-        let now = Date()
-        let starred = storage.starred.map { entry in
-            var updated = entry
-            let isValid = ProjectRegistry.isAccessible(entry.id)
-            updated.validity = isValid ? .valid : .invalid
-            updated.lastCheckedAt = now
-            return updated
+        var invalid: Set<URL> = []
+        for entry in storage.starred + storage.recent {
+            let normalized = ProjectRegistry.normalizeID(entry.id)
+            if !ProjectRegistry.isAccessible(normalized) {
+                invalid.insert(normalized)
+            }
         }
-        let recent = storage.recent.map { entry in
-            var updated = entry
-            let isValid = ProjectRegistry.isAccessible(entry.id)
-            updated.validity = isValid ? .valid : .invalid
-            updated.lastCheckedAt = now
-            return updated
-        }
-        storage = ProjectRegistryStorage(starred: starred, recent: recent)
+        invalidIDs = invalid
     }
 
     public func isInvalid(_ entry: ProjectEntry) -> Bool {
-        entry.validity == .invalid
-    }
-
-    public func validateNow(_ entry: ProjectEntry) -> Bool {
-        let isValid = ProjectRegistry.isAccessible(entry.id)
-        let now = Date()
         let normalized = ProjectRegistry.normalizeID(entry.id)
-        let starred = storage.starred.map { existing in
-            guard existing.id == normalized else { return existing }
-            var updated = existing
-            updated.validity = isValid ? .valid : .invalid
-            updated.lastCheckedAt = now
-            return updated
-        }
-        let recent = storage.recent.map { existing in
-            guard existing.id == normalized else { return existing }
-            var updated = existing
-            updated.validity = isValid ? .valid : .invalid
-            updated.lastCheckedAt = now
-            return updated
-        }
-        storage = ProjectRegistryStorage(starred: starred, recent: recent)
-        return isValid
+        return invalidIDs.contains(normalized)
     }
 
     public func moveStarred(fromOffsets: IndexSet, toOffset: Int) {
@@ -336,16 +283,13 @@ public final class ProjectRegistryStore {
         let normalizedRoot = ProjectRegistry.normalizeID(root)
         let normalizedSession = sessionPath.map { ProjectRegistry.normalizeSessionPath($0) }
         let entryName = name ?? normalizedRoot.lastPathComponent
-        let now = Date()
-        var entry = ProjectEntry(
+        let entry = ProjectEntry(
             id: normalizedRoot,
             name: entryName,
             icon: nil,
             colorHex: nil,
             sessionPath: normalizedSession
         )
-        entry.validity = ProjectRegistry.isAccessible(normalizedRoot) ? .valid : .invalid
-        entry.lastCheckedAt = now
 
         var starred = storage.starred
         var recent = storage.recent
@@ -362,17 +306,22 @@ public final class ProjectRegistryStore {
             recent.remove(at: index)
             recent.insert(merged, at: 0)
             storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            updateInvalidCache(for: normalizedRoot)
             return
         }
 
         recent.insert(entry, at: 0)
         storage = ProjectRegistryStorage(starred: starred, recent: recent)
+        updateInvalidCache(for: normalizedRoot)
     }
 
     public func updateEntry(_ entry: ProjectEntry, replacing oldID: URL? = nil) {
-        let normalizedEntry = ProjectRegistry.mergeEntry(
-            base: ProjectEntry(id: ProjectRegistry.normalizeID(entry.id)),
-            incoming: entry
+        let normalizedEntry = ProjectEntry(
+            id: ProjectRegistry.normalizeID(entry.id),
+            name: entry.name,
+            icon: entry.icon,
+            colorHex: entry.colorHex,
+            sessionPath: entry.sessionPath.map { ProjectRegistry.normalizeSessionPath($0) }
         )
 
         var starred = storage.starred
@@ -383,22 +332,35 @@ public final class ProjectRegistryStore {
         if targetID != normalizedEntry.id {
             starred.removeAll { $0.id == normalizedEntry.id }
             recent.removeAll { $0.id == normalizedEntry.id }
+            invalidIDs.remove(targetID)
         }
 
         if let index = starred.firstIndex(where: { $0.id == targetID }) {
-            starred[index] = ProjectRegistry.mergeEntry(base: starred[index], incoming: normalizedEntry)
+            starred[index] = normalizedEntry
             storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            updateInvalidCache(for: normalizedEntry.id)
             return
         }
 
         if let index = recent.firstIndex(where: { $0.id == targetID }) {
-            recent[index] = ProjectRegistry.mergeEntry(base: recent[index], incoming: normalizedEntry)
+            recent[index] = normalizedEntry
             storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            updateInvalidCache(for: normalizedEntry.id)
             return
         }
 
         recent.insert(normalizedEntry, at: 0)
         storage = ProjectRegistryStorage(starred: starred, recent: recent)
+        updateInvalidCache(for: normalizedEntry.id)
+    }
+
+    private func updateInvalidCache(for id: URL) {
+        let normalized = ProjectRegistry.normalizeID(id)
+        if ProjectRegistry.isAccessible(normalized) {
+            invalidIDs.remove(normalized)
+        } else {
+            invalidIDs.insert(normalized)
+        }
     }
 }
 

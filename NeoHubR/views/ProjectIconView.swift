@@ -11,6 +11,11 @@ struct ProjectIconView: View {
     var body: some View {
         if let descriptor = entry.iconDescriptor {
             iconView(for: descriptor)
+        } else if entry.isSession {
+            Image(systemName: "doc.text.fill")
+                .font(.system(size: size))
+                .foregroundStyle(iconStyle)
+                .frame(width: size, height: size)
         } else {
             Image(systemName: fallbackSystemName)
                 .font(.system(size: size))
