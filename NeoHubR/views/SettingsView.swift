@@ -449,12 +449,13 @@ private struct ProjectRegistryTab: View {
         panel.prompt = "Add"
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            guard url.lastPathComponent == "Session.vim" else {
-                addErrorMessage = String(localized: "Please select Session.vim.")
+            guard url.pathExtension.lowercased() == "vim" else {
+                addErrorMessage = String(localized: "Please select a .vim file.")
                 showAddError = true
                 return
             }
-            projectRegistry.addProject(root: url.deletingLastPathComponent(), sessionPath: url)
+            let displayName = url.deletingPathExtension().lastPathComponent
+            projectRegistry.addProject(root: url, name: displayName, sessionPath: url)
         }
     }
 }
@@ -558,16 +559,6 @@ private struct ProjectRow: View {
                     .font(.caption)
                     .foregroundStyle(isInvalid ? .quaternary : .tertiary)
                     .lineLimit(1)
-
-                if let sessionPath = entry.sessionPath {
-                    HStack(spacing: 4) {
-                        Text("Session")
-                        Text(ProjectPathFormatter.displayPath(sessionPath))
-                    }
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
-                }
             }
 
             Spacer()
@@ -602,9 +593,12 @@ private struct ProjectRow: View {
 
     @ViewBuilder
     private var titleText: some View {
-        let text = Text(entry.name ?? entry.id.lastPathComponent)
+        let fallbackName = entry.isSession
+            ? entry.id.deletingPathExtension().lastPathComponent
+            : entry.id.lastPathComponent
+        let text = Text(entry.name ?? fallbackName)
             .lineLimit(1)
-            .foregroundStyle(isInvalid ? .secondary : (entry.customColor ?? .primary))
+            .foregroundStyle(isInvalid ? .secondary : .primary)
 
         if isInvalid {
             text.strikethrough().italic()

@@ -216,11 +216,12 @@ final class EditorStore {
     }
 
     private func updateProjectRegistry(location: URL, displayName: String, sessionPath: URL?) {
-        projectRegistry.touchRecent(root: location, name: displayName, sessionPath: sessionPath)
+        let projectID = sessionPath ?? location
+        projectRegistry.touchRecent(root: projectID, name: displayName, sessionPath: sessionPath)
     }
 
     func openProject(_ project: ProjectEntry) {
-        if !projectRegistry.validateNow(project) {
+        if projectRegistry.isInvalid(project) {
             NotificationManager.sendInfo(
                 title: String(localized: "Project not accessible"),
                 body: String(localized: "The project path is missing or not accessible.")
@@ -234,19 +235,13 @@ final class EditorStore {
             return
         }
 
-        let path = project.id.path(percentEncoded: false)
+        let targetURL = project.sessionPath ?? project.id
+        let path = targetURL.path(percentEncoded: false)
         let wd: URL
-        if project.id.hasDirectoryPath {
-            wd = project.id
+        if targetURL.hasDirectoryPath {
+            wd = targetURL
         } else {
-            wd = project.id.deletingLastPathComponent()
-        }
-
-        var opts: [String] = []
-        if let sessionPath = project.sessionPath {
-            opts.append("--")
-            opts.append("-S")
-            opts.append(sessionPath.path(percentEncoded: false))
+            wd = targetURL.deletingLastPathComponent()
         }
 
         let request = RunRequest(
@@ -254,7 +249,7 @@ final class EditorStore {
             bin: bin,
             name: project.name,
             path: path,
-            opts: opts,
+            opts: [],
             env: ProcessInfo.processInfo.environment
         )
         runEditor(request: request)

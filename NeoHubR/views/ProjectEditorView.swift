@@ -27,9 +27,10 @@ struct ProjectEditorView: View {
     private var editorFields: some View {
         VStack(alignment: .leading, spacing: 12) {
             nameField
-            projectField
-            if loadedEntry?.isSession == true {
+            if state.isSession {
                 sessionField
+            } else {
+                projectField
             }
             iconField
             colorField
@@ -62,13 +63,14 @@ struct ProjectEditorView: View {
 
     private var sessionField: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Session.vim Path")
+            Text("Session (.vim) Path")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             PathField(
                 path: $state.sessionPath,
-                allowedTypes: [.data],
-                expectsDirectory: false
+                allowedTypes: [UTType(filenameExtension: "vim") ?? .data],
+                expectsDirectory: false,
+                allowedExtensions: ["vim"]
             )
         }
     }
@@ -238,7 +240,23 @@ struct ProjectEditorView: View {
     @ViewBuilder
     private var previewCard: some View {
         let trimmedName = state.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let resolvedURL = state.normalizedProjectURL ?? loadedEntry?.id
+        let resolvedURL: URL? = {
+            if state.isSession {
+                if let sessionURL = state.normalizedSessionURL {
+                    return sessionURL
+                }
+                if let entry = loadedEntry {
+                    if let sessionPath = entry.sessionPath {
+                        return sessionPath
+                    }
+                    if entry.id.pathExtension.lowercased() == "vim" {
+                        return entry.id
+                    }
+                    return entry.id
+                }
+            }
+            return state.normalizedProjectURL ?? loadedEntry?.id
+        }()
         let emojiText = state.emojiValue.isEmpty ? "🙂" : state.emojiValue
         let emojiFontSize: CGFloat = emojiText.count > 1 ? 20 : 28
         let displayName: String = {
@@ -267,7 +285,7 @@ struct ProjectEditorView: View {
             Group {
                 switch state.iconMode {
                 case .default:
-                    Image(systemName: "folder.fill")
+                    Image(systemName: state.isSession ? "doc.text.fill" : "folder.fill")
                 case .symbol:
                     Image(systemName: state.symbolName)
                 case .emoji:
@@ -371,8 +389,21 @@ private struct PathField: View {
     @Binding var path: String
     let allowedTypes: [UTType]
     let expectsDirectory: Bool
+    let allowedExtensions: [String]?
 
     @State private var isPickerPresented = false
+
+    init(
+        path: Binding<String>,
+        allowedTypes: [UTType],
+        expectsDirectory: Bool,
+        allowedExtensions: [String]? = nil
+    ) {
+        self._path = path
+        self.allowedTypes = allowedTypes
+        self.expectsDirectory = expectsDirectory
+        self.allowedExtensions = allowedExtensions
+    }
 
     var body: some View {
         HStack(spacing: 8) {
@@ -388,6 +419,7 @@ private struct PathField: View {
                     allowedContentTypes: allowedTypes
                 ) { result in
                     if case .success(let url) = result {
+                        guard accepts(url) else { return }
                         path = url.path(percentEncoded: false)
                     }
                 }
@@ -396,6 +428,7 @@ private struct PathField: View {
 
     private func handleDrop(_ urls: [URL]) -> Bool {
         guard let url = urls.first else { return false }
+        guard accepts(url) else { return false }
 
         if expectsDirectory {
             var isDir: ObjCBool = false
@@ -406,6 +439,12 @@ private struct PathField: View {
 
         path = url.path(percentEncoded: false)
         return true
+    }
+
+    private func accepts(_ url: URL) -> Bool {
+        guard let allowedExtensions, !allowedExtensions.isEmpty else { return true }
+        let ext = url.pathExtension.lowercased()
+        return allowedExtensions.contains(ext)
     }
 }
 
@@ -471,6 +510,7 @@ private struct EditorState {
     var name = ""
     var projectPath = ""
     var sessionPath = ""
+    var isSession = false
     var iconMode: IconMode = .default
     var symbolName = "folder.fill"
     var emojiValue = ""
@@ -481,9 +521,33 @@ private struct EditorState {
     init() {}
 
     init(entry: ProjectEntry) {
-        name = entry.name ?? ""
-        projectPath = ProjectPathFormatter.displayPath(entry.id)
-        sessionPath = entry.sessionPath.map { ProjectPathFormatter.displayPath($0) } ?? ""
+        let sessionEntry = entry.isSession || entry.id.pathExtension.lowercased() == "vim"
+        isSession = sessionEntry
+        let defaultName: String = {
+            if sessionEntry {
+                if let sessionURL = entry.sessionPath {
+                    return sessionURL.deletingPathExtension().lastPathComponent
+                }
+                if entry.id.pathExtension.lowercased() == "vim" {
+                    return entry.id.deletingPathExtension().lastPathComponent
+                }
+            }
+            return entry.id.lastPathComponent
+        }()
+        name = entry.name ?? defaultName
+
+        if sessionEntry {
+            if let sessionURL = entry.sessionPath {
+                sessionPath = ProjectPathFormatter.displayPath(sessionURL)
+                projectPath = ProjectPathFormatter.displayPath(sessionURL.deletingLastPathComponent())
+            } else if entry.id.pathExtension.lowercased() == "vim" {
+                sessionPath = ProjectPathFormatter.displayPath(entry.id)
+                projectPath = ProjectPathFormatter.displayPath(entry.id.deletingLastPathComponent())
+            }
+        } else {
+            projectPath = ProjectPathFormatter.displayPath(entry.id)
+            sessionPath = ""
+        }
 
         if let customColor = entry.customColor {
             useCustomColor = true
@@ -504,7 +568,9 @@ private struct EditorState {
         }
     }
 
-    var canSave: Bool { normalizedProjectURL != nil }
+    var canSave: Bool {
+        isSession ? normalizedSessionURL != nil : normalizedProjectURL != nil
+    }
 
     var isProjectPathValid: Bool {
         guard let url = normalizedProjectURL else { return false }
@@ -529,21 +595,31 @@ private struct EditorState {
     }
 
     func buildEntry(from entry: ProjectEntry) -> ProjectEntry? {
+        if isSession {
+            guard let sessionURL = normalizedSessionURL else { return nil }
+            let iconValue = buildIconValue()
+            let nameValue = buildName(projectURL: sessionURL)
+
+            return ProjectEntry(
+                id: sessionURL,
+                name: nameValue,
+                icon: iconValue,
+                colorHex: useCustomColor ? color.hexString() : nil,
+                sessionPath: sessionURL
+            )
+        }
+
         guard let projectURL = normalizedProjectURL else { return nil }
 
-        let sessionURL = buildSessionURL(for: entry)
         let iconValue = buildIconValue()
         let nameValue = buildName(projectURL: projectURL)
-        let isValid = ProjectRegistry.isAccessible(projectURL)
 
         return ProjectEntry(
             id: projectURL,
             name: nameValue,
             icon: iconValue,
             colorHex: useCustomColor ? color.hexString() : nil,
-            sessionPath: sessionURL,
-            validity: isValid ? .valid : .invalid,
-            lastCheckedAt: Date()
+            sessionPath: nil
         )
     }
 
@@ -554,11 +630,13 @@ private struct EditorState {
         return ProjectRegistry.normalizeID(URL(fileURLWithPath: expanded))
     }
 
-    private func buildSessionURL(for entry: ProjectEntry) -> URL? {
+    var normalizedSessionURL: URL? {
         let trimmed = sessionPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard entry.isSession, !trimmed.isEmpty else { return nil }
+        guard !trimmed.isEmpty else { return nil }
         let expanded = ProjectPathFormatter.expandTilde(trimmed)
-        return ProjectRegistry.normalizeSessionPath(URL(fileURLWithPath: expanded))
+        let url = URL(fileURLWithPath: expanded)
+        guard url.pathExtension.lowercased() == "vim" else { return nil }
+        return ProjectRegistry.normalizeSessionPath(url)
     }
 
     private func buildIconValue() -> String? {
@@ -576,7 +654,9 @@ private struct EditorState {
 
     private func buildName(projectURL: URL) -> String? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        return trimmed == projectURL.lastPathComponent ? nil : trimmed
+        let defaultName = isSession
+            ? projectURL.deletingPathExtension().lastPathComponent
+            : projectURL.lastPathComponent
+        return trimmed.isEmpty ? defaultName : trimmed
     }
 }
