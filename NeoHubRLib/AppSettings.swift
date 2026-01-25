@@ -8,8 +8,8 @@ public enum AppSettings {
         public static let settingsAlwaysOnTop = "SettingsAlwaysOnTop"
     }
 
-    public static let minSwitcherItems = 3
-    public static let maxSwitcherItems = 10
+    public static let minSwitcherItems = 4
+    public static let maxSwitcherItems = 16
     public static let defaultSwitcherMaxItems = 9
 
     public static func registerDefaults() {

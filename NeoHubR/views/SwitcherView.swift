@@ -775,11 +775,17 @@ private struct SwitcherRow: View {
         .background {
             if isSelected {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.accentColor.opacity(0.15))
+                    .fill(Color.accentColor.opacity(0.12))
                     .matchedGeometryEffect(id: "highlight", in: animation)
             } else {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Color.secondary.opacity(0.08))
+            }
+        }
+        .overlay {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color.accentColor, lineWidth: 1)
             }
         }
         .overlay(alignment: .leading) {
