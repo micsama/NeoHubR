@@ -12,6 +12,7 @@ final class EditorStore {
     let switcherWindow: SwitcherWindowRef
     let activationManager: ActivationManager
     let projectRegistry: ProjectRegistryStore
+    private let activeEditorStore: ActiveEditorStore
 
     private var restartPoller: Timer?
 
@@ -24,6 +25,7 @@ final class EditorStore {
         self.switcherWindow = switcherWindow
         self.activationManager = activationManager
         self.projectRegistry = projectRegistry
+        self.activeEditorStore = ActiveEditorStore()
 
         KeyboardShortcuts.onKeyUp(for: .restartEditor) { [self] in
             self.restartActiveEditor()
@@ -114,6 +116,7 @@ final class EditorStore {
                     process.terminationHandler = { [editorID, self] _ in
                         Task { @MainActor in
                             self.editors.removeValue(forKey: editorID)
+                            self.persistActiveEditors()
                         }
                     }
 
@@ -134,8 +137,12 @@ final class EditorStore {
                                 id: editorID,
                                 name: editorName,
                                 process: process,
-                                request: request
+                                request: request,
+                                onAccessed: { [weak self] in
+                                    self?.persistActiveEditors()
+                                }
                             )
+                            self.persistActiveEditors()
                         } else {
                             let error = ReportableError(
                                 "Editor process is not running",
@@ -213,6 +220,40 @@ final class EditorStore {
 
     private func invalidateRestartPoller() {
         self.restartPoller?.invalidate()
+    }
+
+    func restoreActiveEditors() {
+        MainThread.assert()
+
+        let snapshots = activeEditorStore.loadSnapshots()
+        guard !snapshots.isEmpty else { return }
+
+        for snapshot in snapshots {
+            guard let app = NSRunningApplication(processIdentifier: snapshot.pid),
+                !app.isTerminated
+            else {
+                continue
+            }
+
+            let editorID = EditorID(snapshot.id)
+            if editors[editorID] != nil {
+                continue
+            }
+
+            let editor = Editor(
+                id: editorID,
+                name: snapshot.name,
+                processIdentifier: snapshot.pid,
+                request: snapshot.request,
+                lastAccessTime: Date(timeIntervalSince1970: snapshot.lastAccessTime),
+                onAccessed: { [weak self] in
+                    self?.persistActiveEditors()
+                }
+            )
+            editors[editorID] = editor
+        }
+
+        persistActiveEditors()
     }
 
     private func updateProjectRegistry(location: URL, displayName: String, sessionPath: URL?) {
@@ -293,9 +334,40 @@ final class EditorStore {
         }
     }
 
+    private func persistActiveEditors() {
+        let snapshots = editors.values.map { editor in
+            ActiveEditorSnapshot(
+                id: editor.id.id,
+                name: editor.name,
+                pid: editor.processIdentifier,
+                lastAccessTime: editor.lastAcceessTime.timeIntervalSince1970,
+                request: editor.request
+            )
+        }
+        activeEditorStore.saveSnapshots(snapshots)
+    }
+
     @MainActor
     deinit {
         self.invalidateRestartPoller()
+    }
+}
+
+extension EditorStore {
+    func pruneDeadEditors() {
+        let toRemove = editors.filter { _, editor in
+            guard let app = NSRunningApplication(processIdentifier: editor.processIdentifier) else {
+                return true
+            }
+            return app.isTerminated
+        }
+
+        guard !toRemove.isEmpty else { return }
+
+        for (id, _) in toRemove {
+            editors.removeValue(forKey: id)
+        }
+        persistActiveEditors()
     }
 }
 
@@ -324,16 +396,43 @@ final class Editor: Identifiable {
     let id: EditorID
     let name: String
 
-    private let process: Process
+    private let process: Process?
+    private let processIdentifierValue: Int32
+    private let onAccessed: (() -> Void)?
     private(set) var lastAcceessTime: Date
     private(set) var request: RunRequest
 
-    init(id: EditorID, name: String, process: Process, request: RunRequest) {
+    init(
+        id: EditorID,
+        name: String,
+        process: Process,
+        request: RunRequest,
+        onAccessed: (() -> Void)? = nil
+    ) {
         self.id = id
         self.name = name
         self.process = process
+        self.processIdentifierValue = process.processIdentifier
         self.lastAcceessTime = Date()
         self.request = request
+        self.onAccessed = onAccessed
+    }
+
+    init(
+        id: EditorID,
+        name: String,
+        processIdentifier: Int32,
+        request: RunRequest,
+        lastAccessTime: Date = Date(),
+        onAccessed: (() -> Void)? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.process = nil
+        self.processIdentifierValue = processIdentifier
+        self.lastAcceessTime = lastAccessTime
+        self.request = request
+        self.onAccessed = onAccessed
     }
 
     var displayPath: String {
@@ -341,11 +440,11 @@ final class Editor: Identifiable {
     }
 
     var processIdentifier: Int32 {
-        self.process.processIdentifier
+        self.processIdentifierValue
     }
 
     private func runningEditor() -> NSRunningApplication? {
-        NSRunningApplication(processIdentifier: process.processIdentifier)
+        NSRunningApplication(processIdentifier: processIdentifierValue)
     }
 
     func activate() {
@@ -366,10 +465,15 @@ final class Editor: Identifiable {
             NotificationManager.send(kind: .failedToActivateEditorApp, error: error)
         } else {
             self.lastAcceessTime = Date()
+            self.onAccessed?()
         }
     }
 
     func quit() {
-        process.terminate()
+        if let process {
+            process.terminate()
+            return
+        }
+        runningEditor()?.terminate()
     }
 }

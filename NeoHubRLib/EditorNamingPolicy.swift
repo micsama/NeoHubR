@@ -42,6 +42,10 @@ public enum EditorNamingPolicy {
         switch explicitName {
         case nil, "":
             if location.pathExtension.lowercased() == "vim" {
+                let parentName = location.deletingLastPathComponent().lastPathComponent
+                if !parentName.isEmpty {
+                    return parentName
+                }
                 return location.deletingPathExtension().lastPathComponent
             }
             return location.lastPathComponent

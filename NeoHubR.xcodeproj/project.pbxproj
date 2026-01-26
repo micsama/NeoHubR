@@ -15,6 +15,7 @@
 		FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */; };
 		FA2EAD932AEC4CCD000F8F7A /* SocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */; };
 		FA2EAD972AED0C8B000F8F7A /* EditorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */; };
+		FABC01002D2F000100000001 /* ActiveEditorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC01012D2F000100000002 /* ActiveEditorStore.swift */; };
 		FA2EAD9A2AED3906000F8F7A /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = FA2EAD992AED3906000F8F7A /* ArgumentParser */; };
 		FA2EADA62AED589F000F8F7A /* NeoHubRLib.docc in Sources */ = {isa = PBXBuildFile; fileRef = FA2EADA52AED589F000F8F7A /* NeoHubRLib.docc */; };
 		FA2EADA72AED589F000F8F7A /* NeoHubRLib.h in Headers */ = {isa = PBXBuildFile; fileRef = FA2EADA42AED589F000F8F7A /* NeoHubRLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -106,6 +107,7 @@
 		FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketServer.swift; sourceTree = "<group>"; };
 		FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketClient.swift; sourceTree = "<group>"; };
 		FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorStore.swift; sourceTree = "<group>"; };
+		FABC01012D2F000100000002 /* ActiveEditorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveEditorStore.swift; sourceTree = "<group>"; };
 		FA2EADA22AED589F000F8F7A /* libNeoHubRLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libNeoHubRLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA2EADA42AED589F000F8F7A /* NeoHubRLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NeoHubRLib.h; sourceTree = "<group>"; };
 		FA2EADA52AED589F000F8F7A /* NeoHubRLib.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = NeoHubRLib.docc; sourceTree = "<group>"; };
@@ -194,6 +196,7 @@
 				FA54EB712AF5033D001AE449 /* CLI.swift */,
 				FA54EB802AF789F6001AE449 /* Logger.swift */,
 				FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */,
+				FABC01012D2F000100000002 /* ActiveEditorStore.swift */,
 				FAE1A0712D00000100000001 /* AppUtilities.swift */,
 				FA54EB822AF7A381001AE449 /* NotificationManager.swift */,
 				FA54EB8C2AF7F689001AE449 /* BugReporter.swift */,
@@ -446,6 +449,7 @@
 				FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */,
 				FAE1A0722D00000100000002 /* AppUtilities.swift in Sources */,
 				FA2EAD972AED0C8B000F8F7A /* EditorStore.swift in Sources */,
+				FABC01002D2F000100000001 /* ActiveEditorStore.swift in Sources */,
 				FA30F2282AEED1E7004EC6E9 /* MenuBarView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

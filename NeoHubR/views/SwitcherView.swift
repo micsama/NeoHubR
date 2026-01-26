@@ -399,6 +399,7 @@ final class SwitcherWindow {
     }
 
     private func show() {
+        editorStore.pruneDeadEditors()
         activationManager.setActivationTarget(
             currentApp: NSWorkspace.shared.frontmostApplication,
             switcherWindow: selfRef,

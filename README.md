@@ -1,7 +1,7 @@
 # 🚀 NeoHubR
 
 <p align="center">
-<img width="757" height="418" alt="NeoHubR Demo" src="https://github.com/user-attachments/assets/724d0e7f-ca91-4759-9e15-5005f82038fc" />
+<img width="757" height="418" alt="switcher" src="https://github.com/user-attachments/assets/db0dbfe4-6e72-4f8a-8afe-deea013b0119" />
 </p>
 
 <p align="center">
@@ -19,8 +19,9 @@
 ## 📸 Screenshots
 
 <p align="center">
-<img width="411" height="474" alt="NeoHubR Screenshot 1" src="https://github.com/user-attachments/assets/eaf9400f-1ee9-4522-9048-1039604c8a6e" />
-<img width="411" height="474" alt="NeoHubR Screenshot 2" src="https://github.com/user-attachments/assets/8257b402-1d5d-4f86-9fdd-c509d59650cd" />
+<img width="386" height="469" alt="settings" src="https://github.com/user-attachments/assets/ef1c9703-de15-427e-ae74-8271873acd3f" />
+<img width="386" height="469" alt="projects" src="https://github.com/user-attachments/assets/99d8eb47-be4f-4a5f-b422-7bb524ce7cf0" />
+<img width="291" height="418" alt="editor" src="https://github.com/user-attachments/assets/96c7a97d-993c-409e-b99e-4e4b07f3ad05" />
 </p>
 
 ## ✨ Feature Highlights
