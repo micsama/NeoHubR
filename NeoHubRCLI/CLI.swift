@@ -61,7 +61,7 @@ struct CLI: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "neohubr",
         abstract: "A CLI interface to NeoHubR. Launch new or activate already running Neovide instance.",
-        version: "0.3.1"
+        version: "0.3.2"
     )
 
     @Argument(help: "Optional path passed to Neovide.")
