@@ -59,7 +59,7 @@ extension CLIError {
 @main
 struct CLI: ParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "neohubr",
+        commandName: "nh",
         abstract: "A CLI interface to NeoHubR. Launch new or activate already running Neovide instance.",
         version: "0.3.2"
     )

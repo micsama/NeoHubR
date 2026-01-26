@@ -30,7 +30,7 @@
 		FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */; };
 		FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3937162AF291A5001D9105 /* SettingsView.swift */; };
 		FA39371D2AF3A7CC001D9105 /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA39371C2AF3A7CC001D9105 /* Shell.swift */; };
-		FA54EB702AF4FD84001AE449 /* neohubr in Embed CLI */ = {isa = PBXBuildFile; fileRef = FA2AE45D2AEB9CA000D24008 /* neohubr */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		FA54EB702AF4FD84001AE449 /* nh in Embed CLI */ = {isa = PBXBuildFile; fileRef = FA2AE45D2AEB9CA000D24008 /* nh */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		FA54EB722AF5033D001AE449 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB712AF5033D001AE449 /* CLI.swift */; };
 		FA54EB812AF789F6001AE449 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB802AF789F6001AE449 /* Logger.swift */; };
 		FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB822AF7A381001AE449 /* NotificationManager.swift */; };
@@ -84,7 +84,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 12;
 			files = (
-				FA54EB702AF4FD84001AE449 /* neohubr in Embed CLI */,
+				FA54EB702AF4FD84001AE449 /* nh in Embed CLI */,
 			);
 			name = "Embed CLI";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -100,7 +100,7 @@
 		FA2AE44E2AEB980800D24008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FA2AE4512AEB980800D24008 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		FA2AE4532AEB980800D24008 /* NeoHubR.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NeoHubR.entitlements; sourceTree = "<group>"; };
-		FA2AE45D2AEB9CA000D24008 /* neohubr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = neohubr; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA2AE45D2AEB9CA000D24008 /* nh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = nh; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA2AE45F2AEB9CA000D24008 /* CLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLI.swift; sourceTree = "<group>"; };
 		FA2AE4A92AEBDDB800D24008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FA2AE4AA2AEBDF7800D24008 /* NeoHubRCLI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NeoHubRCLI.entitlements; sourceTree = "<group>"; };
@@ -179,7 +179,7 @@
 			isa = PBXGroup;
 			children = (
 				FA2AE4472AEB980700D24008 /* NeoHubR.app */,
-				FA2AE45D2AEB9CA000D24008 /* neohubr */,
+				FA2AE45D2AEB9CA000D24008 /* nh */,
 				FA2EADA22AED589F000F8F7A /* libNeoHubRLib.a */,
 			);
 			name = Products;
@@ -318,7 +318,7 @@
 				FA2EAD992AED3906000F8F7A /* ArgumentParser */,
 			);
 			productName = NeoHubRCLI;
-			productReference = FA2AE45D2AEB9CA000D24008 /* neohubr */;
+			productReference = FA2AE45D2AEB9CA000D24008 /* nh */;
 			productType = "com.apple.product-type.tool";
 		};
 		FA2EADA12AED589F000F8F7A /* NeoHubRLib */ = {
@@ -741,7 +741,7 @@
 				MARKETING_VERSION = 0.3.2;
 				OTHER_CODE_SIGN_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.micsama.NeoHubR.CLI;
-				PRODUCT_NAME = neohubr;
+				PRODUCT_NAME = nh;
 				SKIP_INSTALL = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
@@ -771,7 +771,7 @@
 				MARKETING_VERSION = 0.3.2;
 				OTHER_CODE_SIGN_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.micsama.NeoHubR.CLI;
-				PRODUCT_NAME = neohubr;
+				PRODUCT_NAME = nh;
 				SKIP_INSTALL = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;

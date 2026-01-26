@@ -59,7 +59,7 @@ Neovide is amazing, but it has two major "quality of life" issues on macOS:
 
 ### Command Line (CLI)
 
-Use `neohubr` instead of `neovide` in your terminal. It handles de-duplication and brings existing windows to the front automatically.
+Use `nh` instead of `neovide` in your terminal. It handles de-duplication and brings existing windows to the front automatically.
 
 ### Hotkeys (Default)
 
@@ -88,7 +88,7 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 ## 🧭 Roadmap (Short)
 
 ### Latest Release (v0.3.1)
-- Path normalization so `neohubr`, `neohubr .`, and `neohubr <file>` map to the same project.
+- Path normalization so `nh`, `nh .`, and `nh <file>` map to the same project.
 - Persistent validity checks with visual invalid styling and “Not available” label.
 - Red trash deletion in Projects list with two‑step confirmation.
 

@@ -1,6 +1,6 @@
 # NeoHubRCLI
 
-该目录包含命令行工具 `neohubr` 的实现，用于启动或激活 Neovide 实例。
+该目录包含命令行工具 `nh` 的实现，用于启动或激活 Neovide 实例。
 
 ## 工作域
 - 解析 CLI 参数与选项，构造 `RunRequest`。
@@ -20,6 +20,6 @@
   - 用 `/bin/sh -c` 运行 `command -v neovide` 获取路径。
 
 ## 典型流程
-1. 用户在项目目录运行 `neohubr`。
+1. 用户在项目目录运行 `nh`。
 2. CLI 查找 `neovide` 路径并构造 `RunRequest`。
 3. 通过 socket 将请求发送给 NeoHubR App。

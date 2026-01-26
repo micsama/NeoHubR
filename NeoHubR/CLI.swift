@@ -3,8 +3,8 @@ import Foundation
 import Observation
 
 private struct Bin {
-    static let source = Bundle.main.bundlePath + "/Contents/SharedSupport/neohubr"
-    static let destination = "/usr/local/bin/neohubr"
+    static let source = Bundle.main.bundlePath + "/Contents/SharedSupport/nh"
+    static let destination = "/usr/local/bin/nh"
 }
 
 enum CLIOperation {
