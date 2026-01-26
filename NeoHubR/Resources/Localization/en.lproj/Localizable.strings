@@ -10,9 +10,9 @@
 "Install CLI" = "Install CLI";
 "Update CLI" = "Update CLI";
 "Unexpected Error" = "Unexpected Error";
-"Open your terminal and try to run `neohubr` command" = "Open your terminal and try to run `neohubr` command";
+"Open your terminal and try to run `nh` command" = "Open your terminal and try to run `nh` command";
 "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI." = "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI.";
-"After successful installation, the `neohubr` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "After successful installation, the `neohubr` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed.";
+"After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed.";
 "Something went wrong" = "Something went wrong";
 "Report" = "Report";
 "Install" = "Install";

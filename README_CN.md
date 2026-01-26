@@ -59,7 +59,7 @@ Neovide 确实很棒，但在 macOS 上有两个让人头疼的痛点：
 
 ### 命令行 (CLI)
 
-在终端里用 `neohubr` 代替 `neovide` 命令。它会自动帮你去重并聚焦已有窗口。
+在终端里用 `nh` 代替 `neovide` 命令。它会自动帮你去重并聚焦已有窗口。
 
 ### 快捷键 (默认)
 
@@ -88,7 +88,7 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 ## 🧭 路线图（简版）
 
 ### 最新版本（v0.3.1）
-- 路径归一：`neohubr` / `neohubr .` / `neohubr <file>` 统一为同一项目。
+- 路径归一：`nh` / `nh .` / `nh <file>` 统一为同一项目。
 - 失效检测持久化，失效项目置灰并显示 “Not available” 提示。
 - Projects 列表红色垃圾桶删除，二次确认防误删。
 

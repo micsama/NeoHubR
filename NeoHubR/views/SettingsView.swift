@@ -39,7 +39,7 @@ struct SettingsView: View {
                 }
         }
         .background(SettingsWindowLevelUpdater(alwaysOnTop: appSettings.settingsAlwaysOnTop))
-        .frame(minWidth: 350, idealWidth: 350, minHeight: 345, idealHeight: 345)
+        .frame(minWidth: 355, idealWidth: 355, minHeight: 360, idealHeight: 360)
         .fixedSize(horizontal: true, vertical: true)
         .onAppear {
             NSApp.activate(ignoringOtherApps: true)

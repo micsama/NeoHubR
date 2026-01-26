@@ -10,9 +10,9 @@
 "Install CLI" = "安装 CLI";
 "Update CLI" = "更新 CLI";
 "Unexpected Error" = "未知错误";
-"Open your terminal and try to run `neohubr` command" = "打开终端并尝试运行 `neohubr` 命令";
+"Open your terminal and try to run `nh` command" = "打开终端并尝试运行 `nh` 命令";
 "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI." = "为了通过 NeoHubR 管理 Neovide 实例，你需要安装 NeoHubR CLI。";
-"After successful installation, the `neohubr` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "安装成功后，`neohubr` 命令应可在你的 shell 中使用。请用它替代 `neovide` 来启动编辑器。仅安装 CLI 可执行文件。";
+"After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "安装成功后，`nh` 命令应可在你的 shell 中使用。请用它替代 `neovide` 来启动编辑器。仅安装 CLI 可执行文件。";
 "Something went wrong" = "出了点问题";
 "Report" = "报告";
 "Install" = "安装";
