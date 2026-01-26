@@ -479,7 +479,7 @@ private struct ProjectRegistryTab: View {
 
 private struct AdvancedSettingsTab: View {
     @Bindable var appSettings: AppSettingsStore
-    @State private var notificationStatusText = "Unknown"
+    @State private var notificationStatus = UNAuthorizationStatus.notDetermined
 
     var body: some View {
         Form {
@@ -491,8 +491,15 @@ private struct AdvancedSettingsTab: View {
 
             Section {
                 LabeledContent("Notification Permission") {
-                    Text(notificationStatusText)
-                        .foregroundStyle(.secondary)
+                    if notificationStatus == .notDetermined || notificationStatus == .denied {
+                        Button("Request Notification Permission") {
+                            handleNotificationPermission()
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        Text(notificationStatusText)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             Section {
@@ -510,25 +517,50 @@ private struct AdvancedSettingsTab: View {
         }
         .formStyle(.grouped)
         .task {
-            let settings = await UNUserNotificationCenter.current().notificationSettings()
-            let text: String
-            switch settings.authorizationStatus {
-            case .notDetermined:
-                text = String(localized: "Not Determined")
-            case .denied:
-                text = String(localized: "Denied")
-            case .authorized:
-                text = String(localized: "Authorized")
-            case .provisional:
-                text = String(localized: "Provisional")
-            case .ephemeral:
-                text = String(localized: "Ephemeral")
-            @unknown default:
-                text = String(localized: "Unknown")
-            }
+            refreshNotificationStatus()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refreshNotificationStatus()
+        }
+    }
 
-            await MainActor.run {
-                notificationStatusText = text
+    private var notificationStatusText: String {
+        switch notificationStatus {
+        case .notDetermined:
+            return String(localized: "Not Determined")
+        case .denied:
+            return String(localized: "Denied")
+        case .authorized:
+            return String(localized: "Authorized")
+        case .provisional:
+            return String(localized: "Provisional")
+        case .ephemeral:
+            return String(localized: "Ephemeral")
+        @unknown default:
+            return String(localized: "Unknown")
+        }
+    }
+
+    private func refreshNotificationStatus() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            let status = settings.authorizationStatus
+            DispatchQueue.main.async {
+                notificationStatus = status
+            }
+        }
+    }
+
+    private func handleNotificationPermission() {
+        if notificationStatus == .notDetermined {
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in
+                refreshNotificationStatus()
+            }
+            return
+        }
+
+        if notificationStatus == .denied {
+            if let url = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension") {
+                NSWorkspace.shared.open(url)
             }
         }
     }
