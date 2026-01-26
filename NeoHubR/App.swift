@@ -112,6 +112,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         self.server.start()
         self.projectRegistry.refreshValidity()
+        self.editorStore.restoreActiveEditors()
 
         Task { @MainActor in
             let status = await self.cli.refreshStatus()

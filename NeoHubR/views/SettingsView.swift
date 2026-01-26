@@ -553,7 +553,9 @@ private struct AdvancedSettingsTab: View {
     private func handleNotificationPermission() {
         if notificationStatus == .notDetermined {
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in
-                refreshNotificationStatus()
+                Task { @MainActor in
+                    refreshNotificationStatus()
+                }
             }
             return
         }

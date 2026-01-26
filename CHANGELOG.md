@@ -3,6 +3,14 @@
 ## Unreleased
 - Avoid activation errors when the previous activation target is no longer running/visible.
 
+## 0.3.2
+- Add Project Editor with icon/color controls, preview, and session-aware editing.
+- Support Session.vim projects (file-based entries) alongside folder projects.
+- Rework Switcher list rendering (ScrollView/LazyVStack) with unified row styling and icon/color display.
+- Update Projects settings: switcher item range 4–20 and a compact add menu for folder/session.
+- Add notification permission request button in Advanced settings with deep link to system settings.
+- Disable CLI coverage instrumentation to prevent `default.profraw` output.
+
 ## 0.2.1
 - Add missing entitlement.
 
