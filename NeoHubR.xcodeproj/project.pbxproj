@@ -24,6 +24,7 @@
 		FA2EADB12AED65A6000F8F7A /* libNeoHubRLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* libNeoHubRLib.a */; };
 		FA30F2282AEED1E7004EC6E9 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */; };
 		FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */; };
+		FABC02012D3A111100000011 /* SwitcherLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC02002D3A111100000010 /* SwitcherLogic.swift */; };
 		FABC00012D12300100000001 /* ProjectAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00042D12300100000004 /* ProjectAppearance.swift */; };
 		FABC00022D12300100000002 /* ProjectEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00052D12300100000005 /* ProjectEditorView.swift */; };
 		FABC00032D12300100000003 /* ProjectIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00062D12300100000006 /* ProjectIconView.swift */; };
@@ -114,6 +115,7 @@
 		FA2EADAF2AED58C6000F8F7A /* Shared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared.swift; sourceTree = "<group>"; };
 		FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitcherView.swift; sourceTree = "<group>"; };
+		FABC02002D3A111100000010 /* SwitcherLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitcherLogic.swift; sourceTree = "<group>"; };
 		FA3937162AF291A5001D9105 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		FA39371C2AF3A7CC001D9105 /* Shell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shell.swift; sourceTree = "<group>"; };
 		FA54EB712AF5033D001AE449 /* CLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLI.swift; sourceTree = "<group>"; };
@@ -197,6 +199,7 @@
 				FA54EB802AF789F6001AE449 /* Logger.swift */,
 				FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */,
 				FABC01012D2F000100000002 /* ActiveEditorStore.swift */,
+				FABC02002D3A111100000010 /* SwitcherLogic.swift */,
 				FAE1A0712D00000100000001 /* AppUtilities.swift */,
 				FA54EB822AF7A381001AE449 /* NotificationManager.swift */,
 				FA54EB8C2AF7F689001AE449 /* BugReporter.swift */,
@@ -446,6 +449,7 @@
 				FA54EB722AF5033D001AE449 /* CLI.swift in Sources */,
 				FA54EB812AF789F6001AE449 /* Logger.swift in Sources */,
 				FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */,
+				FABC02012D3A111100000011 /* SwitcherLogic.swift in Sources */,
 				FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */,
 				FAE1A0722D00000100000002 /* AppUtilities.swift in Sources */,
 				FA2EAD972AED0C8B000F8F7A /* EditorStore.swift in Sources */,
