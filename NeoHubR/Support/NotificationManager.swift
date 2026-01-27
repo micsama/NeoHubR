@@ -51,7 +51,7 @@ final class NotificationManager: NSObject {
 
         let reportable = ReportableError(report.message, meta: meta)
         let actionMeta = ReportAction(error: reportable).meta
-        
+
         scheduleNotification(
             categoryId: Kind.cliError.id,
             title: Kind.cliError.title,
@@ -81,14 +81,15 @@ final class NotificationManager: NSObject {
                     UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
                         if granted {
                             Task { @MainActor in
-                                self.performSchedule(categoryId: categoryId, title: title, body: body, userInfo: userInfo)
+                                self.performSchedule(
+                                    categoryId: categoryId, title: title, body: body, userInfo: userInfo)
                             }
                         }
                     }
                 }
                 return
             }
-            
+
             Task { @MainActor in
                 self.performSchedule(categoryId: categoryId, title: title, body: body, userInfo: userInfo)
             }
@@ -182,8 +183,10 @@ extension NotificationManager {
         var title: String {
             switch self {
             case .failedToLaunchServer: return String(localized: "Failed to launch the NeoHubR server")
-            case .failedToHandleRequestFromCLI, .failedToRunEditorProcess: return String(localized: "Failed to open Neovide")
-            case .failedToGetRunningEditorApp, .failedToActivateEditorApp: return String(localized: "Failed to activate Neovide")
+            case .failedToHandleRequestFromCLI, .failedToRunEditorProcess:
+                return String(localized: "Failed to open Neovide")
+            case .failedToGetRunningEditorApp, .failedToActivateEditorApp:
+                return String(localized: "Failed to activate Neovide")
             case .failedToRestartEditor: return String(localized: "Failed to restart the editor")
             case .cliUnexpectedError: return String(localized: "NeoHubR CLI error")
             case .cliError: return String(localized: "CLI Error")
@@ -193,7 +196,9 @@ extension NotificationManager {
         var body: String {
             switch self {
             case .failedToLaunchServer:
-                return String(localized: "NeoHubR won't be able to function properly. Please, create an issue in the GitHub repo.")
+                return String(
+                    localized: "NeoHubR won't be able to function properly. Please, create an issue in the GitHub repo."
+                )
             case .failedToHandleRequestFromCLI, .failedToRunEditorProcess, .failedToActivateEditorApp, .cliError:
                 return String(localized: "Please create an issue in the GitHub repo.")
             case .failedToGetRunningEditorApp:
@@ -233,7 +238,7 @@ private struct ReportAction {
 
     init?(from userInfo: [AnyHashable: Any]) {
         guard let title = userInfo["REPORT_TITLE"] as? String,
-              let error = userInfo["REPORT_ERROR"] as? String
+            let error = userInfo["REPORT_ERROR"] as? String
         else {
             log.warning("Failed to get metadata from notification userInfo")
             return nil

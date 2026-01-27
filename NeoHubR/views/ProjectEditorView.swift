@@ -159,7 +159,10 @@ struct ProjectEditorView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             HStack(alignment: .top, spacing: 12) {
-                LazyVGrid(columns: Array(repeating: GridItem(.fixed(18), spacing: 6), count: 6), alignment: .leading, spacing: 6) {
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.fixed(18), spacing: 6), count: 6), alignment: .leading,
+                    spacing: 6
+                ) {
                     ForEach(Array(palette.enumerated()), id: \.offset) { _, item in
                         ColorSwatch(
                             color: item.color,
@@ -219,11 +222,12 @@ struct ProjectEditorView: View {
     private var previewCard: some View {
         let resolvedURL: URL? = {
             if state.isSession {
-                return state.normalizedSessionURL ?? loadedEntry?.sessionPath ?? (loadedEntry?.id.pathExtension.lowercased() == "vim" ? loadedEntry?.id : nil)
+                return state.normalizedSessionURL ?? loadedEntry?.sessionPath
+                    ?? (loadedEntry?.id.pathExtension.lowercased() == "vim" ? loadedEntry?.id : nil)
             }
             return state.normalizedProjectURL ?? loadedEntry?.id
         }()
-        
+
         let displayName: String = {
             let trimmed = state.name.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty { return trimmed }
@@ -469,7 +473,7 @@ private struct EditorState {
 
     init(entry: ProjectEntry) {
         isSession = entry.isSession
-        
+
         if let entryName = entry.name, !entryName.isEmpty {
             name = entryName
         } else {

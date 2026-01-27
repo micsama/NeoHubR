@@ -64,7 +64,6 @@ final class EditorStore {
     }
 
     func runEditor(request: RunRequest) {
-        MainThread.assert()
         let naming = EditorNamingPolicy.resolve(for: request)
         let sessionPath = ProjectRegistry.resolveSessionPath(
             workingDirectory: request.wd,
@@ -88,7 +87,7 @@ final class EditorStore {
                 let process = try makeEditorProcess(request: request, sessionPath: sessionPath, editorID: editorID)
                 try process.run()
 
-                MainThread.run { [weak self] in
+                Task { @MainActor [weak self] in
                     guard let self else { return }
                     self.handleProcessLaunch(
                         process: process,
@@ -99,7 +98,7 @@ final class EditorStore {
                     )
                 }
             } catch {
-                MainThread.run {
+                Task { @MainActor in
                     let error = ReportableError("Failed to run editor process", error: error)
                     log.error("\(error)")
                     NotificationManager.send(kind: .failedToRunEditorProcess, error: error)
@@ -108,7 +107,9 @@ final class EditorStore {
         }
     }
 
-    nonisolated private func makeEditorProcess(request: RunRequest, sessionPath: URL?, editorID: EditorID) throws -> Process {
+    nonisolated private func makeEditorProcess(request: RunRequest, sessionPath: URL?, editorID: EditorID) throws
+        -> Process
+    {
         let process = Process()
         process.executableURL = request.bin
 
@@ -185,9 +186,8 @@ final class EditorStore {
     }
 
     func restartActiveEditor() {
-        MainThread.assert()
         guard let activeApp = NSWorkspace.shared.frontmostApplication,
-              let editor = self.editors.first(where: { $0.value.processIdentifier == activeApp.processIdentifier })?.value
+            let editor = self.editors.first(where: { $0.value.processIdentifier == activeApp.processIdentifier })?.value
         else { return }
 
         editor.quit()
@@ -198,7 +198,7 @@ final class EditorStore {
         let editorRequest = editor.request
 
         self.restartPoller = Timer.scheduledTimer(withTimeInterval: 0.005, repeats: true) { [weak self] _ in
-            MainThread.run { [weak self] in
+            Task { @MainActor [weak self] in
                 guard let self else { return }
 
                 if self.editors[editorID] == nil {
@@ -215,7 +215,6 @@ final class EditorStore {
     }
 
     func quitAllEditors() async {
-        MainThread.assert()
         for editor in editors.values {
             editor.quit()
         }
@@ -228,7 +227,6 @@ final class EditorStore {
     }
 
     func restoreActiveEditors() {
-        MainThread.assert()
         let snapshots = activeEditorStore.loadSnapshots()
         guard !snapshots.isEmpty else { return }
 
@@ -355,7 +353,10 @@ final class Editor: Identifiable {
         self.onAccessed = onAccessed
     }
 
-    init(id: EditorID, name: String, processIdentifier: Int32, request: RunRequest, lastAccessTime: Date = Date(), onAccessed: (() -> Void)? = nil) {
+    init(
+        id: EditorID, name: String, processIdentifier: Int32, request: RunRequest, lastAccessTime: Date = Date(),
+        onAccessed: (() -> Void)? = nil
+    ) {
         self.id = id
         self.name = name
         self.process = nil

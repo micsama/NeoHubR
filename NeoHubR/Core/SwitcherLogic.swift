@@ -32,7 +32,8 @@ struct SwitcherItem: Identifiable {
         if let n = entry.name, !n.isEmpty {
             self.name = n
         } else {
-            self.name = entry.isSession ? entry.id.deletingPathExtension().lastPathComponent : entry.id.lastPathComponent
+            self.name =
+                entry.isSession ? entry.id.deletingPathExtension().lastPathComponent : entry.id.lastPathComponent
         }
     }
 }
