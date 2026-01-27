@@ -19,7 +19,7 @@ Rebuilt from the ground up with **SwiftUI** and **Swift 6 Concurrency**, it tran
 
 ## 🌟 What's New in Reboot?
 
-Unlike the original tool which hasn't been updated in years, NeoHubR brings:
+Building upon the core vision of the original tool, NeoHubR introduces modern enhancements and a robust architecture:
 
 1.  **🗂️ Advanced Project Management**:
     *   **History & Stars**: Track recent projects and pin your favorites.
