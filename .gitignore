@@ -88,6 +88,7 @@ iOSInjectionProject/
 
 # End of https://www.toptal.com/developers/gitignore/api/swift
 default.profraw
+Session.vim
 AGENTS.md
 .DS_Store
 todo.md

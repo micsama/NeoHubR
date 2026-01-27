@@ -192,18 +192,9 @@
 			children = (
 				FA2AE4A92AEBDDB800D24008 /* Info.plist */,
 				FA30F2262AEED1C5004EC6E9 /* views */,
-				FA2AE44A2AEB980700D24008 /* App.swift */,
-				FABC00042D12300100000004 /* ProjectAppearance.swift */,
-				FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */,
-				FA54EB712AF5033D001AE449 /* CLI.swift */,
-				FA54EB802AF789F6001AE449 /* Logger.swift */,
-				FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */,
-				FABC01012D2F000100000002 /* ActiveEditorStore.swift */,
-				FABC02002D3A111100000010 /* SwitcherLogic.swift */,
-				FAE1A0712D00000100000001 /* AppUtilities.swift */,
-				FA54EB822AF7A381001AE449 /* NotificationManager.swift */,
-				FA54EB8C2AF7F689001AE449 /* BugReporter.swift */,
-				FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */,
+				FABC03012D3A111100000020 /* App */,
+				FABC03022D3A111100000021 /* Core */,
+				FABC03032D3A111100000022 /* Support */,
 				FA2AE44E2AEB980800D24008 /* Assets.xcassets */,
 				CDCEDF7BBE712A6A22A706F7 /* Localizable.strings */,
 				FA2AE4532AEB980800D24008 /* NeoHubR.entitlements */,
@@ -253,6 +244,38 @@
 			path = NeoHubRLib;
 			sourceTree = "<group>";
 		};
+		FABC03012D3A111100000020 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				FA2AE44A2AEB980700D24008 /* App.swift */,
+				FA54EB712AF5033D001AE449 /* CLI.swift */,
+				FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */,
+				FAE1A0712D00000100000001 /* AppUtilities.swift */,
+				FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		FABC03022D3A111100000021 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */,
+				FABC01012D2F000100000002 /* ActiveEditorStore.swift */,
+				FABC02002D3A111100000010 /* SwitcherLogic.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		FABC03032D3A111100000022 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				FA54EB802AF789F6001AE449 /* Logger.swift */,
+				FA54EB822AF7A381001AE449 /* NotificationManager.swift */,
+				FA54EB8C2AF7F689001AE449 /* BugReporter.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
 		FA30F2262AEED1C5004EC6E9 /* views */ = {
 			isa = PBXGroup;
 			children = (
@@ -261,6 +284,7 @@
 				FA3937162AF291A5001D9105 /* SettingsView.swift */,
 				FABC00052D12300100000005 /* ProjectEditorView.swift */,
 				FABC00062D12300100000006 /* ProjectIconView.swift */,
+				FABC00042D12300100000004 /* ProjectAppearance.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
