@@ -1,189 +1,71 @@
 import NeoHubRLib
-import UserNotifications
-
-typealias NotificationMeta = [String: String]
-
-extension NotificationMeta {
-    init(userInfo: [AnyHashable: Any]) {
-        var meta: NotificationMeta = [:]
-        for (key, value) in userInfo {
-            if let key = key as? String, let value = value as? String {
-                meta[key] = value
-            }
-        }
-        self = meta
-    }
-
-    var userInfo: [AnyHashable: Any] {
-        Dictionary(uniqueKeysWithValues: map { ($0.key, $0.value) })
-    }
-}
-
-enum NotificationKind: CaseIterable {
-    case failedToLaunchServer
-    case failedToHandleRequestFromCLI
-    case failedToRunEditorProcess
-    case failedToGetRunningEditorApp
-    case failedToActivateEditorApp
-    case failedToRestartEditor
-    case cliUnexpectedError
-    case cliError
-
-    var id: String {
-        switch self {
-        case .failedToLaunchServer:
-            return "FAILED_TO_LAUNCH_SERVER"
-        case .failedToHandleRequestFromCLI:
-            return "FAILED_TO_HANDLE_REQUEST_FROM_CLI"
-        case .failedToRunEditorProcess:
-            return "FAILED_TO_RUN_EDITOR_PROCESS"
-        case .failedToGetRunningEditorApp:
-            return "FAILED_TO_GET_RUNNING_EDITOR_APP"
-        case .failedToActivateEditorApp:
-            return "FAILED_TO_ACTIVATE_EDITOR_APP"
-        case .failedToRestartEditor:
-            return "FAILED_TO_RESTART_EDITOR"
-        case .cliUnexpectedError:
-            return "CLI_UNEXPECTED_ERROR"
-        case .cliError:
-            return "CLI_ERROR"
-        }
-    }
-
-    var title: String {
-        switch self {
-        case .failedToLaunchServer:
-            return String(localized: "Failed to launch the NeoHubR server")
-        case .failedToHandleRequestFromCLI, .failedToRunEditorProcess:
-            return String(localized: "Failed to open Neovide")
-        case .failedToGetRunningEditorApp, .failedToActivateEditorApp:
-            return String(localized: "Failed to activate Neovide")
-        case .failedToRestartEditor:
-            return String(localized: "Failed to restart the editor")
-        case .cliUnexpectedError:
-            return String(localized: "NeoHubR CLI error")
-        case .cliError:
-            return String(localized: "CLI Error")
-        }
-    }
-
-    var body: String {
-        switch self {
-        case .failedToLaunchServer:
-            return String(
-                localized: "NeoHubR won't be able to function properly. Please, create an issue in the GitHub repo."
-            )
-        case .failedToHandleRequestFromCLI, .failedToRunEditorProcess:
-            return String(localized: "Please create an issue in the GitHub repo.")
-        case .failedToGetRunningEditorApp:
-            return String(localized: "Requested Neovide instance is not running.")
-        case .failedToActivateEditorApp:
-            return String(localized: "Please create an issue in GitHub repo.")
-        case .failedToRestartEditor:
-            return String(localized: "Please, report the issue on GitHub.")
-        case .cliUnexpectedError:
-            return String(localized: "Please open Settings and check logs.")
-        case .cliError:
-            return String(localized: "Please create an issue in the GitHub repo.")
-        }
-    }
-
-    var category: UNNotificationCategory {
-        UNNotificationCategory(
-            identifier: id,
-            actions: [ReportAction.built],
-            intentIdentifiers: [],
-            hiddenPreviewsBodyPlaceholder: "",
-            options: .customDismissAction
-        )
-    }
-}
+@preconcurrency import UserNotifications
 
 @MainActor
 final class NotificationManager: NSObject {
     static let shared = NotificationManager()
 
     override init() {
-        Self.registerCategories()
         super.init()
+        Self.registerCategories()
     }
 
-    static func registerCategories() {
-        let categories = Set(NotificationKind.allCases.map { $0.category })
+    private static func registerCategories() {
+        let categories = Set(Kind.allCases.map { $0.category })
         UNUserNotificationCenter.current().setNotificationCategories(categories)
     }
 
-    private func requestAuthorization(completion: @Sendable @escaping (Bool) -> Void) {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            switch settings.authorizationStatus {
-            case .notDetermined:
-                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
-                    MainThread.run {
-                        if let error {
-                            log.notice("There was an error during notification authorization request. \(error)")
-                        }
-                        completion(granted || error != nil)
-                    }
-                }
-            case .authorized, .provisional, .ephemeral:
-                MainThread.run {
-                    completion(true)
-                }
-            case .denied:
-                MainThread.run {
-                    completion(false)
-                }
-            @unknown default:
-                MainThread.run {
-                    completion(false)
-                }
-            }
-        }
-    }
-
-    nonisolated static func send(kind: NotificationKind, error: ReportableError) {
+    nonisolated static func send(kind: Kind, error: ReportableError) {
         Task { @MainActor in
-            NotificationManager.shared.sendOnMain(kind: kind, error: error)
+            shared.schedule(kind: kind, error: error)
         }
     }
 
     nonisolated static func sendCLIError(_ report: CLIErrorReport) {
-        guard AppSettings.forwardCLIErrors else {
-            return
-        }
+        guard AppSettings.forwardCLIErrors else { return }
         Task { @MainActor in
-            NotificationManager.shared.sendCLIErrorOnMain(report)
+            shared.scheduleCLIError(report)
         }
     }
 
-    private func sendOnMain(kind: NotificationKind, error: ReportableError) {
-        MainThread.assert()
+    nonisolated static func sendInfo(title: String, body: String) {
+        Task { @MainActor in
+            shared.schedule(title: title, body: body)
+        }
+    }
+
+    private func schedule(kind: Kind, error: ReportableError) {
         let meta = ReportAction(error: error).meta
         scheduleNotification(
             categoryId: kind.id,
             title: kind.title,
             body: kind.body,
-            meta: meta
+            userInfo: meta
         )
     }
 
-    private func sendCLIErrorOnMain(_ report: CLIErrorReport) {
-        MainThread.assert()
+    private func scheduleCLIError(_ report: CLIErrorReport) {
         var meta: [String: String] = ["source": "cli"]
-        if let detail = report.detail {
-            meta["detail"] = detail
-        }
-        if let code = report.code {
-            meta["code"] = String(code)
-        }
+        if let detail = report.detail { meta["detail"] = detail }
+        if let code = report.code { meta["code"] = String(code) }
 
         let reportable = ReportableError(report.message, meta: meta)
         let actionMeta = ReportAction(error: reportable).meta
+        
         scheduleNotification(
-            categoryId: NotificationKind.cliError.id,
-            title: NotificationKind.cliError.title,
+            categoryId: Kind.cliError.id,
+            title: Kind.cliError.title,
             body: report.message,
-            meta: actionMeta
+            userInfo: actionMeta
+        )
+    }
+
+    private func schedule(title: String, body: String) {
+        scheduleNotification(
+            categoryId: "",
+            title: title,
+            body: body,
+            userInfo: [:]
         )
     }
 
@@ -191,51 +73,55 @@ final class NotificationManager: NSObject {
         categoryId: String,
         title: String,
         body: String,
-        meta: NotificationMeta
+        userInfo: [String: String]
     ) {
-        MainThread.assert()
-        self.requestAuthorization { granted in
-            guard granted else {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else {
+                if settings.authorizationStatus == .notDetermined {
+                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
+                        if granted {
+                            Task { @MainActor in
+                                self.performSchedule(categoryId: categoryId, title: title, body: body, userInfo: userInfo)
+                            }
+                        }
+                    }
+                }
                 return
             }
-
-            let content = UNMutableNotificationContent()
-            content.categoryIdentifier = categoryId
-            content.title = title
-            content.body = body
-            content.userInfo = meta.userInfo
-
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-            let request = UNNotificationRequest(
-                identifier: UUID().uuidString,
-                content: content,
-                trigger: trigger
-            )
-
-            UNUserNotificationCenter.current().add(request) { error in
-                if let error {
-                    log.error("Error scheduling notification: \(error)")
-                }
+            
+            Task { @MainActor in
+                self.performSchedule(categoryId: categoryId, title: title, body: body, userInfo: userInfo)
             }
         }
     }
 
-    nonisolated static func sendInfo(title: String, body: String) {
-        Task { @MainActor in
-            NotificationManager.shared.sendInfoOnMain(title: title, body: body)
+    private func performSchedule(
+        categoryId: String,
+        title: String,
+        body: String,
+        userInfo: [String: String]
+    ) {
+        let content = UNMutableNotificationContent()
+        content.categoryIdentifier = categoryId
+        content.title = title
+        content.body = body
+        content.userInfo = userInfo
+
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        )
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error {
+                log.error("Error scheduling notification: \(error)")
+            }
         }
     }
-
-    private func sendInfoOnMain(title: String, body: String) {
-        MainThread.assert()
-        scheduleNotification(
-            categoryId: "",
-            title: title,
-            body: body,
-            meta: [:]
-        )
-    }
 }
+
+// MARK: - Delegate
 
 extension NotificationManager: UNUserNotificationCenterDelegate {
     func registerDelegate() {
@@ -256,27 +142,85 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         if response.actionIdentifier == ReportAction.id {
-            let meta = NotificationMeta(userInfo: response.notification.request.content.userInfo)
-            if let action = ReportAction(from: meta) {
-                DispatchQueue.global().async {
-                    action.run()
-                }
+            let userInfo = response.notification.request.content.userInfo
+            if let action = ReportAction(from: userInfo) {
+                // BugReporter handles UI, so we can run on main or background.
+                // BugReporter uses NSWorkspace.open which is thread safe.
+                action.run()
             }
         }
-
         completionHandler()
     }
 }
 
-struct ReportAction {
-    static let id: String = "REPORT_ACTION"
-    static let button: String = String(localized: "Report")
+// MARK: - Supporting Types
+
+extension NotificationManager {
+    enum Kind: CaseIterable {
+        case failedToLaunchServer
+        case failedToHandleRequestFromCLI
+        case failedToRunEditorProcess
+        case failedToGetRunningEditorApp
+        case failedToActivateEditorApp
+        case failedToRestartEditor
+        case cliUnexpectedError
+        case cliError
+
+        var id: String {
+            switch self {
+            case .failedToLaunchServer: return "FAILED_TO_LAUNCH_SERVER"
+            case .failedToHandleRequestFromCLI: return "FAILED_TO_HANDLE_REQUEST_FROM_CLI"
+            case .failedToRunEditorProcess: return "FAILED_TO_RUN_EDITOR_PROCESS"
+            case .failedToGetRunningEditorApp: return "FAILED_TO_GET_RUNNING_EDITOR_APP"
+            case .failedToActivateEditorApp: return "FAILED_TO_ACTIVATE_EDITOR_APP"
+            case .failedToRestartEditor: return "FAILED_TO_RESTART_EDITOR"
+            case .cliUnexpectedError: return "CLI_UNEXPECTED_ERROR"
+            case .cliError: return "CLI_ERROR"
+            }
+        }
+
+        var title: String {
+            switch self {
+            case .failedToLaunchServer: return String(localized: "Failed to launch the NeoHubR server")
+            case .failedToHandleRequestFromCLI, .failedToRunEditorProcess: return String(localized: "Failed to open Neovide")
+            case .failedToGetRunningEditorApp, .failedToActivateEditorApp: return String(localized: "Failed to activate Neovide")
+            case .failedToRestartEditor: return String(localized: "Failed to restart the editor")
+            case .cliUnexpectedError: return String(localized: "NeoHubR CLI error")
+            case .cliError: return String(localized: "CLI Error")
+            }
+        }
+
+        var body: String {
+            switch self {
+            case .failedToLaunchServer:
+                return String(localized: "NeoHubR won't be able to function properly. Please, create an issue in the GitHub repo.")
+            case .failedToHandleRequestFromCLI, .failedToRunEditorProcess, .failedToActivateEditorApp, .cliError:
+                return String(localized: "Please create an issue in the GitHub repo.")
+            case .failedToGetRunningEditorApp:
+                return String(localized: "Requested Neovide instance is not running.")
+            case .failedToRestartEditor:
+                return String(localized: "Please, report the issue on GitHub.")
+            case .cliUnexpectedError:
+                return String(localized: "Please open Settings and check logs.")
+            }
+        }
+
+        var category: UNNotificationCategory {
+            UNNotificationCategory(
+                identifier: id,
+                actions: [ReportAction.built],
+                intentIdentifiers: [],
+                hiddenPreviewsBodyPlaceholder: "",
+                options: .customDismissAction
+            )
+        }
+    }
+}
+
+private struct ReportAction {
+    static let id = "REPORT_ACTION"
     static var built: UNNotificationAction {
-        UNNotificationAction(
-            identifier: id,
-            title: button,
-            options: []
-        )
+        UNNotificationAction(identifier: id, title: String(localized: "Report"), options: [])
     }
 
     let title: String
@@ -287,29 +231,22 @@ struct ReportAction {
         self.error = String(describing: error)
     }
 
-    var meta: NotificationMeta {
-        [
-            "REPORT_TITLE": title,
-            "REPORT_ERROR": error,
-        ]
-    }
-
-    init?(from meta: NotificationMeta) {
-        guard let title = meta["REPORT_TITLE"],
-            let error = meta["REPORT_ERROR"]
+    init?(from userInfo: [AnyHashable: Any]) {
+        guard let title = userInfo["REPORT_TITLE"] as? String,
+              let error = userInfo["REPORT_ERROR"] as? String
         else {
-            log.warning("Failed to get metadata from notification. Meta: \(meta)")
+            log.warning("Failed to get metadata from notification userInfo")
             return nil
         }
-
         self.title = title
         self.error = error
     }
 
+    var meta: [String: String] {
+        ["REPORT_TITLE": title, "REPORT_ERROR": error]
+    }
+
     func run() {
-        BugReporter.report(
-            title: self.title,
-            error: self.error
-        )
+        BugReporter.report(title: title, error: error)
     }
 }
