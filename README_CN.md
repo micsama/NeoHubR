@@ -87,14 +87,15 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ## 🧭 路线图（简版）
 
-### 最新版本（v0.3.1）
-- 路径归一：`nh` / `nh .` / `nh <file>` 统一为同一项目。
-- 失效检测持久化，失效项目置灰并显示 “Not available” 提示。
-- Projects 列表红色垃圾桶删除，二次确认防误删。
+### 最新版本（v0.3.4）
+- **架构升级**: 全面拥抱 Swift Concurrency (`async/await`)，性能与线程安全大幅提升。
+- **全新 CLI**: 重写 `nh` 命令行工具，原生路径解析，通信更稳健。
+- **安全性增强**: Socket 路径增加用户隔离，多用户环境更安全。
+- **体验优化**: 优化项目编辑器、图标渲染及切换器交互体验。
 
 ### 下一步
 - **v0.4.0**：Projects 手动添加（目录 / Session.vim）；Session 项目标注；项目编辑窗口（路径/图标/颜色）；项目自定义图标/颜色并在 Switcher 展示。
-- **v0.4.1**：运行中 Neovide 实例接管（混合方案）；GUI 启动环境继承（默认每次从 Switcher 打开时继承，具体实现待评估）。
+- **v0.4.1**：运行中 Neovide 实例接管（混合方案）；GUI 启动环境继承。
 - **v0.5.0**：Switcher 视觉与交互体验整体优化；单文件模式。
 
 ## 🤝 致谢

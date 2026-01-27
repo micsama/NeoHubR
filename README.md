@@ -87,14 +87,15 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ## 🧭 Roadmap (Short)
 
-### Latest Release (v0.3.1)
-- Path normalization so `nh`, `nh .`, and `nh <file>` map to the same project.
-- Persistent validity checks with visual invalid styling and “Not available” label.
-- Red trash deletion in Projects list with two‑step confirmation.
+### Latest Release (v0.3.4)
+- **Architecture Overhaul**: Native Swift Concurrency (`async/await`) adoption for improved performance and thread safety.
+- **Modern CLI**: Completely rewritten `nh` tool with native path resolution and robust IPC.
+- **Enhanced Security**: User-isolated socket paths for better multi-user support.
+- **UI Refinement**: Optimized project editor, icons, and smoother switcher interactions.
 
 ### Next
 - **v0.4.0**: Manual project add (folder / Session.vim); Session labeling; project editor (path/icon/color); per‑project icon & color with Switcher display.
-- **v0.4.1**: Attach to running Neovide instances (hybrid strategy); GUI launch environment inheritance (default: inherit on Switcher launch; implementation to be finalized).
+- **v0.4.1**: Attach to running Neovide instances (hybrid strategy); GUI launch environment inheritance.
 - **v0.5.0**: Switcher visuals & interaction polish; single‑file mode.
 
 ## 🤝 Credits
