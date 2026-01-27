@@ -34,7 +34,6 @@
 		FA54EB722AF5033D001AE449 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB712AF5033D001AE449 /* CLI.swift */; };
 		FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB822AF7A381001AE449 /* NotificationManager.swift */; };
 		FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB8C2AF7F689001AE449 /* BugReporter.swift */; };
-		FA7B6C122D0A111100000002 /* AppSettingsStore+LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */; };
 		FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0102C8F0A1A00000001 /* AppSettings.swift */; };
 		FAE1A0212C8F1A0000000002 /* EditorNamingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */; };
 		FAE1A0312C8F1B0000000004 /* ProjectRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */; };
@@ -120,7 +119,6 @@
 		FA54EB822AF7A381001AE449 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		FA54EB8C2AF7F689001AE449 /* BugReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BugReporter.swift; sourceTree = "<group>"; };
 		FA728EF32AFF716E0013610E /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
-		FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppSettingsStore+LaunchAtLogin.swift"; sourceTree = "<group>"; };
 		FABC00052D12300100000005 /* ProjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectEditorView.swift; sourceTree = "<group>"; };
 		FABC00062D12300100000006 /* ProjectIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectIconView.swift; sourceTree = "<group>"; };
 		FAE1A0102C8F0A1A00000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -247,7 +245,6 @@
 				FA54EB712AF5033D001AE449 /* CLI.swift */,
 				FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */,
 				FAE1A0712D00000100000001 /* AppUtilities.swift */,
-				FA7B6C112D0A111100000001 /* AppSettingsStore+LaunchAtLogin.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -459,7 +456,6 @@
 				FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */,
 				FABC00022D12300100000002 /* ProjectEditorView.swift in Sources */,
 				FABC00032D12300100000003 /* ProjectIconView.swift in Sources */,
-				FA7B6C122D0A111100000002 /* AppSettingsStore+LaunchAtLogin.swift in Sources */,
 				FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */,
 				FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */,
 				FA2AE44B2AEB980700D24008 /* App.swift in Sources */,
