@@ -29,7 +29,6 @@
 		FABC00032D12300100000003 /* ProjectIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00062D12300100000006 /* ProjectIconView.swift */; };
 		FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */; };
 		FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3937162AF291A5001D9105 /* SettingsView.swift */; };
-		FA39371D2AF3A7CC001D9105 /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA39371C2AF3A7CC001D9105 /* Shell.swift */; };
 		FA54EB702AF4FD84001AE449 /* nh in Embed CLI */ = {isa = PBXBuildFile; fileRef = FA2AE45D2AEB9CA000D24008 /* nh */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		FA54EB722AF5033D001AE449 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB712AF5033D001AE449 /* CLI.swift */; };
 		FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB822AF7A381001AE449 /* NotificationManager.swift */; };
@@ -114,7 +113,6 @@
 		FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitcherView.swift; sourceTree = "<group>"; };
 		FABC02002D3A111100000010 /* SwitcherLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitcherLogic.swift; sourceTree = "<group>"; };
 		FA3937162AF291A5001D9105 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		FA39371C2AF3A7CC001D9105 /* Shell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shell.swift; sourceTree = "<group>"; };
 		FA54EB712AF5033D001AE449 /* CLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLI.swift; sourceTree = "<group>"; };
 		FA54EB822AF7A381001AE449 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		FA54EB8C2AF7F689001AE449 /* BugReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BugReporter.swift; sourceTree = "<group>"; };
@@ -210,7 +208,6 @@
 			children = (
 				FA2AE4AA2AEBDF7800D24008 /* NeoHubRCLI.entitlements */,
 				FA2AE45F2AEB9CA000D24008 /* CLI.swift */,
-				FA39371C2AF3A7CC001D9105 /* Shell.swift */,
 				FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */,
 			);
 			path = NeoHubRCLI;
@@ -474,7 +471,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FA39371D2AF3A7CC001D9105 /* Shell.swift in Sources */,
 				FA2AE4602AEB9CA000D24008 /* CLI.swift in Sources */,
 				FA2EAD932AEC4CCD000F8F7A /* SocketClient.swift in Sources */,
 			);
