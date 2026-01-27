@@ -24,7 +24,7 @@ public enum EditorNamingPolicy {
         case .some(let path):
             let rawURL: URL
             if path.hasPrefix("~") {
-                let expanded = (path as NSString).expandingTildeInPath
+                let expanded = PathUtils.expandTilde(path)
                 rawURL = URL(fileURLWithPath: expanded)
             } else if path.hasPrefix("/") {
                 rawURL = URL(fileURLWithPath: path)

@@ -63,34 +63,18 @@ public enum ProjectRegistry {
     }
 
     public static func normalizeID(_ url: URL) -> URL {
-        let expandedPath = (url.path(percentEncoded: false) as NSString).expandingTildeInPath
-        let trimmedPath = trimTrailingSlash(expandedPath)
-        var normalized = URL(fileURLWithPath: trimmedPath).standardizedFileURL
-
-        if FileManager.default.fileExists(atPath: normalized.path) {
-            normalized = normalized.resolvingSymlinksInPath()
-        }
-
-        if let isCaseSensitive = isCaseSensitiveVolume(for: normalized), !isCaseSensitive {
-            normalized = URL(fileURLWithPath: normalized.path.lowercased())
-        }
-
-        return normalized
+        PathUtils.normalize(url)
     }
 
     public static func normalizeSessionPath(_ url: URL) -> URL {
-        let standardized = url.standardizedFileURL
-        if FileManager.default.fileExists(atPath: standardized.path) {
-            return standardized.resolvingSymlinksInPath()
-        }
-        return standardized
+        PathUtils.normalizeSessionPath(url)
     }
 
     public static func resolveSessionPath(workingDirectory: URL, path: String?) -> URL? {
         guard let path, !path.isEmpty else { return nil }
         let rawURL: URL
         if path.hasPrefix("~") {
-            let expanded = (path as NSString).expandingTildeInPath
+            let expanded = PathUtils.expandTilde(path)
             rawURL = URL(fileURLWithPath: expanded)
         } else if path.hasPrefix("/") {
             rawURL = URL(fileURLWithPath: path)
@@ -111,18 +95,7 @@ public enum ProjectRegistry {
     }
 
     public static func isAccessible(_ url: URL) -> Bool {
-        let path = url.path(percentEncoded: false)
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) else {
-            return false
-        }
-
-        if isDirectory.boolValue {
-            return FileManager.default.isReadableFile(atPath: path)
-                && FileManager.default.isExecutableFile(atPath: path)
-        }
-
-        return FileManager.default.isReadableFile(atPath: path)
+        PathUtils.isAccessible(url)
     }
 
     public static func mergeEntry(base: ProjectEntry, incoming: ProjectEntry) -> ProjectEntry {
@@ -140,24 +113,6 @@ public enum ProjectRegistry {
             result.sessionPath = normalizeSessionPath(sessionPath)
         }
         return result
-    }
-
-    private static func trimTrailingSlash(_ path: String) -> String {
-        guard path.count > 1 else { return path }
-        var result = path
-        while result.hasSuffix("/") && result.count > 1 {
-            result.removeLast()
-        }
-        return result
-    }
-
-    private static func isCaseSensitiveVolume(for url: URL) -> Bool? {
-        do {
-            let values = try url.resourceValues(forKeys: [.volumeSupportsCaseSensitiveNamesKey])
-            return values.volumeSupportsCaseSensitiveNames
-        } catch {
-            return nil
-        }
     }
 }
 
