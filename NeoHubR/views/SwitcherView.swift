@@ -170,7 +170,7 @@ private struct SwitcherRow: View {
 
                 Text(highlight(item.displayPath, query: query))
                     .font(.system(size: 11))
-                    .foregroundStyle(item.isInvalid ? .secondary.opacity(0.6) : .secondary)
+                    .foregroundStyle(item.isInvalid ? Color.secondary.opacity(0.6) : .secondary)
                     .lineLimit(1)
             }
 
@@ -223,7 +223,9 @@ private struct StatusTag: View {
     let text: LocalizedStringKey
     init(_ text: LocalizedStringKey) { self.text = text }
     var body: some View {
-        Text("(\(text))").font(.system(size: 12)).foregroundStyle(.tertiary)
+        (Text("(") + Text(text) + Text(")"))
+            .font(.system(size: 12))
+            .foregroundStyle(.tertiary)
     }
 }
 
