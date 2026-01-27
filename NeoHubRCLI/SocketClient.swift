@@ -1,188 +1,103 @@
 import Foundation
 import NeoHubRLib
 import Network
+import os
 
-enum SendError: Error {
+enum SendError: Error, LocalizedError {
     case appIsNotRunning
     case failedToSendRequest(Error)
-}
+    case timeout
 
-extension SendError: LocalizedError {
     var errorDescription: String? {
         switch self {
-        case .appIsNotRunning:
-            return "NeoHubR app is not running. Start the app and retry."
-        case .failedToSendRequest(let error):
-            return error.localizedDescription
+        case .appIsNotRunning: "NeoHubR app is not running. Start the app and retry."
+        case .failedToSendRequest(let e): e.localizedDescription
+        case .timeout: "Timed out waiting for IPC response."
         }
     }
 }
 
-class SocketClient {
-    private let queue = DispatchQueue(label: "neohubr.ipc.client")
-    private let timeoutSeconds: TimeInterval = 1.5
-    private let maxAttempts = 2
-    private static let timeoutDomain = "NeoHubRIPC"
+actor SocketClient {
+    private let timeoutNanoseconds: UInt64 = 1_500_000_000 // 1.5s
 
-    func send(_ request: Codable) -> Result<String?, SendError> {
-        if !FileManager.default.fileExists(atPath: Socket.addr) {
+    func send(_ request: Codable) async -> Result<String?, SendError> {
+        guard FileManager.default.fileExists(atPath: Socket.addr) else {
             return .failure(.appIsNotRunning)
         }
 
         do {
             let json = try IPCCodec.encoder().encode(request)
             let payload = IPCFrame.encode(json)
-
-            for attempt in 0..<maxAttempts {
-                let result = sendOnce(payload: payload, timeout: timeoutSeconds)
-                switch result {
-                case .success(let response):
-                    return .success(response)
-                case .failure(let error):
-                    if attempt == maxAttempts - 1 {
-                        return .failure(.failedToSendRequest(error))
-                    }
-                }
-            }
-
-            return .failure(.failedToSendRequest(Self.timeoutError()))
+            let response = try await sendWithTimeout(payload: payload)
+            return .success(response)
         } catch {
             return .failure(.failedToSendRequest(error))
         }
     }
 
-    private func sendOnce(payload: Data, timeout: TimeInterval) -> Result<String?, Error> {
-        let connection = NWConnection(to: .unix(path: Socket.addr), using: .tcp)
-        let context = SendContext(connection: connection)
+    private func sendWithTimeout(payload: Data) async throws -> String? {
+        return try await withThrowingTaskGroup(of: String?.self) { group in
+            group.addTask {
+                try await self.performSend(payload: payload)
+            }
+            
+            group.addTask {
+                try await Task.sleep(nanoseconds: self.timeoutNanoseconds)
+                throw SendError.timeout
+            }
+            
+            let result = try await group.next()
+            group.cancelAll()
+            return result ?? nil
+        }
+    }
 
-        connection.stateUpdateHandler = { state in
-            switch state {
-            case .ready:
-                connection.send(
-                    content: payload,
-                    completion: .contentProcessed { error in
+    private func performSend(payload: Data) async throws -> String? {
+        return try await withCheckedThrowingContinuation { continuation in
+            let connection = NWConnection(to: .unix(path: Socket.addr), using: .tcp)
+            let state = OSAllocatedUnfairLock(initialState: false)
+            
+            @Sendable func resume(_ result: Result<String?, Error>) {
+                state.withLock { hasResumed in
+                    guard !hasResumed else { return }
+                    hasResumed = true
+                    connection.cancel()
+                    continuation.resume(with: result)
+                }
+            }
+
+            connection.stateUpdateHandler = { state in
+                switch state {
+                case .ready:
+                    connection.send(content: payload, completion: .contentProcessed { error in
                         if let error {
-                            context.finish(.failure(error))
-                            return
+                            resume(.failure(error))
+                        } else {
+                            // Start receiving response
+                            connection.receive(minimumIncompleteLength: 1, maximumLength: 1024 * 4) { data, _, isComplete, error in
+                                if let error {
+                                    resume(.failure(error))
+                                    return
+                                }
+                                if let data, let str = String(data: data, encoding: .utf8) {
+                                    resume(.success(str))
+                                } else if isComplete {
+                                    resume(.success(nil))
+                                }
+                            }
                         }
-                        Self.receiveResponse(context: context)
                     })
-            case .failed(let error):
-                context.finish(.failure(error))
-            case .cancelled:
-                if !context.hasResult {
-                    context.finish(.failure(Self.timeoutError()))
+                case .failed(let error):
+                    resume(.failure(error))
+                case .cancelled:
+                    // Only resume if cancelled externally (not by us calling cancel())
+                    // But we call cancel() in resume(), so we rely on hasResumed flag
+                    break 
+                default: break
                 }
-            default:
-                break
             }
+            
+            connection.start(queue: .global())
         }
-
-        connection.start(queue: queue)
-        let waitResult = context.semaphore.wait(timeout: .now() + timeout)
-        if waitResult == .timedOut {
-            if !context.hasResult {
-                context.setResultIfNil(.failure(Self.timeoutError()))
-            }
-            connection.cancel()
-        }
-        return context.result ?? .failure(Self.timeoutError())
-    }
-
-    private static func receiveResponse(context: SendContext) {
-        @Sendable func receiveNext() {
-            context.connection.receive(minimumIncompleteLength: 1, maximumLength: 4 * 1024) {
-                data, _, isComplete, error in
-                if let data {
-                    context.appendResponse(data)
-                }
-
-                if let error {
-                    context.finish(.failure(error))
-                    return
-                }
-
-                if isComplete || context.hasResponseData {
-                    let response = context.responseString
-                    context.finish(.success(response))
-                    return
-                }
-
-                receiveNext()
-            }
-        }
-
-        receiveNext()
-    }
-
-    private static func timeoutError() -> NSError {
-        NSError(
-            domain: timeoutDomain, code: 1,
-            userInfo: [
-                NSLocalizedDescriptionKey: "Timed out waiting for IPC response."
-            ])
-    }
-}
-
-private final class SendContext: @unchecked Sendable {
-    let connection: NWConnection
-    let semaphore = DispatchSemaphore(value: 0)
-
-    private let lock = NSLock()
-    private var _result: Result<String?, Error>?
-    private var responseData = Data()
-
-    init(connection: NWConnection) {
-        self.connection = connection
-    }
-
-    var result: Result<String?, Error>? {
-        lock.lock()
-        defer { lock.unlock() }
-        return _result
-    }
-
-    var hasResult: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return _result != nil
-    }
-
-    var hasResponseData: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return !responseData.isEmpty
-    }
-
-    var responseString: String? {
-        lock.lock()
-        defer { lock.unlock() }
-        return responseData.isEmpty ? nil : String(data: responseData, encoding: .utf8)
-    }
-
-    func setResultIfNil(_ value: Result<String?, Error>) {
-        lock.lock()
-        if _result == nil {
-            _result = value
-        }
-        lock.unlock()
-    }
-
-    func finish(_ value: Result<String?, Error>) {
-        lock.lock()
-        if _result != nil {
-            lock.unlock()
-            return
-        }
-        _result = value
-        lock.unlock()
-        connection.cancel()
-        semaphore.signal()
-    }
-
-    func appendResponse(_ data: Data) {
-        lock.lock()
-        responseData.append(data)
-        lock.unlock()
     }
 }

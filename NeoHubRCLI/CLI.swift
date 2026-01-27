@@ -10,46 +10,28 @@ let log = Logger.bootstrap(
     alsoStderr: true
 )
 
-enum CLIError: Error {
-    case failedToGetBin(Error)
+enum CLIError: Error, LocalizedError {
+    case failedToGetBin
     case failedToCommunicateWithNeoHubR(SendError)
     case manual(String)
-}
 
-extension CLIError: LocalizedError {
     var errorDescription: String? {
         switch self {
-        case .failedToGetBin(let error):
-            return
-                """
-                Failed to get a path to Neovide binary. Make sure it is available in your PATH.
-                \(error.localizedDescription)
-                """
+        case .failedToGetBin:
+            return "Failed to get a path to Neovide binary. Make sure it is available in your PATH."
         case .failedToCommunicateWithNeoHubR(let error):
-            return
-                """
-                Failed to communicate with NeoHubR.
-                \(error.localizedDescription)
-                """
+            return "Failed to communicate with NeoHubR: \(error.localizedDescription)"
         case .manual(let message):
             return message
         }
     }
-}
 
-extension CLIError {
     var report: CLIErrorReport {
         switch self {
-        case .failedToGetBin(let error):
-            return CLIErrorReport(
-                message: "Failed to get a path to Neovide binary.",
-                detail: error.localizedDescription
-            )
+        case .failedToGetBin:
+            return CLIErrorReport(message: "Failed to get a path to Neovide binary.")
         case .failedToCommunicateWithNeoHubR(let error):
-            return CLIErrorReport(
-                message: "Failed to communicate with NeoHubR.",
-                detail: error.localizedDescription
-            )
+            return CLIErrorReport(message: "Failed to communicate with NeoHubR.", detail: error.localizedDescription)
         case .manual(let message):
             return CLIErrorReport(message: message)
         }
@@ -57,7 +39,7 @@ extension CLIError {
 }
 
 @main
-struct CLI: ParsableCommand {
+struct CLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "nh",
         abstract: "A CLI interface to NeoHubR. Launch new or activate already running Neovide instance.",
@@ -67,8 +49,7 @@ struct CLI: ParsableCommand {
     @Argument(help: "Optional path passed to Neovide.")
     var path: String?
 
-    @Option(
-        help: "Optional editor name. Used for display only. If not provided, a file or directory name will be used.")
+    @Option(help: "Optional editor name. Used for display only. If not provided, a file or directory name will be used.")
     var name: String?
 
     @Option(parsing: .remaining, help: "Options passed to Neovide")
@@ -77,55 +58,55 @@ struct CLI: ParsableCommand {
     @Option(help: "Send a CLI error message to the GUI for testing.")
     var error: String?
 
-    mutating func run() {
+    mutating func run() async throws {
         if let error {
-            Self.sendErrorReport(.manual(error))
-            Self.exit(withError: CLIError.manual(error))
+            await Self.sendErrorReport(.manual(error))
+            throw CLIError.manual(error)
+        }
+
+        guard let bin = findNeovide() else {
+            let error = CLIError.failedToGetBin
+            await Self.sendErrorReport(error)
+            throw error
         }
 
         let wd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-
-        let bin: URL
-        switch Shell.run("command -v neovide") {
-        case .success(let path):
-            bin = URL(fileURLWithPath: path)
-        case .failure(let error):
-            Self.sendErrorReport(.failedToGetBin(error))
-            Self.exit(withError: CLIError.failedToGetBin(error))
-        }
-
-        let path: String? =
-            switch self.path {
-            case nil, "": nil
-            case .some(let path): .some(path)
-            }
-
         let env = ProcessInfo.processInfo.environment
-
+        
         let req = RunRequest(
             wd: wd,
             bin: bin,
             name: self.name,
-            path: path,
+            path: path.flatMap { $0.isEmpty ? nil : $0 },
             opts: self.opts,
             env: env
         )
-        let message = IPCMessage.run(req)
 
-        let client = SocketClient()
-        let result = client.send(message)
+        let result = await SocketClient().send(IPCMessage.run(req))
 
         switch result {
         case .success:
-            Self.exit(withError: nil)
+            return
         case .failure(let error):
-            Self.sendErrorReport(.failedToCommunicateWithNeoHubR(error))
-            Self.exit(withError: CLIError.failedToCommunicateWithNeoHubR(error))
+            let cliError = CLIError.failedToCommunicateWithNeoHubR(error)
+            await Self.sendErrorReport(cliError)
+            throw cliError
         }
     }
 
-    private static func sendErrorReport(_ error: CLIError) {
-        let message = IPCMessage.cliError(error.report)
-        let _ = SocketClient().send(message)
+    private func findNeovide() -> URL? {
+        guard let pathEnv = ProcessInfo.processInfo.environment["PATH"] else { return nil }
+        let paths = pathEnv.split(separator: ":")
+        for path in paths {
+            let url = URL(fileURLWithPath: String(path)).appendingPathComponent("neovide")
+            if FileManager.default.isExecutableFile(atPath: url.path) {
+                return url
+            }
+        }
+        return nil
+    }
+
+    private static func sendErrorReport(_ error: CLIError) async {
+        let _ = await SocketClient().send(IPCMessage.cliError(error.report))
     }
 }
