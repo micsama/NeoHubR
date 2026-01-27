@@ -30,7 +30,6 @@ struct NeoHubRApp: App {
         MenuBarExtra(
             content: {
                 MenuBarView(
-                    cli: app.cli,
                     editorStore: app.editorStore
                 )
             },

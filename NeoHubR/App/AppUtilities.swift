@@ -19,6 +19,30 @@ enum MainThread {
     }
 }
 
+enum ProjectPathFormatter {
+    static func displayPath(_ url: URL) -> String {
+        displayPath(url.path(percentEncoded: false))
+    }
+
+    static func displayPath(_ path: String) -> String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let lowerPath = path.lowercased()
+        let lowerHome = home.lowercased()
+        if lowerPath == lowerHome {
+            return "~"
+        }
+        if lowerPath.hasPrefix(lowerHome + "/") {
+            let suffix = path.dropFirst(home.count)
+            return "~" + suffix
+        }
+        return path
+    }
+
+    static func expandTilde(_ path: String) -> String {
+        (path as NSString).expandingTildeInPath
+    }
+}
+
 enum ActivationTarget {
     case neohubr(NonSwitcherWindow)
     case neovide(Editor)

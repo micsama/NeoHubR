@@ -152,48 +152,25 @@ struct ProjectEditorView: View {
     private var colorField: some View {
         let presets = EditorState.colorPresets
         let palette: [(color: Color?, presetIndex: Int?)] =
-            [
-                (color: nil, presetIndex: nil)
-            ] + presets.enumerated().map { (color: $0.element, presetIndex: $0.offset) }
-        let firstRow = palette.prefix(6)
-        let secondRow = palette.dropFirst(6).prefix(6)
+            [(color: nil, presetIndex: nil)] + presets.enumerated().map { ($0.element, $0.offset) }
 
         return VStack(alignment: .leading, spacing: 6) {
             Text("Color")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 6) {
-                        ForEach(Array(firstRow.enumerated()), id: \.offset) { _, item in
-                            ColorSwatch(
-                                color: item.color,
-                                isSelected: item.presetIndex == nil
-                                    ? !state.useCustomColor
-                                    : state.useCustomColor && state.selectedPresetIndex == item.presetIndex
-                            ) {
-                                if let presetIndex = item.presetIndex, let color = item.color {
-                                    state.selectPresetColor(color, index: presetIndex)
-                                } else {
-                                    state.selectNoneColor()
-                                }
-                            }
-                        }
-                    }
-
-                    HStack(spacing: 6) {
-                        ForEach(Array(secondRow.enumerated()), id: \.offset) { _, item in
-                            ColorSwatch(
-                                color: item.color,
-                                isSelected: item.presetIndex == nil
-                                    ? !state.useCustomColor
-                                    : state.useCustomColor && state.selectedPresetIndex == item.presetIndex
-                            ) {
-                                if let presetIndex = item.presetIndex, let color = item.color {
-                                    state.selectPresetColor(color, index: presetIndex)
-                                } else {
-                                    state.selectNoneColor()
-                                }
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(18), spacing: 6), count: 6), alignment: .leading, spacing: 6) {
+                    ForEach(Array(palette.enumerated()), id: \.offset) { _, item in
+                        ColorSwatch(
+                            color: item.color,
+                            isSelected: item.presetIndex == nil
+                                ? !state.useCustomColor
+                                : state.useCustomColor && state.selectedPresetIndex == item.presetIndex
+                        ) {
+                            if let presetIndex = item.presetIndex, let color = item.color {
+                                state.selectPresetColor(color, index: presetIndex)
+                            } else {
+                                state.selectNoneColor()
                             }
                         }
                     }
@@ -240,47 +217,23 @@ struct ProjectEditorView: View {
 
     @ViewBuilder
     private var previewCard: some View {
-        let trimmedName = state.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let resolvedURL: URL? = {
             if state.isSession {
-                if let sessionURL = state.normalizedSessionURL {
-                    return sessionURL
-                }
-                if let entry = loadedEntry {
-                    if let sessionPath = entry.sessionPath {
-                        return sessionPath
-                    }
-                    if entry.id.pathExtension.lowercased() == "vim" {
-                        return entry.id
-                    }
-                    return entry.id
-                }
+                return state.normalizedSessionURL ?? loadedEntry?.sessionPath ?? (loadedEntry?.id.pathExtension.lowercased() == "vim" ? loadedEntry?.id : nil)
             }
             return state.normalizedProjectURL ?? loadedEntry?.id
         }()
+        
+        let displayName: String = {
+            let trimmed = state.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { return trimmed }
+            return loadedEntry?.name ?? resolvedURL?.lastPathComponent ?? String(localized: "Untitled")
+        }()
+
+        let displayPath = resolvedURL.map { ProjectPathFormatter.displayPath($0) } ?? "-"
+        let iconColor = state.useCustomColor ? state.color : Color.secondary
         let emojiText = state.emojiValue.isEmpty ? "🙂" : state.emojiValue
         let emojiFontSize: CGFloat = emojiText.count > 1 ? 20 : 28
-        let displayName: String = {
-            if !trimmedName.isEmpty {
-                return trimmedName
-            }
-            if let entryName = loadedEntry?.name, !entryName.isEmpty {
-                return entryName
-            }
-            if let resolvedURL {
-                return resolvedURL.lastPathComponent
-            }
-            return String(localized: "Untitled")
-        }()
-
-        let displayPath: String = {
-            if let resolvedURL {
-                return ProjectPathFormatter.displayPath(resolvedURL)
-            }
-            return "-"
-        }()
-
-        let iconColor = state.useCustomColor ? state.color : Color.secondary
 
         let card = HStack(spacing: 12) {
             Group {
@@ -497,17 +450,8 @@ private struct ColorSwatch: View {
 
 private struct EditorState {
     static let colorPresets: [Color] = [
-        .black,
-        .white,
-        .red,
-        .orange,
-        .yellow,
-        .green,
-        .mint,
-        .teal,
-        .blue,
-        .indigo,
-        .purple,
+        .black, .white, .red, .orange, .yellow, .green,
+        .mint, .teal, .blue, .indigo, .purple,
     ]
 
     var name = ""
@@ -526,18 +470,12 @@ private struct EditorState {
     init(entry: ProjectEntry) {
         let sessionEntry = entry.isSession || entry.id.pathExtension.lowercased() == "vim"
         isSession = sessionEntry
-        let defaultName: String = {
-            if sessionEntry {
-                if let sessionURL = entry.sessionPath {
-                    return sessionURL.deletingPathExtension().lastPathComponent
-                }
-                if entry.id.pathExtension.lowercased() == "vim" {
-                    return entry.id.deletingPathExtension().lastPathComponent
-                }
-            }
-            return entry.id.lastPathComponent
-        }()
-        name = entry.name ?? defaultName
+        
+        if let entryName = entry.name, !entryName.isEmpty {
+            name = entryName
+        } else {
+            name = entry.id.deletingPathExtension().lastPathComponent
+        }
 
         if sessionEntry {
             if let sessionURL = entry.sessionPath {
@@ -598,14 +536,13 @@ private struct EditorState {
     }
 
     func buildEntry(from entry: ProjectEntry) -> ProjectEntry? {
+        let iconValue = buildIconValue()
+
         if isSession {
             guard let sessionURL = normalizedSessionURL else { return nil }
-            let iconValue = buildIconValue()
-            let nameValue = buildName(projectURL: sessionURL)
-
             return ProjectEntry(
                 id: sessionURL,
-                name: nameValue,
+                name: buildName(for: sessionURL),
                 icon: iconValue,
                 colorHex: useCustomColor ? color.hexString() : nil,
                 sessionPath: sessionURL
@@ -613,13 +550,9 @@ private struct EditorState {
         }
 
         guard let projectURL = normalizedProjectURL else { return nil }
-
-        let iconValue = buildIconValue()
-        let nameValue = buildName(projectURL: projectURL)
-
         return ProjectEntry(
             id: projectURL,
-            name: nameValue,
+            name: buildName(for: projectURL),
             icon: iconValue,
             colorHex: useCustomColor ? color.hexString() : nil,
             sessionPath: nil
@@ -655,12 +588,8 @@ private struct EditorState {
         }
     }
 
-    private func buildName(projectURL: URL) -> String? {
+    private func buildName(for url: URL) -> String? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let defaultName =
-            isSession
-            ? projectURL.deletingPathExtension().lastPathComponent
-            : projectURL.lastPathComponent
-        return trimmed.isEmpty ? defaultName : trimmed
+        return trimmed.isEmpty ? url.deletingPathExtension().lastPathComponent : trimmed
     }
 }
