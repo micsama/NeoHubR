@@ -165,6 +165,7 @@ final class SwitcherViewModel {
     }
 
     private func activate(_ item: SwitcherItem) {
+        onDismiss()
         item.editor?.activate() ?? editorStore.openProject(item.entry)
     }
 

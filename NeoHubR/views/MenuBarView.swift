@@ -12,7 +12,6 @@ struct MenuBarIcon: View {
 }
 
 struct MenuBarView: View {
-    @Bindable var cli: CLI
     @Bindable var editorStore: EditorStore
 
     var body: some View {
@@ -24,19 +23,34 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(editors) { editor in
-                    Button(editor.name) { editor.activate() }
+                    Button {
+                        editor.activate()
+                    } label: {
+                        Label(editor.name, systemImage: "terminal")
+                    }
                 }
             }
         }
 
-        Section {
-            SettingsLink { Label("Settings…", systemImage: "gearshape") }
+        Divider()
+
+        SettingsLink {
+            Label("Settings…", systemImage: "gearshape")
         }
 
         Section {
-            Button("Quit All Editors") { Task { await editorStore.quitAllEditors() } }
-                .disabled(editors.isEmpty)
-            Button(String(localized: "Quit NeoHubR")) { NSApplication.shared.terminate(nil) }
+            Button {
+                Task { await editorStore.quitAllEditors() }
+            } label: {
+                Label("Quit All Editors", systemImage: "xmark.circle")
+            }
+            .disabled(editors.isEmpty)
+
+            Button {
+                NSApplication.shared.terminate(nil)
+            } label: {
+                Label(String(localized: "Quit NeoHubR"), systemImage: "power")
+            }
         }
     }
 }
