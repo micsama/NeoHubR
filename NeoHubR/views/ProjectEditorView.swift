@@ -468,8 +468,7 @@ private struct EditorState {
     init() {}
 
     init(entry: ProjectEntry) {
-        let sessionEntry = entry.isSession || entry.id.pathExtension.lowercased() == "vim"
-        isSession = sessionEntry
+        isSession = entry.isSession
         
         if let entryName = entry.name, !entryName.isEmpty {
             name = entryName
@@ -477,7 +476,7 @@ private struct EditorState {
             name = entry.id.deletingPathExtension().lastPathComponent
         }
 
-        if sessionEntry {
+        if isSession {
             if let sessionURL = entry.sessionPath {
                 sessionPath = ProjectPathFormatter.displayPath(sessionURL)
                 projectPath = ProjectPathFormatter.displayPath(sessionURL.deletingLastPathComponent())
