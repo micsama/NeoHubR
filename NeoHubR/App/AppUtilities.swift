@@ -54,6 +54,46 @@ enum ProjectPathFormatter {
     }
 }
 
+enum NeovideResolver {
+    static func resolveBinary() -> URL? {
+        if let path = resolveFromPath() {
+            return path
+        }
+
+        let bundled = URL(fileURLWithPath: "/Applications/Neovide.app/Contents/MacOS/neovide")
+        if FileManager.default.fileExists(atPath: bundled.path) {
+            return bundled
+        }
+
+        return nil
+    }
+
+    private static func resolveFromPath() -> URL? {
+        let process = Process()
+        let pipe = Pipe()
+
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["which", "neovide"]
+        process.standardOutput = pipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+            guard process.terminationStatus == 0 else { return nil }
+
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            guard
+                let path = String(data: data, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                !path.isEmpty
+            else { return nil }
+            return URL(fileURLWithPath: path)
+        } catch {
+            return nil
+        }
+    }
+}
+
 enum ActivationTarget {
     case neohubr(NonSwitcherWindow)
     case neovide(Editor)

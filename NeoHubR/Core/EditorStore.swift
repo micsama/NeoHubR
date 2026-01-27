@@ -7,7 +7,7 @@ import SwiftUI
 @MainActor
 @Observable
 final class EditorStore {
-    private var editors: [EditorID: Editor]
+    private var editors: [EditorID: Editor] = [:]
 
     let switcherWindow: SwitcherWindowRef
     let activationManager: ActivationManager
@@ -21,7 +21,6 @@ final class EditorStore {
         switcherWindow: SwitcherWindowRef,
         projectRegistry: ProjectRegistryStore
     ) {
-        self.editors = [:]
         self.switcherWindow = switcherWindow
         self.activationManager = activationManager
         self.projectRegistry = projectRegistry
@@ -57,8 +56,6 @@ final class EditorStore {
                 case .neovide(let prevEditor) = activationManager.activationTarget,
                 sorted.first?.processIdentifier == prevEditor.processIdentifier
             {
-                // Swap the first editor with the second one
-                // so it would require just Enter to switch between two editors
                 sorted.swapAt(0, 1)
             }
 
@@ -77,120 +74,126 @@ final class EditorStore {
         let editorName = naming.displayName
         updateProjectRegistry(location: naming.location, displayName: editorName, sessionPath: sessionPath)
 
-        switch editors[editorID] {
-        case .some(let editor):
+        if let editor = editors[editorID] {
             log.info("Editor exists, activating: \(editorID)")
             editor.activate()
-        case .none:
-            let currentApp = NSWorkspace.shared.frontmostApplication
+            return
+        }
 
-            DispatchQueue.global(qos: .background).async { [weak self] in
-                guard let self else { return }
-                do {
-                    let process = Process()
+        let currentApp = NSWorkspace.shared.frontmostApplication
 
-                    process.executableURL = request.bin
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self else { return }
+            do {
+                let process = try makeEditorProcess(request: request, sessionPath: sessionPath, editorID: editorID)
+                try process.run()
 
-                    var args = request.opts
-                    if !args.contains("--no-fork") {
-                        args.append("--no-fork")
-                    }
-                    if let sessionPath {
-                        if !args.contains("--") {
-                            args.append("--")
-                        }
-                        args.append("-S")
-                        args.append(sessionPath.path(percentEncoded: false))
-                    } else if let path = request.path {
-                        args.append(path)
-                    }
-                    process.arguments = args
-
-                    if let sessionPath {
-                        process.currentDirectoryURL = sessionPath.deletingLastPathComponent()
-                    } else {
-                        process.currentDirectoryURL = request.wd
-                    }
-                    process.environment = request.env
-
-                    process.terminationHandler = { [editorID, self] _ in
-                        Task { @MainActor in
-                            self.editors.removeValue(forKey: editorID)
-                            self.persistActiveEditors()
-                        }
-                    }
-
-                    try process.run()
-
-                    MainThread.run { [weak self] in
-                        guard let self else { return }
-                        self.activationManager.setActivationTarget(
-                            currentApp: currentApp,
-                            switcherWindow: self.switcherWindow,
-                            editors: self.getEditors()
-                        )
-
-                        if process.isRunning {
-                            log.info("Editor launched: \(editorID), pid \(process.processIdentifier)")
-
-                            self.editors[editorID] = Editor(
-                                id: editorID,
-                                name: editorName,
-                                process: process,
-                                request: request,
-                                onAccessed: { [weak self] in
-                                    self?.persistActiveEditors()
-                                }
-                            )
-                            self.persistActiveEditors()
-                        } else {
-                            let error = ReportableError(
-                                "Editor process is not running",
-                                code: Int(process.terminationStatus),
-                                meta: [
-                                    "EditorID": editorID,
-                                    "EditorPID": process.processIdentifier,
-                                    "EditorTerminationStatus": process.terminationStatus,
-                                    "EditorWorkingDirectory": request.wd,
-                                    "EditorBinary": request.bin,
-                                    "EditorPathArgument": request.path ?? "-",
-                                    "EditorOptions": request.opts,
-                                ]
-                            )
-                            log.error("\(error)")
-                            NotificationManager.send(kind: .failedToRunEditorProcess, error: error)
-                        }
-                    }
-                } catch {
-                    MainThread.run {
-                        let error = ReportableError("Failed to run editor process", error: error)
-                        log.error("\(error)")
-                        NotificationManager.send(kind: .failedToRunEditorProcess, error: error)
-                    }
+                MainThread.run { [weak self] in
+                    guard let self else { return }
+                    self.handleProcessLaunch(
+                        process: process,
+                        request: request,
+                        editorID: editorID,
+                        editorName: editorName,
+                        currentApp: currentApp
+                    )
+                }
+            } catch {
+                MainThread.run {
+                    let error = ReportableError("Failed to run editor process", error: error)
+                    log.error("\(error)")
+                    NotificationManager.send(kind: .failedToRunEditorProcess, error: error)
                 }
             }
         }
     }
 
+    nonisolated private func makeEditorProcess(request: RunRequest, sessionPath: URL?, editorID: EditorID) throws -> Process {
+        let process = Process()
+        process.executableURL = request.bin
+
+        var args = request.opts
+        if !args.contains("--no-fork") {
+            args.append("--no-fork")
+        }
+        if let sessionPath {
+            if !args.contains("--") { args.append("--") }
+            args.append("-S")
+            args.append(sessionPath.path(percentEncoded: false))
+        } else if let path = request.path {
+            args.append(path)
+        }
+        process.arguments = args
+
+        if let sessionPath {
+            process.currentDirectoryURL = sessionPath.deletingLastPathComponent()
+        } else {
+            process.currentDirectoryURL = request.wd
+        }
+        process.environment = request.env
+
+        process.terminationHandler = { [weak self] _ in
+            Task { @MainActor in
+                self?.editors.removeValue(forKey: editorID)
+                self?.persistActiveEditors()
+            }
+        }
+        return process
+    }
+
+    private func handleProcessLaunch(
+        process: Process,
+        request: RunRequest,
+        editorID: EditorID,
+        editorName: String,
+        currentApp: NSRunningApplication?
+    ) {
+        activationManager.setActivationTarget(
+            currentApp: currentApp,
+            switcherWindow: switcherWindow,
+            editors: getEditors()
+        )
+
+        if process.isRunning {
+            log.info("Editor launched: \(editorID), pid \(process.processIdentifier)")
+
+            editors[editorID] = Editor(
+                id: editorID,
+                name: editorName,
+                process: process,
+                request: request,
+                onAccessed: { [weak self] in self?.persistActiveEditors() }
+            )
+            persistActiveEditors()
+        } else {
+            let error = ReportableError(
+                "Editor process is not running",
+                code: Int(process.terminationStatus),
+                meta: [
+                    "EditorID": editorID,
+                    "EditorPID": process.processIdentifier,
+                    "EditorTerminationStatus": process.terminationStatus,
+                    "EditorWorkingDirectory": request.wd,
+                    "EditorBinary": request.bin,
+                    "EditorPathArgument": request.path ?? "-",
+                    "EditorOptions": request.opts,
+                ]
+            )
+            log.error("\(error)")
+            NotificationManager.send(kind: .failedToRunEditorProcess, error: error)
+        }
+    }
+
     func restartActiveEditor() {
         MainThread.assert()
-        guard let activeApp = NSWorkspace.shared.frontmostApplication else {
-            return
-        }
-
-        guard
-            let editor = self.editors.first(where: { id, editor in
-                editor.processIdentifier == activeApp.processIdentifier
-            })?.value
-        else {
-            return
-        }
+        guard let activeApp = NSWorkspace.shared.frontmostApplication,
+              let editor = self.editors.first(where: { $0.value.processIdentifier == activeApp.processIdentifier })?.value
+        else { return }
 
         editor.quit()
 
-        let timeout = TimeInterval(5)
+        let timeout: TimeInterval = 5
         let startTime = Date()
-
         let editorID = editor.id
         let editorRequest = editor.request
 
@@ -213,11 +216,10 @@ final class EditorStore {
 
     func quitAllEditors() async {
         MainThread.assert()
-        let editors = self.editors.values
-        for editor in editors {
+        for editor in editors.values {
             editor.quit()
         }
-        self.editors.removeAll()
+        editors.removeAll()
         persistActiveEditors()
     }
 
@@ -227,35 +229,24 @@ final class EditorStore {
 
     func restoreActiveEditors() {
         MainThread.assert()
-
         let snapshots = activeEditorStore.loadSnapshots()
         guard !snapshots.isEmpty else { return }
 
         for snapshot in snapshots {
-            guard let app = NSRunningApplication(processIdentifier: snapshot.pid),
-                !app.isTerminated
-            else {
-                continue
-            }
+            guard let app = NSRunningApplication(processIdentifier: snapshot.pid), !app.isTerminated else { continue }
 
             let editorID = EditorID(snapshot.id)
-            if editors[editorID] != nil {
-                continue
-            }
+            if editors[editorID] != nil { continue }
 
-            let editor = Editor(
+            editors[editorID] = Editor(
                 id: editorID,
                 name: snapshot.name,
                 processIdentifier: snapshot.pid,
                 request: snapshot.request,
                 lastAccessTime: Date(timeIntervalSince1970: snapshot.lastAccessTime),
-                onAccessed: { [weak self] in
-                    self?.persistActiveEditors()
-                }
+                onAccessed: { [weak self] in self?.persistActiveEditors() }
             )
-            editors[editorID] = editor
         }
-
         persistActiveEditors()
     }
 
@@ -272,7 +263,7 @@ final class EditorStore {
             )
             return
         }
-        guard let bin = resolveNeovideBinary() else {
+        guard let bin = NeovideResolver.resolveBinary() else {
             let error = ReportableError("Failed to locate Neovide binary in PATH.")
             log.error("\(error)")
             NotificationManager.send(kind: .failedToRunEditorProcess, error: error)
@@ -281,12 +272,7 @@ final class EditorStore {
 
         let targetURL = project.sessionPath ?? project.id
         let path = targetURL.path(percentEncoded: false)
-        let wd: URL
-        if targetURL.hasDirectoryPath {
-            wd = targetURL
-        } else {
-            wd = targetURL.deletingLastPathComponent()
-        }
+        let wd = targetURL.hasDirectoryPath ? targetURL : targetURL.deletingLastPathComponent()
 
         let request = RunRequest(
             wd: wd,
@@ -297,44 +283,6 @@ final class EditorStore {
             env: ProcessInfo.processInfo.environment
         )
         runEditor(request: request)
-    }
-
-    private func resolveNeovideBinary() -> URL? {
-        if let path = resolveNeovideFromPath() {
-            return path
-        }
-
-        let bundled = URL(fileURLWithPath: "/Applications/Neovide.app/Contents/MacOS/neovide")
-        if FileManager.default.fileExists(atPath: bundled.path) {
-            return bundled
-        }
-
-        return nil
-    }
-
-    private func resolveNeovideFromPath() -> URL? {
-        let process = Process()
-        let pipe = Pipe()
-
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["which", "neovide"]
-        process.standardOutput = pipe
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-            guard process.terminationStatus == 0 else { return nil }
-
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            guard
-                let path = String(data: data, encoding: .utf8)?
-                    .trimmingCharacters(in: .whitespacesAndNewlines),
-                !path.isEmpty
-            else { return nil }
-            return URL(fileURLWithPath: path)
-        } catch {
-            return nil
-        }
     }
 
     private func persistActiveEditors() {
@@ -359,18 +307,16 @@ final class EditorStore {
 extension EditorStore {
     func pruneDeadEditors() {
         let toRemove = editors.filter { _, editor in
-            guard let app = NSRunningApplication(processIdentifier: editor.processIdentifier) else {
-                return true
-            }
+            guard let app = NSRunningApplication(processIdentifier: editor.processIdentifier) else { return true }
             return app.isTerminated
         }
 
-        guard !toRemove.isEmpty else { return }
-
-        for (id, _) in toRemove {
-            editors.removeValue(forKey: id)
+        if !toRemove.isEmpty {
+            for (id, _) in toRemove {
+                editors.removeValue(forKey: id)
+            }
+            persistActiveEditors()
         }
-        persistActiveEditors()
     }
 
     func removeEditor(id: EditorID) {
@@ -381,21 +327,10 @@ extension EditorStore {
 
 struct EditorID: Hashable, Identifiable, Sendable, CustomStringConvertible {
     private let loc: URL
-
-    init(_ loc: URL) {
-        self.loc = loc
-    }
-
-    var path: String {
-        loc.path(percentEncoded: false)
-    }
-
-    var lastPathComponent: String {
-        loc.lastPathComponent
-    }
-
+    init(_ loc: URL) { self.loc = loc }
+    var path: String { loc.path(percentEncoded: false) }
+    var lastPathComponent: String { loc.lastPathComponent }
     var id: URL { self.loc }
-
     var description: String { self.path }
 }
 
@@ -410,13 +345,7 @@ final class Editor: Identifiable {
     private(set) var lastAcceessTime: Date
     private(set) var request: RunRequest
 
-    init(
-        id: EditorID,
-        name: String,
-        process: Process,
-        request: RunRequest,
-        onAccessed: (() -> Void)? = nil
-    ) {
+    init(id: EditorID, name: String, process: Process, request: RunRequest, onAccessed: (() -> Void)? = nil) {
         self.id = id
         self.name = name
         self.process = process
@@ -426,14 +355,7 @@ final class Editor: Identifiable {
         self.onAccessed = onAccessed
     }
 
-    init(
-        id: EditorID,
-        name: String,
-        processIdentifier: Int32,
-        request: RunRequest,
-        lastAccessTime: Date = Date(),
-        onAccessed: (() -> Void)? = nil
-    ) {
+    init(id: EditorID, name: String, processIdentifier: Int32, request: RunRequest, lastAccessTime: Date = Date(), onAccessed: (() -> Void)? = nil) {
         self.id = id
         self.name = name
         self.process = nil
@@ -443,13 +365,8 @@ final class Editor: Identifiable {
         self.onAccessed = onAccessed
     }
 
-    var displayPath: String {
-        ProjectPathFormatter.displayPath(self.id.path)
-    }
-
-    var processIdentifier: Int32 {
-        self.processIdentifierValue
-    }
+    var displayPath: String { ProjectPathFormatter.displayPath(self.id.path) }
+    var processIdentifier: Int32 { self.processIdentifierValue }
 
     private func runningEditor() -> NSRunningApplication? {
         NSRunningApplication(processIdentifier: processIdentifierValue)
@@ -463,11 +380,8 @@ final class Editor: Identifiable {
             return
         }
 
-        // We have to activate NeoHubR first so macOS would allow to activate Neovide
         NSApp.activate(ignoringOtherApps: true)
-
-        let activated = app.activate()
-        if !activated {
+        if !app.activate() {
             let error = ReportableError("Failed to activate Neovide instance")
             log.error("\(error)")
             NotificationManager.send(kind: .failedToActivateEditorApp, error: error)
@@ -480,8 +394,8 @@ final class Editor: Identifiable {
     func quit() {
         if let process {
             process.terminate()
-            return
+        } else {
+            runningEditor()?.terminate()
         }
-        runningEditor()?.terminate()
     }
 }
