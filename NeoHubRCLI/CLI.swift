@@ -43,7 +43,7 @@ struct CLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "nh",
         abstract: "A CLI interface to NeoHubR. Launch new or activate already running Neovide instance.",
-        version: "0.3.3"
+        version: "0.3.4"
     )
 
     @Argument(help: "Optional path passed to Neovide.")
