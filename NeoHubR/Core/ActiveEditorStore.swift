@@ -13,18 +13,21 @@ final class ActiveEditorStore {
     private let fileManager: FileManager
     private let fileURL: URL
 
-    init(
-        fileManager: FileManager = .default,
-        fileURL: URL = URL(fileURLWithPath: "/tmp/neohubr.instances.json")
-    ) {
+    init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
-        self.fileURL = fileURL
+        self.fileURL = fileManager.temporaryDirectory.appendingPathComponent("neohubr.instances.json")
     }
 
     func loadSnapshots() -> [ActiveEditorSnapshot] {
         guard let data = try? Data(contentsOf: fileURL) else { return [] }
-        let decoder = JSONDecoder()
-        return (try? decoder.decode([ActiveEditorSnapshot].self, from: data)) ?? []
+        
+        do {
+            let decoder = JSONDecoder()
+            return try decoder.decode([ActiveEditorSnapshot].self, from: data)
+        } catch {
+            log.error("Failed to decode active editor snapshots: \(error)")
+            return []
+        }
     }
 
     func saveSnapshots(_ snapshots: [ActiveEditorSnapshot]) {
@@ -33,8 +36,12 @@ final class ActiveEditorStore {
             return
         }
 
-        let encoder = JSONEncoder()
-        guard let data = try? encoder.encode(snapshots) else { return }
-        try? data.write(to: fileURL, options: .atomic)
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(snapshots)
+            try data.write(to: fileURL, options: .atomic)
+        } catch {
+            log.error("Failed to save active editor snapshots: \(error)")
+        }
     }
 }

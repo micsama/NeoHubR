@@ -13,7 +13,7 @@ struct SwitcherItem: Identifiable {
     let isStarred: Bool
     let isInvalid: Bool
 
-    // 预计算属性，View 渲染时零开销
+    // Pre-computed properties for zero-overhead view rendering
     let name: String
     let displayPath: String
     let isActive: Bool
@@ -32,8 +32,7 @@ struct SwitcherItem: Identifiable {
         if let n = entry.name, !n.isEmpty {
             self.name = n
         } else {
-            self.name =
-                entry.isSession ? entry.id.deletingPathExtension().lastPathComponent : entry.id.lastPathComponent
+            self.name = entry.isSession ? entry.id.deletingPathExtension().lastPathComponent : entry.id.lastPathComponent
         }
     }
 }
@@ -78,14 +77,14 @@ final class SwitcherViewModel {
         var newItems: [SwitcherItem] = []
         newItems.reserveCapacity(maxItems)
 
-        // 1. 建立索引 (一次遍历完成)
+        // 1. Build Index
         var registryIndex: [URL: (ProjectEntry, Bool)] = [:]
         for e in projectRegistry.starredEntries { registryIndex[ProjectRegistry.normalizeID(e.id)] = (e, true) }
         for e in projectRegistry.recentEntries { registryIndex[ProjectRegistry.normalizeID(e.id)] = (e, false) }
 
         var activeIDs: Set<URL> = []
 
-        // 2. 添加活跃编辑器
+        // 2. Add Active Editors
         for editor in editorStore.getEditors(sortedFor: .switcher) where newItems.count < maxItems {
             let normalizedID = ProjectRegistry.normalizeID(editor.id.id)
             activeIDs.insert(normalizedID)
@@ -99,7 +98,7 @@ final class SwitcherViewModel {
                 ))
         }
 
-        // 3. 补充非活跃项目 (Starred -> Recent)
+        // 3. Add Inactive Projects (Starred -> Recent)
         let sources: [(list: [ProjectEntry], isStarred: Bool)] = [
             (projectRegistry.starredEntries, true),
             (projectRegistry.recentEntries, false),
@@ -109,7 +108,7 @@ final class SwitcherViewModel {
             for entry in source.list where newItems.count < maxItems {
                 let normID = ProjectRegistry.normalizeID(entry.id)
                 guard !activeIDs.contains(normID) else { continue }
-                activeIDs.insert(normID)  // 防止 Starred 和 Recent 重复
+                activeIDs.insert(normID)
 
                 newItems.append(
                     SwitcherItem(
@@ -139,7 +138,6 @@ final class SwitcherViewModel {
         guard !entries.isEmpty else { return }
 
         let currentIndex = entries.firstIndex(where: { $0.id == selectedID }) ?? -1
-        // 巧妙利用模运算处理：wrap around logic
         let nextIndex = (currentIndex + offset + entries.count) % entries.count
         selectedID = entries[nextIndex].id
     }
@@ -174,14 +172,13 @@ final class SwitcherViewModel {
         let item = filteredEntries[idx]
         guard let editor = item.editor else { return }
 
-        // 智能光标移动
+        // Smart Cursor Movement
         if idx > 0 {
             selectedID = filteredEntries[idx - 1].id
         } else if filteredEntries.count > 1 {
             selectedID = filteredEntries[idx + 1].id
         }
 
-        // 窗口焦点管理
         if filteredEntries.filter({ $0.isActive }).count == 1 { activationManager.activateTarget() }
 
         editor.quit()
@@ -232,7 +229,7 @@ final class SwitcherWindow {
             styleMask: [.titled, .closable, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered, defer: false
         )
-        selfRef.set(self)  // Bind immediately
+        selfRef.set(self)
 
         configurePanel()
         setupInteractions()
@@ -240,6 +237,20 @@ final class SwitcherWindow {
         panel.contentView = NSHostingView(rootView: SwitcherContentView(viewModel: viewModel))
     }
 
+    func hide() {
+        guard panel.isVisible else { return }
+        panel.orderOut(nil)
+        if NSWorkspace.shared.frontmostApplication?.bundleIdentifier == APP_BUNDLE_ID {
+            activationManager.activateTarget()
+        }
+    }
+
+    func isSameWindow(_ window: NSWindow) -> Bool { panel === window }
+}
+
+// MARK: - Private Configuration
+
+extension SwitcherWindow {
     private func configurePanel() {
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -263,8 +274,20 @@ final class SwitcherWindow {
         KeyboardShortcuts.onKeyDown(for: .toggleLastActiveEditor) { [weak self] in self?.handleToggleLastActive() }
     }
 
-    // MARK: - Logic
+    private func centerOnScreen() {
+        guard let screen = NSScreen.main else { return }
+        let frame = screen.visibleFrame
+        panel.setFrameOrigin(
+            NSPoint(
+                x: frame.midX - panel.frame.width / 2,
+                y: frame.midY - panel.frame.height / 2
+            ))
+    }
+}
 
+// MARK: - Logic
+
+extension SwitcherWindow {
     private func handleToggleSwitcher() {
         editorStore.pruneDeadEditors()
         panel.isVisible ? hide() : show()
@@ -294,30 +317,10 @@ final class SwitcherWindow {
             switcherWindow: selfRef,
             editors: editorStore.getEditors()
         )
-        viewModel.refreshData()  // 核心数据刷新点
+        viewModel.refreshData()
 
         centerOnScreen()
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-    }
-
-    func hide() {
-        guard panel.isVisible else { return }
-        panel.orderOut(nil)
-        if NSWorkspace.shared.frontmostApplication?.bundleIdentifier == APP_BUNDLE_ID {
-            activationManager.activateTarget()
-        }
-    }
-
-    func isSameWindow(_ window: NSWindow) -> Bool { panel === window }
-
-    private func centerOnScreen() {
-        guard let screen = NSScreen.main else { return }
-        let frame = screen.visibleFrame
-        panel.setFrameOrigin(
-            NSPoint(
-                x: frame.midX - panel.frame.width / 2,
-                y: frame.midY - panel.frame.height / 2
-            ))
     }
 }
