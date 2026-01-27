@@ -20,7 +20,7 @@ final class ActiveEditorStore {
 
     func loadSnapshots() -> [ActiveEditorSnapshot] {
         guard let data = try? Data(contentsOf: fileURL) else { return [] }
-        
+
         do {
             let decoder = JSONDecoder()
             return try decoder.decode([ActiveEditorSnapshot].self, from: data)

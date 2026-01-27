@@ -20,7 +20,7 @@ struct BugReporter {
         components?.queryItems = [
             URLQueryItem(name: "title", value: title),
             URLQueryItem(name: "body", value: body),
-            URLQueryItem(name: "labels", value: "user-report")
+            URLQueryItem(name: "labels", value: "user-report"),
         ]
 
         if let url = components?.url {
