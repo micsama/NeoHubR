@@ -365,8 +365,8 @@ public final class ProjectRegistryStore {
     }
 }
 
-private extension Array {
-    mutating func move(fromOffsets offsets: IndexSet, toOffset: Int) {
+extension Array {
+    fileprivate mutating func move(fromOffsets offsets: IndexSet, toOffset: Int) {
         let elements = offsets.map { self[$0] }
         let adjustedOffset = toOffset - offsets.filter { $0 < toOffset }.count
         for index in offsets.sorted(by: >) {

@@ -213,9 +213,12 @@ final class EditorStore {
 
     func quitAllEditors() async {
         MainThread.assert()
-        for (_, editor) in self.editors {
+        let editors = self.editors.values
+        for editor in editors {
             editor.quit()
         }
+        self.editors.removeAll()
+        persistActiveEditors()
     }
 
     private func invalidateRestartPoller() {
@@ -367,6 +370,11 @@ extension EditorStore {
         for (id, _) in toRemove {
             editors.removeValue(forKey: id)
         }
+        persistActiveEditors()
+    }
+
+    func removeEditor(id: EditorID) {
+        editors.removeValue(forKey: id)
         persistActiveEditors()
     }
 }
