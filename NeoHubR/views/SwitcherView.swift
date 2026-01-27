@@ -343,6 +343,7 @@ final class SwitcherWindow {
     }
 
     private func handleToggleSwitcher() {
+        editorStore.pruneDeadEditors()
         let editors = editorStore.getEditors()
 
         guard editors.count == 1, let editor = editors.first else {
@@ -372,6 +373,7 @@ final class SwitcherWindow {
     }
 
     private func handleToggleLastActive() {
+        editorStore.pruneDeadEditors()
         let editors = editorStore.getEditors(sortedFor: .lastActiveEditor)
 
         guard let editor = editors.first else {

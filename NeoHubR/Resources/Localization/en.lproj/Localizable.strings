@@ -133,6 +133,9 @@
 "Please create an issue in GitHub repo." = "Please create an issue in GitHub repo.";
 "Requested Neovide instance is not running." = "Requested Neovide instance is not running.";
 "CLI Error" = "CLI Error";
+"Clipboard does not contain a valid path." = "Clipboard does not contain a valid path.";
+"Clipboard does not contain a folder or session path." = "Clipboard does not contain a folder or session path.";
+"Project Added" = "Project Added";
 
 "NeoHubR" = "NeoHubR";
 "Alex Fedoseev · © 2026 micsama" = "Alex Fedoseev · © 2026 micsama";

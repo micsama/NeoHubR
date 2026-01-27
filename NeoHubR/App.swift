@@ -36,13 +36,6 @@ struct NeoHubRApp: App {
             },
             label: { MenuBarIcon() }
         )
-        .commands {
-            CommandGroup(replacing: .appSettings) {
-                SettingsLink {
-                    Text("Settings…")
-                }
-            }
-        }
         Settings {
             SettingsView(
                 cli: app.cli,

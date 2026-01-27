@@ -371,6 +371,9 @@ private struct ProjectRegistryTab: View {
                             Button("Add Session") {
                                 openAddSessionPanel()
                             }
+                            Button("From Clipboard") {
+                                openAddClipboardPath()
+                            }
                         } label: {
                             Image(systemName: "plus.circle.fill")
                                 .font(.system(size: 13, weight: .semibold))
@@ -451,7 +454,7 @@ private struct ProjectRegistryTab: View {
         panel.prompt = "Add"
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            projectRegistry.addProject(root: url)
+            addProject(from: url)
         }
     }
 
@@ -468,9 +471,53 @@ private struct ProjectRegistryTab: View {
                 showAddError = true
                 return
             }
+            addProject(from: url)
+        }
+    }
+
+    private func openAddClipboardPath() {
+        let pasteboard = NSPasteboard.general
+        guard let rawPath = pasteboard.string(forType: .string),
+              !rawPath.isEmpty
+        else {
+            showInvalidClipboardPath()
+            return
+        }
+
+        let expandedPath = (rawPath as NSString).expandingTildeInPath
+        addProject(from: URL(fileURLWithPath: expandedPath))
+    }
+
+    private func addProject(from url: URL) {
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
+            showInvalidClipboardPath()
+            return
+        }
+
+        if url.pathExtension.lowercased() == "vim" {
             let displayName = url.deletingPathExtension().lastPathComponent
             projectRegistry.addProject(root: url, name: displayName, sessionPath: url)
+            notifyProjectAdded(displayName: displayName)
+        } else if isDirectory.boolValue {
+            projectRegistry.addProject(root: url)
+            notifyProjectAdded(displayName: url.lastPathComponent)
+        } else {
+            addErrorMessage = String(localized: "Clipboard does not contain a folder or session path.")
+            showAddError = true
         }
+    }
+
+    private func notifyProjectAdded(displayName: String) {
+        NotificationManager.sendInfo(
+            title: String(localized: "Project Added"),
+            body: displayName
+        )
+    }
+
+    private func showInvalidClipboardPath() {
+        addErrorMessage = String(localized: "Clipboard does not contain a valid path.")
+        showAddError = true
     }
 }
 
@@ -623,7 +670,7 @@ private struct ProjectRow: View {
             Button {
                 openWindow(id: "project-editor", value: entry.id)
             } label: {
-                Image(systemName: "pencil")
+                Image(systemName: "square.and.pencil")
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
