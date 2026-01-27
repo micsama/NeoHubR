@@ -11,7 +11,7 @@ let APP_BUNDLE_ID = Bundle.main.bundleIdentifier!
 extension KeyboardShortcuts.Name {
     static let toggleSwitcher = Self(
         "toggleSwitcher",
-        default: .init(.n, modifiers: [.command, .control])
+        default: .init(.backtick, modifiers: [.control])
     )
 
     static let toggleLastActiveEditor = Self(
