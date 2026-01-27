@@ -65,9 +65,11 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 ## 目录结构
 
 * **`NeoHubR/`**：主 macOS 应用程序源码。
-* `App/`：生命周期与主控制器 (`App.swift`, `AppDelegate`, `CLI.swift` 包装器)。
+* `App/`：生命周期与主控制器 (`App.swift`, `AppDelegate`, `AppUtilities.swift`)。
+    * `AppUtilities.swift`: 通用工具，包含 `ProjectPathFormatter`。
 * `Core/`：业务逻辑 (`EditorStore`, `SwitcherLogic`)。
-* `views/`：SwiftUI 视图 (`MenuBarView`, `SwitcherView`, `SettingsView`)。
+* `views/`：SwiftUI 视图 (`MenuBarView`, `SwitcherView`, `SettingsView`, `ProjectEditorView`, `ProjectIconView`)。
+    * `ProjectIconView.swift`: 包含 `ProjectIconDescriptor` 及图标渲染逻辑。
 * `Support/`：工具类 (`Logger`, `NotificationManager`)。
 
 

@@ -2,48 +2,44 @@ import AppKit
 import Foundation
 
 private struct GitHub {
-    static let user = "alex35mil"
-    static let repo = APP_NAME
+    static let user = "micsama"
+    static let repo = "NeoHubR"
 }
 
 struct BugReporter {
     static func report(_ error: ReportableError) {
-        NSWorkspace.shared.open(buildUrl(title: error.message, error: String(describing: error)))
+        openIssue(title: error.message, body: buildBody(for: error))
     }
 
-    // Since NotificationCenter can't reliably transfer ReportableError, we have to accept string'ish error
     static func report(title: String, error: String) {
-        NSWorkspace.shared.open(buildUrl(title: title, error: error))
+        openIssue(title: title, body: buildBody(for: error))
     }
 
-    private static func buildUrl(title: String, error: String) -> URL {
-        let title = encode(title)
-        let body = encode(
-            """
-            ## What happened?
-            _Reproduction steps, context, etc._
+    private static func openIssue(title: String, body: String) {
+        var components = URLComponents(string: "https://github.com/\(GitHub.user)/\(GitHub.repo)/issues/new")
+        components?.queryItems = [
+            URLQueryItem(name: "title", value: title),
+            URLQueryItem(name: "body", value: body),
+            URLQueryItem(name: "labels", value: "user-report")
+        ]
 
-            ## Error details
-            ```
-            \(error)
-            ```
-            """
-        )
-
-        let path = "https://github.com/\(GitHub.user)/\(GitHub.repo)/issues/new"
-        let query = "title=\(title)&body=\(body)&labels=user-report"
-        let urlString = "\(path)?\(query)"
-
-        guard let url = URL(string: urlString) else {
-            log.warning("Failed to create the reporter url from: \(urlString)")
-            return URL(string: path)!
+        if let url = components?.url {
+            NSWorkspace.shared.open(url)
+        } else {
+            log.warning("Failed to create the reporter url")
         }
-
-        return url
     }
 
-    private static func encode(_ value: String) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+    private static func buildBody(for error: Any) -> String {
+        """
+        ## What happened?
+        _Reproduction steps, context, etc._
+
+        ## Error details
+        ```
+        \(String(describing: error))
+        ```
+        """
     }
 }
 

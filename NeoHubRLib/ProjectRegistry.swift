@@ -21,6 +21,10 @@ public struct ProjectEntry: Identifiable, Codable, Hashable, Sendable {
         self.colorHex = colorHex
         self.sessionPath = sessionPath
     }
+
+    public var isSession: Bool {
+        sessionPath != nil || id.pathExtension.lowercased() == "vim"
+    }
 }
 
 public struct ProjectRegistryStorage: Codable, Sendable, Hashable {
