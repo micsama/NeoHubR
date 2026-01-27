@@ -14,23 +14,77 @@
 
 ---
 
-**NeoHubR**（**Reboot**）是一款专为 macOS 设计的菜单栏常驻工具，它是 **Neovide** 的最佳拍档。它不仅能帮你管理凌乱的编辑器窗口，还能通过丝滑的快捷键让你在项目间瞬间移动。
+
+
+**NeoHubR**（**Reboot**）是 [NeoHub](https://github.com/alex35mil/NeoHub) 的现代化重构重生版。
+
+我们用最新的 **SwiftUI** 和 **Swift 6 并发模型** 彻底重写了底层，致力于解决原版痛点，让 Neovide 在 macOS 上拥有 IDE 般的项目管理体验。
+
+
+
+## 🌟 为什么选择 NeoHubR (Reboot)?
+
+
+
+相比于两年未更新的原版，NeoHubR 带来了核心进化：
+
+
+
+1.  **🗂️ 强大的项目管理**：
+
+    *   **历史与收藏**：内置“最近打开”和“星标收藏”列表。
+
+    *   **高度自定义**：支持为每个项目单独设置**显示名称**、**图标**（SF Symbols 或 Emoji）以及**高亮颜色**。
+
+2.  **🧠 Session 原生支持**：完美识别并启动 `Session.vim`，无需手动配置。
+
+3.  **🧟 实例“复活”能力**：即使 NeoHubR 重启或崩溃，再次启动时也能自动识别并接管所有正在运行的 Neovide 窗口，绝不丢失工作流。
+
+4.  **⚡ 更快更美**：基于现代 macOS API 构建，拥有丝滑的动画和磨砂玻璃质感，性能更强，资源占用更低。
+
+
+
+> [!IMPORTANT]
+
+> **关于环境变量的重要提示**
+
+> 由于 macOS 的机制，从 Dock 或菜单栏启动的 GUI 应用很难获取到完整的 Shell 环境变量（如 `PATH`、LSP 配置等）。
+
+> **强烈建议使用 CLI 工具 `nh` 启动项目**。这样做可以将你当前终端的完整环境变量透传给 Neovide，确保所有插件正常工作。
+
+
 
 ## 📸 预览
 
+
+
 <p align="center">
+
 <img width="386" height="469" alt="settings" src="https://github.com/user-attachments/assets/ef1c9703-de15-427e-ae74-8271873acd3f" />
+
 <img width="386" height="469" alt="projects" src="https://github.com/user-attachments/assets/99d8eb47-be4f-4a5f-b422-7bb524ce7cf0" />
+
 <img width="291" height="418" alt="editor" src="https://github.com/user-attachments/assets/96c7a97d-993c-409e-b99e-4e4b07f3ad05" />
+
 </p>
+
+
 
 ## ✨ 功能亮点
 
+
+
 * **🖱️ 菜单栏工作流**: 轻轻一点，所有运行中的编辑器尽在掌握。
-* **⌨️ 丝滑切换**: 全局快捷键唤起切换器，在不同项目间“闪现”。
+
+* **⌨️ 丝滑切换**: 默认快捷键 `⌃ + \`` (Ctrl + 反引号) 唤起切换器，在不同项目间“闪现”。
+
 * **🚀 智能启动 (CLI)**: 告别重复启动！通过命令行打开项目时，如果该项目已运行，NeoHubR 会直接激活它。
+
 * **📂 项目管理**: 内置收藏（Starred）与最近项目（Recent）列表，找代码不再大海捞针。
-* **🔄 一键重连**: 专属快捷键快速重启当前编辑器。
+
+* **🔄 一键重连**: `⌃ + ⌘ + R` 快速重启当前编辑器。
+
+
 * **🔔 状态感知**: 完美的系统级通知，实时同步 CLI 和编辑器状态。
 * **🎨 原生质感**: 采用最新 SwiftUI 构建，支持 Liquid Glass 视觉效果，完美适配 macOS 现代美学。
 

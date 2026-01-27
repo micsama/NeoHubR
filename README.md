@@ -14,7 +14,24 @@
 
 ---
 
-**NeoHubR** (**Reboot**) is a dedicated menu bar companion for **Neovide** on macOS. It’s designed to rescue you from window chaos, helping you manage multiple editor instances and teleport between projects with buttery-smooth hotkeys.
+**NeoHubR** (**Reboot**) is a modern, feature-packed reincarnation of [NeoHub](https://github.com/alex35mil/NeoHub).
+Rebuilt from the ground up with **SwiftUI** and **Swift 6 Concurrency**, it transforms Neovide on macOS into a powerhouse with IDE-like project management.
+
+## 🌟 What's New in Reboot?
+
+Unlike the original tool which hasn't been updated in years, NeoHubR brings:
+
+1.  **🗂️ Advanced Project Management**:
+    *   **History & Stars**: Track recent projects and pin your favorites.
+    *   **Customization**: Set custom names, icons (SF Symbols/Emoji), and highlight colors for each project.
+2.  **🧠 Session Awareness**: First-class support for `Session.vim`. Opening a directory with a session file just works.
+3.  **🧟 Instance Resurrection**: Restart NeoHubR (or crash recover), and it will automatically reconnect to all your running Neovide instances. No more lost windows.
+4.  **⚡ Modern & Beautiful**: Completely rewritten using the latest macOS APIs. It's faster, safer, and looks stunning with "Liquid Glass" visuals.
+
+> [!IMPORTANT]
+> **Why use the CLI (`nh`)?**
+> macOS GUI apps often struggle to inherit your shell's environment variables (like `PATH`, `LSP` setups).
+> By running `nh .` from your terminal, NeoHubR captures your **exact shell environment** and passes it to Neovide. This ensures your plugins and tools work perfectly.
 
 ## 📸 Screenshots
 
@@ -27,10 +44,10 @@
 ## ✨ Feature Highlights
 
 * **🖱️ Menu Bar Workflow**: Instant access to all running editors with a single click.
-* **⌨️ Seamless Switcher**: Summon a global switcher to "teleport" between different projects.
+* **⌨️ Seamless Switcher**: `⌃ + \`` (Ctrl + Backtick) to summon a global switcher to "teleport" between different projects.
 * **🚀 Smart Launch (CLI)**: Stop duplicating! Opening a project via CLI will automatically re-activate the existing instance if it’s already running.
 * **📂 Project Registry**: Keep your workspace organized with Starred and Recent project lists integrated directly into the switcher.
-* **🔄 Quick Restart**: A dedicated hotkey to restart your current editor instance instantly.
+* **🔄 Quick Restart**: `⌃ + ⌘ + R` to restart your current editor instance instantly.
 * **🔔 Native Notifications**: Stay informed with clean system notifications for CLI and editor lifecycle events.
 * **🎨 Modern macOS Aesthetic**: Built with SwiftUI and featuring "Liquid Glass" visuals—it looks and feels like a native part of your Mac.
 
