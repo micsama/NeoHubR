@@ -298,19 +298,20 @@ public final class ProjectRegistryStore {
             let merged = ProjectRegistry.mergeEntry(base: starred[index], incoming: entry)
             starred[index] = merged
             storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            updateInvalidCache(for: normalizedRoot)
             return
         }
 
         if let index = recent.firstIndex(where: { $0.id == normalizedRoot }) {
             let merged = ProjectRegistry.mergeEntry(base: recent[index], incoming: entry)
             recent.remove(at: index)
-            recent.insert(merged, at: 0)
+            starred.append(merged)
             storage = ProjectRegistryStorage(starred: starred, recent: recent)
             updateInvalidCache(for: normalizedRoot)
             return
         }
 
-        recent.insert(entry, at: 0)
+        starred.append(entry)
         storage = ProjectRegistryStorage(starred: starred, recent: recent)
         updateInvalidCache(for: normalizedRoot)
     }

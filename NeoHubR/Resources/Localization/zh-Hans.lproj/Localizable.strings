@@ -132,6 +132,9 @@
 "Please create an issue in GitHub repo." = "请在 GitHub 仓库创建一个 issue。";
 "Requested Neovide instance is not running." = "请求的 Neovide 实例未在运行。";
 "CLI Error" = "CLI 错误";
+"Clipboard does not contain a valid path." = "剪贴板里没有有效路径。";
+"Clipboard does not contain a folder or session path." = "剪贴板里不是文件夹或会话路径。";
+"Project Added" = "已添加项目";
 
 "NeoHubR" = "NeoHubR";
 "Alex Fedoseev · © 2026 micsama" = "Alex Fedoseev · © 2026 micsama";

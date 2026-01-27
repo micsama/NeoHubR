@@ -15,19 +15,6 @@ struct MenuBarView: View {
     @Bindable var cli: CLI
     @Bindable var editorStore: EditorStore
 
-    private var cliStatusHint: LocalizedStringKey? {
-        switch cli.status {
-        case .ok:
-            return "CLI Hint Open"
-        case .error(reason: .notInstalled):
-            return "CLI Hint Install"
-        case .error(reason: .versionMismatch):
-            return "CLI Hint Update"
-        case .error(reason: .unexpectedError):
-            return "CLI Hint Error"
-        }
-    }
-    
     var body: some View {
         let editors = editorStore.getEditors(sortedFor: .menubar)
 
@@ -43,13 +30,7 @@ struct MenuBarView: View {
         }
 
         Section {
-            if let cliStatusHint {
-                Label(cliStatusHint, systemImage: "arrow.down")
-                    .foregroundStyle(.secondary)
-            }
             SettingsLink { Label("Settings…", systemImage: "gearshape") }
-                // MenuBarExtra opens Settings without focus in accessory apps; activate to ensure key window.
-                .simultaneousGesture(TapGesture().onEnded { NSApp.activate(ignoringOtherApps: true) })
         }
 
         Section {
