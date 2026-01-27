@@ -69,15 +69,17 @@ extension Color {
         var value: UInt64 = 0
         guard Scanner(string: cleaned).scanHexInt64(&value) else { return nil }
 
-        let r, g, b: Double
+        let r: Double
+        let g: Double
+        let b: Double
         if cleaned.count == 6 {
             r = Double((value & 0xFF0000) >> 16) / 255
             g = Double((value & 0x00FF00) >> 8) / 255
             b = Double(value & 0x0000FF) / 255
         } else {
-            r = Double((value & 0xFF000000) >> 24) / 255
-            g = Double((value & 0x00FF0000) >> 16) / 255
-            b = Double((value & 0x0000FF00) >> 8) / 255
+            r = Double((value & 0xFF00_0000) >> 24) / 255
+            g = Double((value & 0x00FF_0000) >> 16) / 255
+            b = Double((value & 0x0000_FF00) >> 8) / 255
         }
 
         self = Color(.sRGB, red: r, green: g, blue: b, opacity: 1)

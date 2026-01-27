@@ -135,9 +135,11 @@ private struct GeneralSettingsTab: View {
                     .font(.system(size: 18, weight: .semibold))
                 HStack(spacing: 2) {
                     Text(String(localized: "Icon by"))
-                    Link(String(localized: "u/danbee"), destination: URL(string: "https://www.reddit.com/user/danbee/")!)
-                        .foregroundStyle(.link)
-                        .focusable(false)
+                    Link(
+                        String(localized: "u/danbee"), destination: URL(string: "https://www.reddit.com/user/danbee/")!
+                    )
+                    .foregroundStyle(.link)
+                    .focusable(false)
                 }
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -478,7 +480,7 @@ private struct ProjectRegistryTab: View {
     private func openAddClipboardPath() {
         let pasteboard = NSPasteboard.general
         guard let rawPath = pasteboard.string(forType: .string),
-              !rawPath.isEmpty
+            !rawPath.isEmpty
         else {
             showInvalidClipboardPath()
             return
@@ -520,7 +522,6 @@ private struct ProjectRegistryTab: View {
         showAddError = true
     }
 }
-
 
 // MARK: - Advanced Tab
 
@@ -689,7 +690,8 @@ private struct ProjectRow: View {
 
     @ViewBuilder
     private var titleText: some View {
-        let fallbackName = entry.isSession
+        let fallbackName =
+            entry.isSession
             ? entry.id.deletingPathExtension().lastPathComponent
             : entry.id.lastPathComponent
         let text = Text(entry.name ?? fallbackName)

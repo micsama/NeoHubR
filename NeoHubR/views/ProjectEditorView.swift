@@ -105,12 +105,12 @@ struct ProjectEditorView: View {
                 }
 
                 if state.iconMode == .symbol {
-                Button {
-                    state.iconMode = .symbol
-                    isIconPickerPresented = true
-                } label: {
-                    Image(systemName: "square.grid.2x2")
-                }
+                    Button {
+                        state.iconMode = .symbol
+                        isIconPickerPresented = true
+                    } label: {
+                        Image(systemName: "square.grid.2x2")
+                    }
                     .buttonStyle(.borderedProminent)
                     .popover(isPresented: $isIconPickerPresented, arrowEdge: .bottom) {
                         iconPickerPopover
@@ -151,9 +151,10 @@ struct ProjectEditorView: View {
 
     private var colorField: some View {
         let presets = EditorState.colorPresets
-        let palette: [(color: Color?, presetIndex: Int?)] = [
-            (color: nil, presetIndex: nil)
-        ] + presets.enumerated().map { (color: $0.element, presetIndex: $0.offset) }
+        let palette: [(color: Color?, presetIndex: Int?)] =
+            [
+                (color: nil, presetIndex: nil)
+            ] + presets.enumerated().map { (color: $0.element, presetIndex: $0.offset) }
         let firstRow = palette.prefix(6)
         let secondRow = palette.dropFirst(6).prefix(6)
 
@@ -356,7 +357,7 @@ struct ProjectEditorView: View {
             "gearshape.fill", "wrench.and.screwdriver.fill", "hammer.fill", "bolt.fill", "sparkles",
             "tag.fill", "bookmark.fill", "link", "paperplane.fill", "star.fill", "heart.fill", "flame.fill",
             "leaf.fill", "globe", "briefcase.fill", "camera.fill", "paintbrush.fill", "chart.bar.fill",
-            "map.fill", "music.note", "gamecontroller.fill", "graduationcap.fill"
+            "map.fill", "music.note", "gamecontroller.fill", "graduationcap.fill",
         ]
         return candidates.filter(isValidSymbolName)
     }
@@ -369,16 +370,16 @@ struct ProjectEditorView: View {
 
 // MARK: - Actions
 
-private extension ProjectEditorView {
-    func loadInitialData() {
+extension ProjectEditorView {
+    fileprivate func loadInitialData() {
         guard let entry = projectRegistry.entry(for: projectID) else { return }
         loadedEntry = entry
         state = EditorState(entry: entry)
     }
 
-    func save() {
+    fileprivate func save() {
         guard let entry = loadedEntry,
-              let updated = state.buildEntry(from: entry)
+            let updated = state.buildEntry(from: entry)
         else { return }
         projectRegistry.updateEntry(updated, replacing: entry.id)
         dismiss()
@@ -435,7 +436,7 @@ private struct PathField: View {
         if expectsDirectory {
             var isDir: ObjCBool = false
             guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir),
-                  isDir.boolValue
+                isDir.boolValue
             else { return false }
         }
 
@@ -506,7 +507,7 @@ private struct EditorState {
         .teal,
         .blue,
         .indigo,
-        .purple
+        .purple,
     ]
 
     var name = ""
@@ -656,7 +657,8 @@ private struct EditorState {
 
     private func buildName(projectURL: URL) -> String? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let defaultName = isSession
+        let defaultName =
+            isSession
             ? projectURL.deletingPathExtension().lastPathComponent
             : projectURL.lastPathComponent
         return trimmed.isEmpty ? defaultName : trimmed
