@@ -92,14 +92,24 @@ Use `nh` instead of `neovide` in your terminal. It handles de-duplication and br
 > [!TIP]
 > Most shortcuts can be customized in the Settings. More customization options are coming soon!
 
-## 🏗️ Build from Source
+## 🏗️ Local Build
+
+### 1. Quick Package (Generate DMG)
+We provide a script that handles building, icon scaling, and DMG creation:
+
+```bash
+./scripts/build.sh
+```
+The final DMG will be located in the `./build/dist/` directory.
+
+### 2. Manual Build
+If you only want to compile specific targets:
 
 ```bash
 open NeoHubR.xcodeproj
-# Build the App and CLI separately
+# Build the App and CLI Tool
 xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubR -configuration Debug build
 xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug build
-
 ```
 
 ## 🧭 Roadmap (Short)

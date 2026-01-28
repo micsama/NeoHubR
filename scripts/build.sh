@@ -2,12 +2,15 @@
 
 set -euo pipefail
 
+# 切换到脚本所在目录的父目录（项目根目录）
+cd "$(dirname "$0")/.."
+
 APP_NAME="NeoHubR"
 BUILD_DIR="./build"
 DIST_DIR="$BUILD_DIR/dist"
 APP_PATH="$BUILD_DIR/$APP_NAME.app"
-BG_IMG="$BUILD_DIR/bg.png"
-BG_IMG_RESIZED="$BUILD_DIR/bg_resized.png"  # 新增：调整后的背景图
+BG_IMG="./scripts/dmg_background.png"
+BG_IMG_RESIZED="$BUILD_DIR/bg_resized.png"
 DERIVED_DATA="$BUILD_DIR/derived"
 
 # 1. 先构建 Release app 到 build 目录

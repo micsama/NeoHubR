@@ -139,12 +139,22 @@ Neovide 确实很棒，但在 macOS 上有两个让人头疼的痛点：
 
 ## 🏗️ 本地构建
 
+### 1. 快速打包 (生成 DMG)
+我们提供了一个自动处理构建、图标缩放及 DMG 制作的脚本：
+
+```bash
+./scripts/build.sh
+```
+成品将存放在 `./build/dist/` 目录。
+
+### 2. 手动构建
+如果你只想单独编译：
+
 ```bash
 open NeoHubR.xcodeproj
 # 分别构建主程序和 CLI 工具
 xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubR -configuration Debug build
 xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug build
-
 ```
 
 ## 🧭 路线图（简版）
