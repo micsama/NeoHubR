@@ -143,6 +143,15 @@ public final class ProjectRegistryStore {
     }
 
     public func lookup(id: URL) -> (entry: ProjectEntry, isStarred: Bool)? {
+        // Try exact match first (fast path & robust for invalid projects)
+        if let entry = storage.starred.first(where: { $0.id == id }) {
+            return (entry, true)
+        }
+        if let entry = storage.recent.first(where: { $0.id == id }) {
+            return (entry, false)
+        }
+        
+        // Fallback to normalized match for external inputs (CLI)
         let normalized = ProjectRegistry.normalizeID(id)
         if let entry = storage.starred.first(where: { $0.id == normalized }) {
             return (entry, true)
@@ -154,27 +163,26 @@ public final class ProjectRegistryStore {
     }
 
     public func remove(id: URL) {
-        let normalized = ProjectRegistry.normalizeID(id)
-        let starred = storage.starred.filter { $0.id != normalized }
-        let recent = storage.recent.filter { $0.id != normalized }
+        // Fix: Use exact match. Do NOT normalize, as it drifts for missing files.
+        let starred = storage.starred.filter { $0.id != id }
+        let recent = storage.recent.filter { $0.id != id }
         storage = ProjectRegistryStorage(starred: starred, recent: recent)
-        invalidIDs.remove(normalized)
+        invalidIDs.remove(id)
     }
 
     public func refreshValidity() {
         var invalid: Set<URL> = []
         for entry in storage.starred + storage.recent {
-            let normalized = ProjectRegistry.normalizeID(entry.id)
-            if !ProjectRegistry.isAccessible(normalized) {
-                invalid.insert(normalized)
+            // Fix: Check stored ID directly.
+            if !ProjectRegistry.isAccessible(entry.id) {
+                invalid.insert(entry.id)
             }
         }
         invalidIDs = invalid
     }
 
     public func isInvalid(_ entry: ProjectEntry) -> Bool {
-        let normalized = ProjectRegistry.normalizeID(entry.id)
-        return invalidIDs.contains(normalized)
+        return invalidIDs.contains(entry.id)
     }
 
     public func moveStarred(fromOffsets: IndexSet, toOffset: Int) {
@@ -184,22 +192,25 @@ public final class ProjectRegistryStore {
     }
 
     public func toggleStar(id: URL) {
-        let normalized = ProjectRegistry.normalizeID(id)
+        // Fix: Use exact match first
         var starred = storage.starred
         var recent = storage.recent
 
-        if let index = starred.firstIndex(where: { $0.id == normalized }) {
+        if let index = starred.firstIndex(where: { $0.id == id }) {
             let entry = starred.remove(at: index)
             recent.insert(entry, at: 0)
             storage = ProjectRegistryStorage(starred: starred, recent: recent)
             return
         }
 
-        if let index = recent.firstIndex(where: { $0.id == normalized }) {
+        if let index = recent.firstIndex(where: { $0.id == id }) {
             let entry = recent.remove(at: index)
             starred.append(entry)
             storage = ProjectRegistryStorage(starred: starred, recent: recent)
+            return
         }
+        
+        // Fallback logic could be added here if needed, but UI passes exact ID.
     }
 
     public func touchRecent(root: URL, name: String? = nil, sessionPath: URL? = nil) {
@@ -287,7 +298,17 @@ public final class ProjectRegistryStore {
         var starred = storage.starred
         var recent = storage.recent
 
-        let targetID = oldID.map { ProjectRegistry.normalizeID($0) } ?? normalizedEntry.id
+        // Fix: Determine targetID safely.
+        // If oldID is provided and exists in storage, use it exactly.
+        // Otherwise, normalize it or fallback to new ID.
+        var targetID = normalizedEntry.id
+        if let old = oldID {
+            if starred.contains(where: { $0.id == old }) || recent.contains(where: { $0.id == old }) {
+                targetID = old
+            } else {
+                targetID = ProjectRegistry.normalizeID(old)
+            }
+        }
 
         if targetID != normalizedEntry.id {
             starred.removeAll { $0.id == normalizedEntry.id }
@@ -315,11 +336,11 @@ public final class ProjectRegistryStore {
     }
 
     private func updateInvalidCache(for id: URL) {
-        let normalized = ProjectRegistry.normalizeID(id)
-        if ProjectRegistry.isAccessible(normalized) {
-            invalidIDs.remove(normalized)
+        // Use exact ID as provided (it's already normalized by add/update logic)
+        if ProjectRegistry.isAccessible(id) {
+            invalidIDs.remove(id)
         } else {
-            invalidIDs.insert(normalized)
+            invalidIDs.insert(id)
         }
     }
 }
