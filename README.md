@@ -104,7 +104,7 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ## 🧭 Roadmap (Short)
 
-### Latest Release (v0.3.4)
+### Latest Release (v0.3.5)
 - **Architecture Overhaul**: Native Swift Concurrency (`async/await`) adoption for improved performance and thread safety.
 - **Modern CLI**: Completely rewritten `nh` tool with native path resolution and robust IPC.
 - **Enhanced Security**: User-isolated socket paths for better multi-user support.

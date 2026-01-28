@@ -149,7 +149,7 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ## 🧭 路线图（简版）
 
-### 最新版本（v0.3.4）
+### 最新版本（v0.3.5）
 - **架构升级**: 全面拥抱 Swift Concurrency (`async/await`)，性能与线程安全大幅提升。
 - **全新 CLI**: 重写 `nh` 命令行工具，原生路径解析，通信更稳健。
 - **安全性增强**: Socket 路径增加用户隔离，多用户环境更安全。
