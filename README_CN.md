@@ -160,15 +160,16 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 ## 🧭 路线图（简版）
 
 ### 最新版本（v0.3.5）
-- **架构升级**: 全面拥抱 Swift Concurrency (`async/await`)，性能与线程安全大幅提升。
-- **全新 CLI**: 重写 `nh` 命令行工具，原生路径解析，通信更稳健。
-- **安全性增强**: Socket 路径增加用户隔离，多用户环境更安全。
-- **体验优化**: 优化项目编辑器、图标渲染及切换器交互体验。
+- **Session 默认名**：Session.vim 默认名取上层目录。
+- **实例复活**：重启后从 `/tmp/neohubr.instances.json` 接回运行实例。
+- **运行实例接管**：支持接回已运行的 Neovide（混合方案）。
+- **Switcher 数据流**：items 缓存 + refreshData，移除 refreshToken，列表改为 VStack。
+- **CLI 现代化**：二进制改为 `nh`，安装/检测路径同步；安装时建立 `neohub` 兼容软链。
+- **结构整理**：App/Core/Support 分组与文件迁移。
 
 ### 下一步
-- **v0.4.0**：Projects 手动添加（目录 / Session.vim）；Session 项目标注；项目编辑窗口（路径/图标/颜色）；项目自定义图标/颜色并在 Switcher 展示。
-- **v0.4.1**：运行中 Neovide 实例接管（混合方案）；GUI 启动环境继承。
-- **v0.5.0**：Switcher 视觉与交互体验整体优化；单文件模式。
+- **v0.4.x**：GUI 环境继承、运行实例接管、Switcher 体验微调。
+- **v0.5.x**：本地化框架与字符串迁移、全量 SwiftUI 化评估。
 
 ## 🤝 致谢
 

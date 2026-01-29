@@ -115,15 +115,16 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 ## 🧭 Roadmap (Short)
 
 ### Latest Release (v0.3.5)
-- **Architecture Overhaul**: Native Swift Concurrency (`async/await`) adoption for improved performance and thread safety.
-- **Modern CLI**: Completely rewritten `nh` tool with native path resolution and robust IPC.
-- **Enhanced Security**: User-isolated socket paths for better multi-user support.
-- **UI Refinement**: Optimized project editor, icons, and smoother switcher interactions.
+- **Session Defaults**: Session.vim name defaults to its parent folder.
+- **Instance Resurrection**: Restore running instances after restart from `/tmp/neohubr.instances.json`.
+- **Instance Attach**: Attach to running Neovide instances (hybrid strategy).
+- **Cleaner Switcher Flow**: Items cache + refreshData, remove refreshToken, use VStack for stability.
+- **CLI Modernization**: `nh` binary naming + install path sync; legacy `neohub` symlink on install.
+- **Structure Cleanup**: App/Core/Support grouping and file moves.
 
 ### Next
-- **v0.4.0**: Manual project add (folder / Session.vim); Session labeling; project editor (path/icon/color); per‑project icon & color with Switcher display.
-- **v0.4.1**: Attach to running Neovide instances (hybrid strategy); GUI launch environment inheritance.
-- **v0.5.0**: Switcher visuals & interaction polish; single‑file mode.
+- **v0.4.x**: GUI environment inheritance; attach to non‑NeoHubR Neovide instances; Switcher polish.
+- **v0.5.x**: Localization framework & string migration; full SwiftUI assessment.
 
 ## 🤝 Credits
 
