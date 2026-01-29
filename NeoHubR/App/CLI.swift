@@ -5,6 +5,7 @@ import Observation
 private struct Bin {
     static let source = Bundle.main.bundlePath + "/Contents/SharedSupport/nh"
     static let destination = "/usr/local/bin/nh"
+    static let legacySymlink = "/usr/local/bin/neohub"
 }
 
 enum CLIOperation {
@@ -103,9 +104,9 @@ final class CLI {
             let script =
                 switch operation {
                 case .install:
-                    "do shell script \"cp -f \(Bin.source) \(Bin.destination)\" with administrator privileges"
+                    "do shell script \"cp -f \(Bin.source) \(Bin.destination) && ln -sf \(Bin.destination) \(Bin.legacySymlink)\" with administrator privileges"
                 case .uninstall:
-                    "do shell script \"rm \(Bin.destination)\" with administrator privileges"
+                    "do shell script \"rm -f \(Bin.destination) \(Bin.legacySymlink)\" with administrator privileges"
                 }
             let result = CLI.runAppleScript(script)
             let status = result.isSuccess ? CLI.getStatus() : nil
