@@ -3,6 +3,21 @@
 ## Unreleased
 - Avoid activation errors when the previous activation target is no longer running/visible.
 
+## 0.3.5
+- Attach to running Neovide instances (hybrid strategy).
+- Switcher data flow cleanup (items cache + refreshData) and stability improvements.
+- CLI install modernization: `nh` path sync + legacy `neohub` symlink.
+- Project list deletion reliability fix by stabilizing ID matching.
+
+## 0.3.4
+- Security hardening: socket path is user-isolated and path handling is unified.
+- Readme/roadmap refresh for the Reboot era.
+
+## 0.3.3
+- Restore running instances after restart from `/tmp/neohubr.instances.json`.
+- Session.vim default name uses parent folder.
+- Repository structure cleanup: App/Core/Support grouping and file moves.
+
 ## 0.3.2
 - Add Project Editor with icon/color controls, preview, and session-aware editing.
 - Support Session.vim projects (file-based entries) alongside folder projects.
