@@ -104,7 +104,7 @@ final class CLI {
             let script =
                 switch operation {
                 case .install:
-                    "do shell script \"cp -f \(Bin.source) \(Bin.destination) && ln -sf \(Bin.destination) \(Bin.legacySymlink)\" with administrator privileges"
+                    "do shell script \"mkdir -p /usr/local/bin && cp -f \(Bin.source) \(Bin.destination) && ln -sf \(Bin.destination) \(Bin.legacySymlink)\" with administrator privileges"
                 case .uninstall:
                     "do shell script \"rm -f \(Bin.destination) \(Bin.legacySymlink)\" with administrator privileges"
                 }
