@@ -6,6 +6,7 @@ public enum AppSettings {
         public static let forwardCLIErrors = "ForwardCLIErrorToGUI"
         public static let switcherMaxItems = "SwitcherMaxItems"
         public static let settingsAlwaysOnTop = "SettingsAlwaysOnTop"
+        public static let clearSwitcherStateOnOpen = "ClearSwitcherStateOnOpen"
     }
 
     public static let minSwitcherItems = 4
@@ -17,6 +18,7 @@ public enum AppSettings {
             Key.forwardCLIErrors: true,
             Key.switcherMaxItems: defaultSwitcherMaxItems,
             Key.settingsAlwaysOnTop: false,
+            Key.clearSwitcherStateOnOpen: true,
         ])
     }
 
@@ -55,6 +57,12 @@ public final class AppSettingsStore {
         }
     }
 
+    public var clearSwitcherStateOnOpen: Bool {
+        didSet {
+            UserDefaults.standard.set(clearSwitcherStateOnOpen, forKey: AppSettings.Key.clearSwitcherStateOnOpen)
+        }
+    }
+
     public init() {
         AppSettings.registerDefaults()
         self.forwardCLIErrors = UserDefaults.standard.bool(forKey: AppSettings.Key.forwardCLIErrors)
@@ -62,5 +70,6 @@ public final class AppSettingsStore {
             UserDefaults.standard.integer(forKey: AppSettings.Key.switcherMaxItems)
         )
         self.settingsAlwaysOnTop = UserDefaults.standard.bool(forKey: AppSettings.Key.settingsAlwaysOnTop)
+        self.clearSwitcherStateOnOpen = UserDefaults.standard.bool(forKey: AppSettings.Key.clearSwitcherStateOnOpen)
     }
 }

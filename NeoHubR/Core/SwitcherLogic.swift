@@ -150,6 +150,10 @@ final class SwitcherViewModel {
         }
     }
 
+    func selectFirst() {
+        selectedID = filteredEntries.first?.id
+    }
+
     func activateSelected() {
         guard let id = selectedID, let item = filteredEntries.first(where: { $0.id == id }) else { return }
         activate(item)
@@ -212,6 +216,7 @@ final class SwitcherWindow {
     private let viewModel: SwitcherViewModel
     private let activationManager: ActivationManager
     private let editorStore: EditorStore
+    private let appSettings: AppSettingsStore
     private let selfRef: SwitcherWindowRef
 
     init(
@@ -219,6 +224,7 @@ final class SwitcherWindow {
         appSettings: AppSettingsStore, projectRegistry: ProjectRegistryStore
     ) {
         self.editorStore = editorStore
+        self.appSettings = appSettings
         self.selfRef = selfRef
         self.activationManager = activationManager
         self.viewModel = SwitcherViewModel(
@@ -319,6 +325,10 @@ extension SwitcherWindow {
             editors: editorStore.getEditors()
         )
         viewModel.refreshData()
+        if appSettings.clearSwitcherStateOnOpen {
+            viewModel.searchText = ""
+            viewModel.selectFirst()
+        }
 
         centerOnScreen()
         panel.makeKeyAndOrderFront(nil)

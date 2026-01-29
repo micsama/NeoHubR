@@ -534,6 +534,8 @@ private struct AdvancedSettingsTab: View {
             Section {
                 Toggle("Keep Settings Window on Top", isOn: $appSettings.settingsAlwaysOnTop)
 
+                Toggle("Reset Switcher state on open", isOn: $appSettings.clearSwitcherStateOnOpen)
+
                 Toggle("Show CLI errors in app", isOn: $appSettings.forwardCLIErrors)
             }
 

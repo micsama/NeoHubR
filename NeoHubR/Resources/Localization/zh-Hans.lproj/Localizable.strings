@@ -63,6 +63,7 @@
 "Recent" = "最近";
 "No recent projects" = "没有最近项目";
 "Keep Settings Window on Top" = "设置窗口置顶";
+"Reset Switcher state on open" = "打开切换器时重置状态";
 "Show CLI errors in app" = "在应用内显示 CLI 错误";
 "Version" = "版本";
 "CLI Installed" = "CLI 已安装";

@@ -63,6 +63,7 @@
 "Recent" = "Recent";
 "No recent projects" = "No recent projects";
 "Keep Settings Window on Top" = "Keep Settings Window on Top";
+"Reset Switcher state on open" = "Reset Switcher state on open";
 "Show CLI errors in app" = "Show CLI errors in app";
 "Version" = "Version";
 "CLI Installed" = "CLI Installed";
