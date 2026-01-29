@@ -43,9 +43,9 @@
 "Projects" = "项目";
 "Advanced" = "高级";
 "Launch at Login" = "开机自启";
-"Toggle Editor Selector" = "切换编辑器选择器";
-"Toggle Last Active Editor" = "切换最近活跃编辑器";
-"Restart Active Editor" = "重启当前编辑器";
+"Toggle Selector" = "切换选择器";
+"Toggle Last Active" = "切换最近实例";
+"Restart Editor" = "重启当前实例";
 "Installed" = "已安装";
 "Reinstall" = "重新安装";
 "Uninstall" = "卸载";
@@ -116,7 +116,6 @@
 "Untitled" = "未命名";
 "Custom" = "自定义";
 "Emoji / Character" = "Emoji / 字符";
-"Choose Color" = "选择颜色";
 
 "Version %@ (%@)" = "版本 %@ (%@)";
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";

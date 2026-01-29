@@ -43,9 +43,9 @@
 "Projects" = "Projects";
 "Advanced" = "Advanced";
 "Launch at Login" = "Launch at Login";
-"Toggle Editor Selector" = "Toggle Editor Selector";
-"Toggle Last Active Editor" = "Toggle Last Active Editor";
-"Restart Active Editor" = "Restart Active Editor";
+"Toggle Selector" = "Toggle Selector";
+"Toggle Last Active" = "Toggle Last Active";
+"Restart Editor" = "Restart Editor";
 "Installed" = "Installed";
 "Reinstall" = "Reinstall";
 "Uninstall" = "Uninstall";
@@ -117,7 +117,6 @@
 "Untitled" = "Untitled";
 "Custom" = "Custom";
 "Emoji / Character" = "Emoji / Character";
-"Choose Color" = "Choose Color";
 
 "Version %@ (%@)" = "Version %@ (%@)";
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";

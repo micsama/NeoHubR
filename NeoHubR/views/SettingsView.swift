@@ -102,15 +102,15 @@ private struct GeneralSettingsTab: View {
                 }
 
                 Section {
-                    LabeledContent("Toggle Editor Selector") {
+                    LabeledContent("Toggle Selector") {
                         KeyboardShortcuts.Recorder("", name: .toggleSwitcher)
                     }
 
-                    LabeledContent("Toggle Last Active Editor") {
+                    LabeledContent("Toggle Last Active") {
                         KeyboardShortcuts.Recorder("", name: .toggleLastActiveEditor)
                     }
 
-                    LabeledContent("Restart Active Editor") {
+                    LabeledContent("Restart Editor") {
                         KeyboardShortcuts.Recorder("", name: .restartEditor)
                     }
                 }

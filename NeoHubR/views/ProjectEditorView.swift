@@ -188,7 +188,7 @@ struct ProjectEditorView: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
-                    ColorPicker(String(localized: "Choose Color"), selection: $state.color, supportsOpacity: false)
+                    ColorPicker("", selection: $state.color, supportsOpacity: false)
                         .controlSize(.small)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .onTapGesture {
