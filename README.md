@@ -114,7 +114,7 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ## 🧭 Roadmap (Short)
 
-### Latest Release (v0.3.5)
+### Latest Release (v0.3.6)
 - **Session Defaults**: Session.vim name defaults to its parent folder.
 - **Instance Resurrection**: Restore running instances after restart from `/tmp/neohubr.instances.json`.
 - **Instance Attach**: Attach to running Neovide instances (hybrid strategy).

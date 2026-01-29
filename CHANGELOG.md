@@ -3,6 +3,10 @@
 ## Unreleased
 - Avoid activation errors when the previous activation target is no longer running/visible.
 
+## 0.3.6
+- Ensure CLI install creates `/usr/local/bin` if missing.
+- Optionally reset Switcher search/selection on open.
+
 ## 0.3.5
 - Attach to running Neovide instances (hybrid strategy).
 - Switcher data flow cleanup (items cache + refreshData) and stability improvements.
