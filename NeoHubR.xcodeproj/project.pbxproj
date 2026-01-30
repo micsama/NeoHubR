@@ -90,6 +90,7 @@
 
 /* Begin PBXFileReference section */
 		3AFE7700C68AF82BB552689D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "NeoHubR/Resources/Localization/zh-Hans.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
+		46C0216DCEFC47AA95B4F9EE /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = NeoHubR/Resources/Localization/ja.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
 		AF868A6614B2E7D702836114 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = NeoHubR/Resources/Localization/en.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
 		FA03D4C82AFA302A00790D2F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		FA2AE4472AEB980700D24008 /* NeoHubR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NeoHubR.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -516,6 +517,7 @@
 			children = (
 				AF868A6614B2E7D702836114 /* en */,
 				3AFE7700C68AF82BB552689D /* zh-Hans */,
+				46C0216DCEFC47AA95B4F9EE /* ja */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

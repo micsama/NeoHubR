@@ -2,6 +2,7 @@ import AppKit
 import KeyboardShortcuts
 import NeoHubRLib
 import ServiceManagement
+import Darwin
 import SwiftUI
 
 let APP_NAME = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as! String
@@ -67,6 +68,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let projectRegistry: ProjectRegistryStore
 
     override init() {
+        disableProfilingOutput()
         let appSettings = AppSettingsStore()
         self.appSettings = appSettings
 
@@ -138,6 +140,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // CLI error alert handled in MenuBarView using SwiftUI + openSettings.
+}
+
+@inline(__always)
+private func disableProfilingOutput() {
+    setenv("LLVM_PROFILE_FILE", "/dev/null", 1)
 }
 
 @MainActor

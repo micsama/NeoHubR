@@ -112,6 +112,12 @@ struct SwitcherContentView: View {
         case "w":
             viewModel.onDismiss()
             return .handled
+        case "j":
+            viewModel.moveSelection(1)
+            return .handled
+        case "k":
+            viewModel.moveSelection(-1)
+            return .handled
         case "d":
             press.modifiers.contains(.shift) ? viewModel.quitAll() : viewModel.quitSelected()
             return .handled

@@ -1,4 +1,5 @@
 import ArgumentParser
+import Darwin
 import Foundation
 import NeoHubRLib
 
@@ -59,6 +60,7 @@ struct CLI: AsyncParsableCommand {
     var error: String?
 
     mutating func run() async throws {
+        disableProfilingOutput()
         if let error {
             await Self.sendErrorReport(.manual(error))
             throw CLIError.manual(error)
@@ -108,5 +110,9 @@ struct CLI: AsyncParsableCommand {
 
     private static func sendErrorReport(_ error: CLIError) async {
         let _ = await SocketClient().send(IPCMessage.cliError(error.report))
+    }
+
+    private func disableProfilingOutput() {
+        setenv("LLVM_PROFILE_FILE", "/dev/null", 1)
     }
 }
