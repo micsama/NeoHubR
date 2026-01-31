@@ -1,7 +1,7 @@
 import Foundation
 import Network
 
-struct NeovideIPCWindow: Decodable, Equatable {
+struct NeovideIPCWindow: Decodable, Equatable, Sendable {
     let windowID: String
     let isActive: Bool?
 
@@ -16,6 +16,7 @@ enum NeovideIPCError: Error {
     case serverError(code: Int, message: String)
     case connectionFailed
     case noWindowsAvailable
+    case timeout
 }
 
 actor NeovideIPCClient {
@@ -44,25 +45,42 @@ actor NeovideIPCClient {
         return response.ok
     }
 
-    private func send<Params: Encodable, Result: Decodable>(
+    private func send<Params: Encodable, Result: Decodable & Sendable>(
         method: String,
         params: Params,
-        socketPath: String
+        socketPath: String,
+        timeout: TimeInterval = 0.5
     ) async throws -> Result {
         let id = nextID
         nextID += 1
 
         let request = JSONRPCRequest(id: id, method: method, params: params)
         let data = try JSONEncoder().encode(request)
-        let responseData = try await sendRaw(data, socketPath: socketPath)
-        let response = try JSONDecoder().decode(JSONRPCResponse<Result>.self, from: responseData)
 
-        if let error = response.error {
-            throw NeovideIPCError.serverError(code: error.code, message: error.message)
+        return try await withThrowingTaskGroup(of: Result.self) { group in
+            group.addTask {
+                let responseData = try await self.sendRaw(data, socketPath: socketPath)
+                let response = try JSONDecoder().decode(JSONRPCResponse<Result>.self, from: responseData)
+
+                if let error = response.error {
+                    throw NeovideIPCError.serverError(code: error.code, message: error.message)
+                }
+
+                guard let result = response.result else { throw NeovideIPCError.invalidResponse }
+                return result
+            }
+
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                throw NeovideIPCError.timeout
+            }
+
+            guard let result = try await group.next() else {
+                throw NeovideIPCError.connectionFailed
+            }
+            group.cancelAll()
+            return result
         }
-
-        guard let result = response.result else { throw NeovideIPCError.invalidResponse }
-        return result
     }
 
     private func sendRaw(_ data: Data, socketPath: String) async throws -> Data {

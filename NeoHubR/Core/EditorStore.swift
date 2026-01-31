@@ -483,9 +483,12 @@ extension EditorStore {
         do {
             windows = try await NeovideIPCClient.shared.listWindows(socketPath: socketPath)
         } catch {
-            let report = ReportableError("Failed to list Neovide windows via IPC", error: error)
-            log.error("\(report)")
-            NotificationManager.send(kind: .failedToRunEditorProcess, error: report)
+            // If IPC fails (timeout, connection refused, etc.), assume Neovide is closed.
+            // We clear all IPC-based editors and do NOT report an error to avoid annoyance.
+            if !editors.isEmpty {
+                editors.removeAll()
+                persistActiveEditors()
+            }
             return
         }
 
