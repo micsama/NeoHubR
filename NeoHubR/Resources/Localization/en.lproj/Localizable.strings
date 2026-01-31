@@ -13,6 +13,8 @@
 "Open your terminal and try to run `nh` command" = "Open your terminal and try to run `nh` command";
 "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI." = "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI.";
 "After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed.";
+"Use Neovide IPC" = "Use Neovide IPC";
+"Neovide IPC Socket" = "Neovide IPC Socket";
 "Something went wrong" = "Something went wrong";
 "Report" = "Report";
 "Install" = "Install";
@@ -45,7 +47,6 @@
 "Launch at Login" = "Launch at Login";
 "Toggle Selector" = "Toggle Selector";
 "Toggle Last Active" = "Toggle Last Active";
-"Restart Editor" = "Restart Editor";
 "Installed" = "Installed";
 "Reinstall" = "Reinstall";
 "Uninstall" = "Uninstall";
@@ -123,7 +124,6 @@
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";
 "Icon by" = "Icon by";
 
-"Failed to restart the editor" = "Failed to restart the editor";
 "Please, report the issue on GitHub." = "Please, report the issue on GitHub.";
 
 "Failed to launch the NeoHubR server" = "Failed to launch the NeoHubR server";

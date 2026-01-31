@@ -1,5 +1,4 @@
 import AppKit
-import KeyboardShortcuts
 import NeoHubRLib
 import Observation
 import SwiftUI
@@ -14,8 +13,6 @@ final class EditorStore {
     let projectRegistry: ProjectRegistryStore
     private let activeEditorStore: ActiveEditorStore
 
-    private var restartPoller: Timer?
-
     init(
         activationManager: ActivationManager,
         switcherWindow: SwitcherWindowRef,
@@ -25,10 +22,6 @@ final class EditorStore {
         self.activationManager = activationManager
         self.projectRegistry = projectRegistry
         self.activeEditorStore = ActiveEditorStore()
-
-        KeyboardShortcuts.onKeyUp(for: .restartEditor) { [self] in
-            self.restartActiveEditor()
-        }
     }
 
     public enum SortTarget {
@@ -81,6 +74,19 @@ final class EditorStore {
 
         let currentApp = NSWorkspace.shared.frontmostApplication
 
+        if AppSettings.useNeovideIPC {
+            Task { @MainActor [weak self] in
+                await self?.runEditorWithIPC(
+                    request: request,
+                    sessionPath: sessionPath,
+                    editorID: editorID,
+                    editorName: editorName,
+                    currentApp: currentApp
+                )
+            }
+            return
+        }
+
         DispatchQueue.global(qos: .background).async { [weak self] in
             guard let self else { return }
             do {
@@ -105,6 +111,143 @@ final class EditorStore {
                 }
             }
         }
+    }
+
+    private func runEditorWithIPC(
+        request: RunRequest,
+        sessionPath: URL?,
+        editorID: EditorID,
+        editorName: String,
+        currentApp: NSRunningApplication?
+    ) async {
+        activationManager.setActivationTarget(
+            currentApp: currentApp,
+            switcherWindow: switcherWindow,
+            editors: getEditors()
+        )
+
+        let socketPath = AppSettings.neovideIPCSocketPath
+        let nvimArgs = buildNvimArgs(sessionPath: sessionPath, request: request)
+
+        do {
+            let windowID = try await NeovideIPCClient.shared.createWindow(
+                nvimArgs: nvimArgs,
+                socketPath: socketPath
+            )
+            handleIPCWindowCreated(
+                windowID: windowID,
+                editorID: editorID,
+                editorName: editorName,
+                request: request
+            )
+        } catch {
+            if case NeovideIPCError.connectionFailed = error {
+                do {
+                    try await autoStartNeovideWithIPC(request: request, sessionPath: sessionPath, socketPath: socketPath)
+                    let windowID = try await waitForActiveWindowID(socketPath: socketPath)
+                    handleIPCWindowCreated(
+                        windowID: windowID,
+                        editorID: editorID,
+                        editorName: editorName,
+                        request: request
+                    )
+                } catch {
+                    let report = ReportableError("Failed to run editor via Neovide IPC", error: error)
+                    log.error("\(report)")
+                    NotificationManager.send(kind: .failedToRunEditorProcess, error: report)
+                }
+            } else {
+                let report = ReportableError("Failed to run editor via Neovide IPC", error: error)
+                log.error("\(report)")
+                NotificationManager.send(kind: .failedToRunEditorProcess, error: report)
+            }
+        }
+    }
+
+    private func handleIPCWindowCreated(
+        windowID: String,
+        editorID: EditorID,
+        editorName: String,
+        request: RunRequest
+    ) {
+        editors[editorID] = Editor(
+            id: editorID,
+            name: editorName,
+            windowID: windowID,
+            request: request,
+            onAccessed: { [weak self] in self?.persistActiveEditors() }
+        )
+        persistActiveEditors()
+    }
+
+    private func buildNvimArgs(sessionPath: URL?, request: RunRequest) -> [String] {
+        if let sessionPath {
+            return ["-S", sessionPath.path(percentEncoded: false)]
+        }
+        if let path = request.path {
+            return [path]
+        }
+        return []
+    }
+
+    private func autoStartNeovideWithIPC(
+        request: RunRequest,
+        sessionPath: URL?,
+        socketPath: String
+    ) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .background).async {
+                do {
+                    let process = Process()
+                    process.executableURL = request.bin
+
+                    var args = request.opts
+                    if !args.contains("--no-fork") {
+                        args.append("--no-fork")
+                    }
+                    if !args.contains("--neovide-ipc") {
+                        args.append("--neovide-ipc")
+                        args.append("unix:\(socketPath)")
+                    }
+
+                    if let sessionPath {
+                        if !args.contains("--") { args.append("--") }
+                        args.append("-S")
+                        args.append(sessionPath.path(percentEncoded: false))
+                    } else if let path = request.path {
+                        args.append(path)
+                    }
+
+                    process.arguments = args
+                    process.currentDirectoryURL = sessionPath?.deletingLastPathComponent() ?? request.wd
+                    process.environment = request.env
+
+                    try process.run()
+                    continuation.resume(returning: ())
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    private func waitForActiveWindowID(socketPath: String) async throws -> String {
+        for _ in 0..<20 {
+            do {
+                let windows = try await NeovideIPCClient.shared.listWindows(socketPath: socketPath)
+                if let active = windows.first(where: { $0.isActive == true }) {
+                    return active.windowID
+                }
+                if let first = windows.first {
+                    return first.windowID
+                }
+            } catch {
+                try? await Task.sleep(nanoseconds: 200_000_000)
+                continue
+            }
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+        throw NeovideIPCError.noWindowsAvailable
     }
 
     nonisolated private func makeEditorProcess(request: RunRequest, sessionPath: URL?, editorID: EditorID) throws
@@ -185,34 +328,6 @@ final class EditorStore {
         }
     }
 
-    func restartActiveEditor() {
-        guard let activeApp = NSWorkspace.shared.frontmostApplication,
-            let editor = self.editors.first(where: { $0.value.processIdentifier == activeApp.processIdentifier })?.value
-        else { return }
-
-        editor.quit()
-
-        let timeout: TimeInterval = 5
-        let startTime = Date()
-        let editorID = editor.id
-        let editorRequest = editor.request
-
-        self.restartPoller = Timer.scheduledTimer(withTimeInterval: 0.005, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-
-                if self.editors[editorID] == nil {
-                    self.invalidateRestartPoller()
-                    self.runEditor(request: editorRequest)
-                } else if -startTime.timeIntervalSinceNow > timeout {
-                    log.error("The editor wasn't removed from the store within the timeout. Canceling the restart.")
-                    self.invalidateRestartPoller()
-                    let error = ReportableError("Failed to restart the editor")
-                    NotificationManager.send(kind: .failedToRestartEditor, error: error)
-                }
-            }
-        }
-    }
 
     func quitAllEditors() async {
         for editor in editors.values {
@@ -222,16 +337,23 @@ final class EditorStore {
         persistActiveEditors()
     }
 
-    private func invalidateRestartPoller() {
-        self.restartPoller?.invalidate()
-    }
 
     func restoreActiveEditors() {
+        if AppSettings.useNeovideIPC {
+            Task { @MainActor [weak self] in
+                await self?.restoreActiveEditorsWithIPC()
+            }
+            return
+        }
+
         let snapshots = activeEditorStore.loadSnapshots()
         guard !snapshots.isEmpty else { return }
 
         for snapshot in snapshots {
-            guard let app = NSRunningApplication(processIdentifier: snapshot.pid), !app.isTerminated else { continue }
+            guard let pid = snapshot.pid,
+                let app = NSRunningApplication(processIdentifier: pid),
+                !app.isTerminated
+            else { continue }
 
             let editorID = EditorID(snapshot.id)
             if editors[editorID] != nil { continue }
@@ -239,7 +361,41 @@ final class EditorStore {
             editors[editorID] = Editor(
                 id: editorID,
                 name: snapshot.name,
-                processIdentifier: snapshot.pid,
+                processIdentifier: pid,
+                request: snapshot.request,
+                lastAccessTime: Date(timeIntervalSince1970: snapshot.lastAccessTime),
+                onAccessed: { [weak self] in self?.persistActiveEditors() }
+            )
+        }
+        persistActiveEditors()
+    }
+
+    private func restoreActiveEditorsWithIPC() async {
+        let snapshots = activeEditorStore.loadSnapshots()
+        guard !snapshots.isEmpty else { return }
+
+        let socketPath = AppSettings.neovideIPCSocketPath
+        let windows: [NeovideIPCWindow]
+        do {
+            windows = try await NeovideIPCClient.shared.listWindows(socketPath: socketPath)
+        } catch {
+            let report = ReportableError("Failed to list Neovide windows via IPC", error: error)
+            log.error("\(report)")
+            NotificationManager.send(kind: .failedToRunEditorProcess, error: report)
+            return
+        }
+
+        let windowIDs = Set(windows.map { $0.windowID })
+        for snapshot in snapshots {
+            guard let windowID = snapshot.windowID, windowIDs.contains(windowID) else { continue }
+
+            let editorID = EditorID(snapshot.id)
+            if editors[editorID] != nil { continue }
+
+            editors[editorID] = Editor(
+                id: editorID,
+                name: snapshot.name,
+                windowID: windowID,
                 request: snapshot.request,
                 lastAccessTime: Date(timeIntervalSince1970: snapshot.lastAccessTime),
                 onAccessed: { [weak self] in self?.persistActiveEditors() }
@@ -288,7 +444,8 @@ final class EditorStore {
             ActiveEditorSnapshot(
                 id: editor.id.id,
                 name: editor.name,
-                pid: editor.processIdentifier,
+                pid: AppSettings.useNeovideIPC ? nil : editor.processIdentifier,
+                windowID: AppSettings.useNeovideIPC ? editor.windowID : nil,
                 lastAccessTime: editor.lastAcceessTime.timeIntervalSince1970,
                 request: editor.request
             )
@@ -297,16 +454,47 @@ final class EditorStore {
     }
 
     @MainActor
-    deinit {
-        self.invalidateRestartPoller()
-    }
+    deinit {}
 }
 
 extension EditorStore {
     func pruneDeadEditors() {
+        if AppSettings.useNeovideIPC {
+            Task { @MainActor [weak self] in
+                await self?.pruneDeadEditorsWithIPC()
+            }
+            return
+        }
+
         let toRemove = editors.filter { _, editor in
             guard let app = NSRunningApplication(processIdentifier: editor.processIdentifier) else { return true }
             return app.isTerminated
+        }
+
+        if !toRemove.isEmpty {
+            for (id, _) in toRemove {
+                editors.removeValue(forKey: id)
+            }
+            persistActiveEditors()
+        }
+    }
+
+    private func pruneDeadEditorsWithIPC() async {
+        let socketPath = AppSettings.neovideIPCSocketPath
+        let windows: [NeovideIPCWindow]
+        do {
+            windows = try await NeovideIPCClient.shared.listWindows(socketPath: socketPath)
+        } catch {
+            let report = ReportableError("Failed to list Neovide windows via IPC", error: error)
+            log.error("\(report)")
+            NotificationManager.send(kind: .failedToRunEditorProcess, error: report)
+            return
+        }
+
+        let windowIDs = Set(windows.map { $0.windowID })
+        let toRemove = editors.filter { _, editor in
+            guard let windowID = editor.windowID else { return true }
+            return !windowIDs.contains(windowID)
         }
 
         if !toRemove.isEmpty {
@@ -336,6 +524,7 @@ struct EditorID: Hashable, Identifiable, Sendable, CustomStringConvertible {
 final class Editor: Identifiable {
     let id: EditorID
     let name: String
+    let windowID: String?
 
     private let process: Process?
     private let processIdentifierValue: Int32
@@ -346,6 +535,7 @@ final class Editor: Identifiable {
     init(id: EditorID, name: String, process: Process, request: RunRequest, onAccessed: (() -> Void)? = nil) {
         self.id = id
         self.name = name
+        self.windowID = nil
         self.process = process
         self.processIdentifierValue = process.processIdentifier
         self.lastAcceessTime = Date()
@@ -359,8 +549,23 @@ final class Editor: Identifiable {
     ) {
         self.id = id
         self.name = name
+        self.windowID = nil
         self.process = nil
         self.processIdentifierValue = processIdentifier
+        self.lastAcceessTime = lastAccessTime
+        self.request = request
+        self.onAccessed = onAccessed
+    }
+
+    init(
+        id: EditorID, name: String, windowID: String, request: RunRequest, lastAccessTime: Date = Date(),
+        onAccessed: (() -> Void)? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.windowID = windowID
+        self.process = nil
+        self.processIdentifierValue = 0
         self.lastAcceessTime = lastAccessTime
         self.request = request
         self.onAccessed = onAccessed
@@ -374,6 +579,26 @@ final class Editor: Identifiable {
     }
 
     func activate() {
+        if AppSettings.useNeovideIPC, let windowID {
+            Task {
+                do {
+                    _ = try await NeovideIPCClient.shared.activateWindow(
+                        windowID,
+                        socketPath: AppSettings.neovideIPCSocketPath
+                    )
+                    await MainActor.run {
+                        self.lastAcceessTime = Date()
+                        self.onAccessed?()
+                    }
+                } catch {
+                    let report = ReportableError("Failed to activate Neovide window via IPC", error: error)
+                    log.error("\(report)")
+                    NotificationManager.send(kind: .failedToActivateEditorApp, error: report)
+                }
+            }
+            return
+        }
+
         guard let app = self.runningEditor() else {
             let error = ReportableError("Failed to get Neovide NSRunningApplication instance")
             log.error("\(error)")
@@ -393,6 +618,9 @@ final class Editor: Identifiable {
     }
 
     func quit() {
+        if AppSettings.useNeovideIPC, windowID != nil {
+            return
+        }
         if let process {
             process.terminate()
         } else {

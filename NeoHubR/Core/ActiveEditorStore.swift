@@ -4,9 +4,45 @@ import NeoHubRLib
 struct ActiveEditorSnapshot: Codable {
     let id: URL
     let name: String
-    let pid: Int32
+    let pid: Int32?
+    let windowID: String?
     let lastAccessTime: TimeInterval
     let request: RunRequest
+
+    init(
+        id: URL,
+        name: String,
+        pid: Int32?,
+        windowID: String?,
+        lastAccessTime: TimeInterval,
+        request: RunRequest
+    ) {
+        self.id = id
+        self.name = name
+        self.pid = pid
+        self.windowID = windowID
+        self.lastAccessTime = lastAccessTime
+        self.request = request
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case pid
+        case windowID
+        case lastAccessTime
+        case request
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(URL.self, forKey: .id)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.pid = try container.decodeIfPresent(Int32.self, forKey: .pid)
+        self.windowID = try container.decodeIfPresent(String.self, forKey: .windowID)
+        self.lastAccessTime = try container.decode(TimeInterval.self, forKey: .lastAccessTime)
+        self.request = try container.decode(RunRequest.self, forKey: .request)
+    }
 }
 
 final class ActiveEditorStore {

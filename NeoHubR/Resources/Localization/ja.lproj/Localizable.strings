@@ -13,6 +13,8 @@
 "Open your terminal and try to run `nh` command" = "ターミナルを開いて `nh` コマンドを実行してみてください";
 "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI." = "NeoHubRでNeovideインスタンスを管理するには、NeoHubR CLIが必要です。";
 "After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "インストール後、`nh` コマンドがシェルで利用可能になります。`neovide` の代わりに `nh` を使ってエディタを起動してください。インストールされるのはCLIバイナリのみです。";
+"Use Neovide IPC" = "Neovide IPC を使う";
+"Neovide IPC Socket" = "Neovide IPC ソケット";
 "Something went wrong" = "問題が発生しました";
 "Report" = "報告";
 "Install" = "インストール";
@@ -45,7 +47,6 @@
 "Launch at Login" = "ログイン時に起動";
 "Toggle Selector" = "セレクターを切り替え";
 "Toggle Last Active" = "直前の編集に切り替え";
-"Restart Editor" = "エディタを再起動";
 "Installed" = "インストール済み";
 "Reinstall" = "再インストール";
 "Uninstall" = "アンインストール";
@@ -123,7 +124,6 @@
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";
 "Icon by" = "アイコン：";
 
-"Failed to restart the editor" = "エディタの再起動に失敗しました";
 "Please, report the issue on GitHub." = "GitHubで報告してください。";
 
 "Failed to launch the NeoHubR server" = "NeoHubRサーバーの起動に失敗しました";

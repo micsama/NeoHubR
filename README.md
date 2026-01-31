@@ -47,7 +47,6 @@ Building upon the core vision of the original tool, NeoHubR introduces modern en
 * **⌨️ Seamless Switcher**: `⌃ + \`` (Ctrl + Backtick) to summon a global switcher to "teleport" between different projects.
 * **🚀 Smart Launch (CLI)**: Stop duplicating! Opening a project via CLI will automatically re-activate the existing instance if it’s already running.
 * **📂 Project Registry**: Keep your workspace organized with Starred and Recent project lists integrated directly into the switcher.
-* **🔄 Quick Restart**: `⌃ + ⌘ + R` to restart your current editor instance instantly.
 * **🔔 Native Notifications**: Stay informed with clean system notifications for CLI and editor lifecycle events.
 * **🎨 Modern macOS Aesthetic**: Built with SwiftUI and featuring "Liquid Glass" visuals—it looks and feels like a native part of your Mac.
 

@@ -13,6 +13,8 @@
 "Open your terminal and try to run `nh` command" = "打开终端并尝试运行 `nh` 命令";
 "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI." = "为了通过 NeoHubR 管理 Neovide 实例，你需要安装 NeoHubR CLI。";
 "After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "安装成功后，`nh` 命令应可在你的 shell 中使用。请用它替代 `neovide` 来启动编辑器。仅安装 CLI 可执行文件。";
+"Use Neovide IPC" = "使用 Neovide IPC";
+"Neovide IPC Socket" = "Neovide IPC 套接字";
 "Something went wrong" = "出了点问题";
 "Report" = "报告";
 "Install" = "安装";
@@ -45,7 +47,6 @@
 "Launch at Login" = "开机自启";
 "Toggle Selector" = "切换选择器";
 "Toggle Last Active" = "切换最近实例";
-"Restart Editor" = "重启当前实例";
 "Installed" = "已安装";
 "Reinstall" = "重新安装";
 "Uninstall" = "卸载";
@@ -122,7 +123,6 @@
 "© 2023 Alex Fedoseev" = "© 2023 Alex Fedoseev";
 "Icon by" = "图标来自";
 
-"Failed to restart the editor" = "重启编辑器失败";
 "Please, report the issue on GitHub." = "请在 GitHub 上报告该问题。";
 
 "Failed to launch the NeoHubR server" = "无法启动 NeoHubR 服务";

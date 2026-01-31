@@ -20,8 +20,6 @@ extension KeyboardShortcuts.Name {
         "toggleLastActiveEditor",
         default: .init(.z, modifiers: [.command, .control])
     )
-
-    static let restartEditor = Self("restartEditor")
 }
 
 @main

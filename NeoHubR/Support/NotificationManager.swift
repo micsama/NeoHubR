@@ -163,7 +163,6 @@ extension NotificationManager {
         case failedToRunEditorProcess
         case failedToGetRunningEditorApp
         case failedToActivateEditorApp
-        case failedToRestartEditor
         case cliUnexpectedError
         case cliError
 
@@ -174,7 +173,6 @@ extension NotificationManager {
             case .failedToRunEditorProcess: return "FAILED_TO_RUN_EDITOR_PROCESS"
             case .failedToGetRunningEditorApp: return "FAILED_TO_GET_RUNNING_EDITOR_APP"
             case .failedToActivateEditorApp: return "FAILED_TO_ACTIVATE_EDITOR_APP"
-            case .failedToRestartEditor: return "FAILED_TO_RESTART_EDITOR"
             case .cliUnexpectedError: return "CLI_UNEXPECTED_ERROR"
             case .cliError: return "CLI_ERROR"
             }
@@ -187,7 +185,6 @@ extension NotificationManager {
                 return String(localized: "Failed to open Neovide")
             case .failedToGetRunningEditorApp, .failedToActivateEditorApp:
                 return String(localized: "Failed to activate Neovide")
-            case .failedToRestartEditor: return String(localized: "Failed to restart the editor")
             case .cliUnexpectedError: return String(localized: "NeoHubR CLI error")
             case .cliError: return String(localized: "CLI Error")
             }
@@ -203,8 +200,6 @@ extension NotificationManager {
                 return String(localized: "Please create an issue in the GitHub repo.")
             case .failedToGetRunningEditorApp:
                 return String(localized: "Requested Neovide instance is not running.")
-            case .failedToRestartEditor:
-                return String(localized: "Please, report the issue on GitHub.")
             case .cliUnexpectedError:
                 return String(localized: "Please open Settings and check logs.")
             }
