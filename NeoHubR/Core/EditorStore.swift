@@ -66,17 +66,11 @@ final class EditorStore {
         let editorName = naming.displayName
         updateProjectRegistry(location: naming.location, displayName: editorName, sessionPath: sessionPath)
 
-        if let editor = editors[editorID] {
-            log.info("Editor exists, activating: \(editorID)")
-            editor.activate()
-            return
-        }
-
         let currentApp = NSWorkspace.shared.frontmostApplication
 
         if AppSettings.useNeovideIPC {
             Task { @MainActor [weak self] in
-                await self?.runEditorWithIPC(
+                await self?.runOrActivateEditorWithIPC(
                     request: request,
                     sessionPath: sessionPath,
                     editorID: editorID,
@@ -85,6 +79,18 @@ final class EditorStore {
                 )
             }
             return
+        }
+
+        // Process Mode Logic
+        if let editor = editors[editorID] {
+            if editor.isActiveProcess {
+                log.info("Editor exists, activating: \(editorID)")
+                editor.activate()
+                return
+            } else {
+                // Editor is dead, remove it and proceed to spawn new one
+                removeEditor(id: editorID)
+            }
         }
 
         DispatchQueue.global(qos: .background).async { [weak self] in
@@ -113,13 +119,27 @@ final class EditorStore {
         }
     }
 
-    private func runEditorWithIPC(
+    private func runOrActivateEditorWithIPC(
         request: RunRequest,
         sessionPath: URL?,
         editorID: EditorID,
         editorName: String,
         currentApp: NSRunningApplication?
     ) async {
+        // 1. Try to activate existing editor
+        if let editor = editors[editorID] {
+            do {
+                log.info("Editor exists in cache, attempting IPC activation: \(editorID)")
+                try await editor.activateIPC()
+                return // Success!
+            } catch {
+                log.warning("Failed to activate existing editor \(editorID), removing from cache and respawning. Error: \(error)")
+                removeEditor(id: editorID)
+                // Fallthrough to create new window
+            }
+        }
+
+        // 2. Create new window
         activationManager.setActivationTarget(
             currentApp: currentApp,
             switcherWindow: switcherWindow,
@@ -579,7 +599,26 @@ final class Editor: Identifiable {
         NSRunningApplication(processIdentifier: processIdentifierValue)
     }
 
-    func activate() {
+    var isActiveProcess: Bool {
+        guard let app = runningEditor() else { return false }
+        return !app.isTerminated
+    }
+
+    func activateIPC() async throws {
+        guard let windowID else {
+             throw ReportableError("No window ID for IPC activation")
+        }
+        _ = try await NeovideIPCClient.shared.activateWindow(
+            windowID,
+            socketPath: AppSettings.neovideIPCSocketPath
+        )
+        await MainActor.run {
+            self.lastAcceessTime = Date()
+            self.onAccessed?()
+        }
+    }
+
+    func activate(onFailure: (@MainActor () -> Void)? = nil) {
         if AppSettings.useNeovideIPC, let windowID {
             Task {
                 do {

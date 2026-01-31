@@ -169,7 +169,9 @@ final class SwitcherViewModel {
 
     private func activate(_ item: SwitcherItem) {
         onDismiss()
-        item.editor?.activate() ?? editorStore.openProject(item.entry)
+        // Delegate all activation/launch logic to EditorStore.
+        // It will handle activating existing editors or spawning new ones (and handling dead editors).
+        editorStore.openProject(item.entry)
     }
 
     func quitSelected() {
