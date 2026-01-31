@@ -105,6 +105,13 @@ actor NeovideIPCClient {
                         finish(.failure(error))
                         return
                     }
+
+                    // Check for newline (Neovide sends \n terminated JSON)
+                    if state.received.contains(0x0A) {
+                        finish(.success(state.received))
+                        return
+                    }
+
                     if isComplete {
                         guard !state.received.isEmpty else {
                             finish(.failure(NeovideIPCError.invalidResponse))

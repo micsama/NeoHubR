@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		482FB03AB5A81FC04E42F435 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = CDCEDF7BBE712A6A22A706F7 /* Localizable.strings */; settings = {ATTRIBUTES = (Localized, ); }; };
+		67D42AB19F8A47C390121CEE /* NeovideIPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE6993988984AE9A2ECAA4C /* NeovideIPCClient.swift */; };
 		FA2AE44B2AEB980700D24008 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2AE44A2AEB980700D24008 /* App.swift */; };
 		FA2AE44F2AEB980800D24008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA2AE44E2AEB980800D24008 /* Assets.xcassets */; };
 		FA2AE4522AEB980800D24008 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA2AE4512AEB980800D24008 /* Preview Assets.xcassets */; };
@@ -15,7 +16,6 @@
 		FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */; };
 		FA2EAD932AEC4CCD000F8F7A /* SocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */; };
 		FA2EAD972AED0C8B000F8F7A /* EditorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */; };
-		67D42AB19F8A47C390121CEE /* NeovideIPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE6993988984AE9A2ECAA4C /* NeovideIPCClient.swift */; };
 		FA2EAD9A2AED3906000F8F7A /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = FA2EAD992AED3906000F8F7A /* ArgumentParser */; };
 		FA2EADA62AED589F000F8F7A /* NeoHubRLib.docc in Sources */ = {isa = PBXBuildFile; fileRef = FA2EADA52AED589F000F8F7A /* NeoHubRLib.docc */; };
 		FA2EADA72AED589F000F8F7A /* NeoHubRLib.h in Headers */ = {isa = PBXBuildFile; fileRef = FA2EADA42AED589F000F8F7A /* NeoHubRLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -90,6 +90,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0FE6993988984AE9A2ECAA4C /* NeovideIPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeovideIPCClient.swift; sourceTree = "<group>"; };
 		3AFE7700C68AF82BB552689D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "NeoHubR/Resources/Localization/zh-Hans.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
 		46C0216DCEFC47AA95B4F9EE /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = NeoHubR/Resources/Localization/ja.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
 		AF868A6614B2E7D702836114 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = NeoHubR/Resources/Localization/en.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
@@ -106,7 +107,6 @@
 		FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketServer.swift; sourceTree = "<group>"; };
 		FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketClient.swift; sourceTree = "<group>"; };
 		FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorStore.swift; sourceTree = "<group>"; };
-		0FE6993988984AE9A2ECAA4C /* NeovideIPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeovideIPCClient.swift; sourceTree = "<group>"; };
 		FA2EADA22AED589F000F8F7A /* libNeoHubRLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libNeoHubRLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA2EADA42AED589F000F8F7A /* NeoHubRLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NeoHubRLib.h; sourceTree = "<group>"; };
 		FA2EADA52AED589F000F8F7A /* NeoHubRLib.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = NeoHubRLib.docc; sourceTree = "<group>"; };
@@ -877,7 +877,7 @@
 				FA2AE4552AEB980800D24008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		FA2AE4562AEB980800D24008 /* Build configuration list for PBXNativeTarget "NeoHubR" */ = {
 			isa = XCConfigurationList;
@@ -886,7 +886,7 @@
 				FA2AE4582AEB980800D24008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		FA2AE4612AEB9CA000D24008 /* Build configuration list for PBXNativeTarget "NeoHubRCLI" */ = {
 			isa = XCConfigurationList;
@@ -895,7 +895,7 @@
 				FA2AE4632AEB9CA000D24008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		FA2EADAC2AED589F000F8F7A /* Build configuration list for PBXNativeTarget "NeoHubRLib" */ = {
 			isa = XCConfigurationList;
@@ -904,7 +904,7 @@
 				FA2EADAE2AED589F000F8F7A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 
