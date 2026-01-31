@@ -296,30 +296,42 @@ extension SwitcherWindow {
 
 extension SwitcherWindow {
     private func handleToggleSwitcher() {
-        editorStore.pruneDeadEditors()
-        panel.isVisible ? hide() : show()
+        if panel.isVisible {
+            hide()
+            Task { [weak self] in await self?.editorStore.pruneDeadEditors() }
+        } else {
+            Task { [weak self] in
+                guard let self else { return }
+                await self.editorStore.pruneDeadEditors()
+                self.show()
+            }
+        }
     }
 
     private func handleToggleLastActive() {
-        editorStore.pruneDeadEditors()
-        guard let editor = editorStore.getEditors(sortedFor: .lastActiveEditor).first else {
-            if !panel.isVisible { show() }
-            return
-        }
+        Task { [weak self] in
+            guard let self else { return }
+            await self.editorStore.pruneDeadEditors()
 
-        if AppSettings.useNeovideIPC {
-            editor.activate()
-            return
-        }
-
-        let frontApp = NSWorkspace.shared.frontmostApplication
-        if frontApp?.processIdentifier == editor.processIdentifier {
-            NSRunningApplication(processIdentifier: editor.processIdentifier)?.hide()
-        } else {
-            if let app = frontApp {
-                activationManager.setActivationTarget(currentApp: app, switcherWindow: selfRef, editors: [editor])
+            guard let editor = self.editorStore.getEditors(sortedFor: .lastActiveEditor).first else {
+                if !self.panel.isVisible { self.show() }
+                return
             }
-            NSRunningApplication(processIdentifier: editor.processIdentifier)?.activate()
+
+            if AppSettings.useNeovideIPC {
+                editor.activate()
+                return
+            }
+
+            let frontApp = NSWorkspace.shared.frontmostApplication
+            if frontApp?.processIdentifier == editor.processIdentifier {
+                NSRunningApplication(processIdentifier: editor.processIdentifier)?.hide()
+            } else {
+                if let app = frontApp {
+                    self.activationManager.setActivationTarget(currentApp: app, switcherWindow: self.selfRef, editors: [editor])
+                }
+                NSRunningApplication(processIdentifier: editor.processIdentifier)?.activate()
+            }
         }
     }
 

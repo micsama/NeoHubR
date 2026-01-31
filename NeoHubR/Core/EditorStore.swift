@@ -458,11 +458,9 @@ final class EditorStore {
 }
 
 extension EditorStore {
-    func pruneDeadEditors() {
+    func pruneDeadEditors() async {
         if AppSettings.useNeovideIPC {
-            Task { @MainActor [weak self] in
-                await self?.pruneDeadEditorsWithIPC()
-            }
+            await pruneDeadEditorsWithIPC()
             return
         }
 
