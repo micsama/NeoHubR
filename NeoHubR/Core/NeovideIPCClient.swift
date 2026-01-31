@@ -96,8 +96,7 @@ actor NeovideIPCClient {
                 }
             }
 
-            var receiveNext: (@Sendable () -> Void)!
-            receiveNext = {
+            @Sendable func receiveLoop() {
                 state.connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) {
                     data, _, isComplete, error in
                     if let data { state.received.append(data) }
@@ -120,7 +119,7 @@ actor NeovideIPCClient {
                         finish(.success(state.received))
                         return
                     }
-                    receiveNext()
+                    receiveLoop()
                 }
             }
 
@@ -134,7 +133,7 @@ actor NeovideIPCClient {
                             finish(.failure(error))
                             return
                         }
-                        receiveNext()
+                        receiveLoop()
                     })
                 case .failed:
                     finish(.failure(NeovideIPCError.connectionFailed))
