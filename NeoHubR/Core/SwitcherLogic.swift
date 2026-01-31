@@ -300,10 +300,17 @@ extension SwitcherWindow {
             hide()
             Task { [weak self] in await self?.editorStore.pruneDeadEditors() }
         } else {
+            // Show immediately to avoid UI lag
+            self.show()
+            
+            // Prune dead editors in background and refresh if needed
             Task { [weak self] in
                 guard let self else { return }
                 await self.editorStore.pruneDeadEditors()
-                self.show()
+                // If the panel is still visible after pruning, refresh the data to reflect changes
+                if self.panel.isVisible {
+                    self.viewModel.refreshData()
+                }
             }
         }
     }
