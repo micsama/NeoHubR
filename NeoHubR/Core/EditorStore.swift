@@ -618,7 +618,7 @@ final class Editor: Identifiable {
         }
     }
 
-    func activate(onFailure: (@MainActor () -> Void)? = nil) {
+    func activate() {
         if AppSettings.useNeovideIPC, let windowID {
             Task {
                 do {
