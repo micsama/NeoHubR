@@ -159,7 +159,7 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ## 🧭 路线图（简版）
 
-### 最新版本（v0.3.6）
+### 最新版本（v0.4.0）
 - **Session 默认名**：Session.vim 默认名取上层目录。
 - **实例复活**：重启后从 `/tmp/neohubr.instances.json` 接回运行实例。
 - **运行实例接管**：支持接回已运行的 Neovide（混合方案）。

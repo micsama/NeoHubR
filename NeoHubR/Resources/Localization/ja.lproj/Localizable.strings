@@ -91,6 +91,7 @@
 "Project not accessible" = "プロジェクトにアクセスできません";
 "Neovide IPC unavailable" = "Neovide IPC が利用できません";
 "Neovide IPC is not responding. Editor list has been reset." = "Neovide IPC が応答しないため、エディタ一覧をリセットしました。";
+"Neovide IPC error. Please check logs." = "Neovide IPC エラー。ログを確認してください。";
 "The project path is missing or not accessible." = "プロジェクトのパスが存在しないかアクセスできません。";
 "Not available" = "利用不可";
 "Add Project Failed" = "プロジェクトの追加に失敗しました";

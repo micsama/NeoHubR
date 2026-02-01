@@ -91,6 +91,7 @@
 "Project not accessible" = "Project not accessible";
 "Neovide IPC unavailable" = "Neovide IPC unavailable";
 "Neovide IPC is not responding. Editor list has been reset." = "Neovide IPC is not responding. Editor list has been reset.";
+"Neovide IPC error. Please check logs." = "Neovide IPC error. Please check logs.";
 "The project path is missing or not accessible." = "The project path is missing or not accessible.";
 "Not available" = "Not available";
 "Add Project Failed" = "Add Project Failed";

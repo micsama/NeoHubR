@@ -8,9 +8,22 @@ enum NeovideIPCError: Error {
 }
 
 enum NeovideIPCClient {
+    enum Config {
+        static let listTimeout: TimeInterval = 0.05
+        static let createTimeout: TimeInterval = 0.4
+        static let activateTimeout: TimeInterval = 1.0
+        static let waitPollInterval: TimeInterval = 0.05
+        static let waitPollTimeout: TimeInterval = 1.0
+        static let waitInitialDelayNanos: UInt64 = 500_000_000
+    }
+
     static let socketPath = "/tmp/neovide.sock"
     fileprivate static let queue = DispatchQueue(label: "neohubr.neovide.ipc")
     private static let inFlightStore = InFlightStore()
+
+    static func listWindows() async throws -> [String] {
+        try await listWindows(timeout: Config.listTimeout)
+    }
 
     static func listWindows(timeout: TimeInterval) async throws -> [String] {
         let response = try await sendRequest(
@@ -21,12 +34,20 @@ enum NeovideIPCClient {
         return try parseWindowIDs(from: response)
     }
 
+    static func activateWindow(id: String) async throws {
+        try await activateWindow(id: id, timeout: Config.activateTimeout)
+    }
+
     static func activateWindow(id: String, timeout: TimeInterval) async throws {
         _ = try await sendRequest(
             method: "ActivateWindow",
             params: ["window_id": id],
             timeout: timeout
         )
+    }
+
+    static func createWindow(nvimArgs: [String]) async throws -> String? {
+        try await createWindow(nvimArgs: nvimArgs, timeout: Config.createTimeout)
     }
 
     static func createWindow(nvimArgs: [String], timeout: TimeInterval) async throws -> String? {
@@ -36,6 +57,14 @@ enum NeovideIPCClient {
             timeout: timeout
         )
         return try parseSingleWindowID(from: response)
+    }
+
+    static func waitForNewWindowID(existingIDs: Set<String>) async throws -> String? {
+        try await waitForNewWindowID(
+            existingIDs: existingIDs,
+            timeout: Config.waitPollTimeout,
+            pollInterval: Config.waitPollInterval
+        )
     }
 
     static func waitForNewWindowID(
@@ -197,7 +226,6 @@ private final class ResponseHandler: @unchecked Sendable {
     }
 
     func start(payload: Data) {
-        log.debug("IPC start request bytes=\(payload.count)")
         scheduleTimeout()
         connection.stateUpdateHandler = { [weak self] state in
             self?.handleState(state, payload: payload)
@@ -206,7 +234,6 @@ private final class ResponseHandler: @unchecked Sendable {
     }
 
     private func handleState(_ state: NWConnection.State, payload: Data) {
-        log.debug("IPC state=\(String(describing: state))")
         switch state {
         case .ready:
             var framed = payload
@@ -217,14 +244,12 @@ private final class ResponseHandler: @unchecked Sendable {
                     self?.finish(.failure(error))
                     return
                 }
-                log.debug("IPC send ok, waiting for response")
                 self?.receive()
             })
         case .failed(let error):
             log.warning("IPC connection failed: \(error)")
             finish(.failure(error))
         case .cancelled:
-            log.warning("IPC connection cancelled")
             finish(.failure(NeovideIPCError.invalidResponse))
         default:
             break
@@ -241,17 +266,14 @@ private final class ResponseHandler: @unchecked Sendable {
             }
 
             if let data { self.buffer.append(data) }
-            if let data { log.debug("IPC received bytes=\(data.count) total=\(self.buffer.count)") }
 
             if let newlineRange = self.buffer.firstRange(of: Data([0x0A])) {
                 let frame = self.buffer.prefix(upTo: newlineRange.lowerBound)
-                log.debug("IPC response newline found bytes=\(frame.count)")
                 self.finish(.success(Data(frame)))
                 return
             }
 
             if isComplete {
-                log.debug("IPC response complete bytes=\(self.buffer.count)")
                 self.finish(.success(self.buffer))
                 return
             }
@@ -263,7 +285,6 @@ private final class ResponseHandler: @unchecked Sendable {
     private func finish(_ result: Result<Data, Error>) {
         guard !didFinish else { return }
         didFinish = true
-        log.debug("IPC finish result=\(result)")
         timeoutTimer?.cancel()
         timeoutTimer = nil
         connection.cancel()
@@ -276,7 +297,6 @@ private final class ResponseHandler: @unchecked Sendable {
         let timer = DispatchSource.makeTimerSource(queue: NeovideIPCClient.queue)
         timer.schedule(deadline: .now() + timeout)
         timer.setEventHandler { [weak self] in
-            log.warning("IPC timeout after \(self?.timeout ?? 0)s")
             self?.finish(.failure(NeovideIPCError.timeout))
         }
         timer.resume()

@@ -91,6 +91,7 @@
 "Project not accessible" = "项目不可访问";
 "Neovide IPC unavailable" = "Neovide IPC 不可用";
 "Neovide IPC is not responding. Editor list has been reset." = "Neovide IPC 无响应，已清空编辑器列表。";
+"Neovide IPC error. Please check logs." = "Neovide IPC 出错，请查看日志。";
 "The project path is missing or not accessible." = "项目路径不存在或没有访问权限。";
 "Not available" = "不可用";
 "Add Project Failed" = "添加项目失败";

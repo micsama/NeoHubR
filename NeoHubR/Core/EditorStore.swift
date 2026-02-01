@@ -114,7 +114,7 @@ final class EditorStore {
         if appSettings.enableNeovideIPC, let windowID = editor.ipcWindowID {
             Task { @MainActor in
                 do {
-                    try await NeovideIPCClient.activateWindow(id: windowID, timeout: 1.0)
+                    try await NeovideIPCClient.activateWindow(id: windowID)
                     editor.recordAccess()
                 } catch {
                     handleIPCFailureIfNeeded(error)
@@ -158,7 +158,9 @@ final class EditorStore {
         } else {
             process.currentDirectoryURL = request.wd
         }
-        process.environment = request.env
+        var env = request.env
+        env["LLVM_PROFILE_FILE"] = "/dev/null"
+        process.environment = env
 
         process.terminationHandler = { [weak self] _ in
             Task { @MainActor in
@@ -310,6 +312,10 @@ final class EditorStore {
             opts: [],
             env: ProcessInfo.processInfo.environment
         )
+        runRequest(request)
+    }
+
+    func runRequest(_ request: RunRequest) {
         if appSettings.enableNeovideIPC {
             Task { @MainActor in
                 await runOrActivateEditorWithIPC(request: request)
@@ -327,11 +333,9 @@ final class EditorStore {
         )
         let editorID = EditorID(naming.location)
         let editorName = naming.displayName
-        log.debug("IPC open start: \(editorID)")
         updateProjectRegistry(location: naming.location, displayName: editorName, sessionPath: sessionPath)
 
         if let editor = editors[editorID] {
-            log.debug("IPC open found cached editor: \(editorID)")
             if await activateEditorWithIPC(editor) { return }
             editors.removeValue(forKey: editorID)
             persistActiveEditors()
@@ -342,9 +346,7 @@ final class EditorStore {
 
         var createError: Error?
         do {
-            log.debug("IPC create window: \(editorID) args=\(nvimArgs)")
-            if let windowID = try await NeovideIPCClient.createWindow(nvimArgs: nvimArgs, timeout: 0.2) {
-                log.debug("IPC create window success: \(editorID) window_id=\(windowID)")
+            if let windowID = try await NeovideIPCClient.createWindow(nvimArgs: nvimArgs) {
                 registerIPCEditor(
                     editorID: editorID,
                     editorName: editorName,
@@ -353,7 +355,6 @@ final class EditorStore {
                 )
                 return
             }
-            log.debug("IPC create window returned nil: \(editorID)")
         } catch {
             log.warning("IPC create window error: \(editorID) error=\(error)")
             createError = error
@@ -362,7 +363,6 @@ final class EditorStore {
         let currentApp = NSWorkspace.shared.frontmostApplication
 
         do {
-            log.debug("IPC fallback run process: \(editorID)")
             let process = try makeEditorProcess(
                 request: request,
                 sessionPath: sessionPath,
@@ -387,32 +387,25 @@ final class EditorStore {
         }
 
         do {
-            log.debug("IPC fallback wait start: \(editorID)")
-            try await Task.sleep(nanoseconds: 500_000_000)
-            if let windowID = try await NeovideIPCClient.waitForNewWindowID(
-                existingIDs: existingWindowIDs,
-                timeout: 1.0,
-                pollInterval: 0.05
-            ) {
-                log.debug("IPC fallback wait success: \(editorID) window_id=\(windowID)")
+            try await Task.sleep(nanoseconds: NeovideIPCClient.Config.waitInitialDelayNanos)
+            if let windowID = try await NeovideIPCClient.waitForNewWindowID(existingIDs: existingWindowIDs) {
                 updateIPCWindowID(editorID: editorID, windowID: windowID)
                 return
             }
-            log.debug("IPC fallback wait timeout: \(editorID)")
         } catch {
             log.warning("IPC fallback wait error: \(editorID) error=\(error)")
             handleIPCFailureIfNeeded(error)
             return
         }
 
-        log.warning("IPC fallback failed to obtain window id: \(editorID)")
+        log.error("IPC fallback failed to obtain window id: \(editorID)")
         handleIPCFailureIfNeeded(createError ?? NeovideIPCError.timeout)
     }
 
     private func activateEditorWithIPC(_ editor: Editor) async -> Bool {
         guard let windowID = editor.ipcWindowID else { return false }
         do {
-            try await NeovideIPCClient.activateWindow(id: windowID, timeout: 1.0)
+            try await NeovideIPCClient.activateWindow(id: windowID)
             editor.recordAccess()
             return true
         } catch {
@@ -436,7 +429,6 @@ final class EditorStore {
         windowID: String
     ) {
         let pid = NeovideResolver.resolveRunningApplication()?.processIdentifier ?? 0
-        log.debug("IPC register editor: \(editorID) window_id=\(windowID) pid=\(pid)")
         activationManager.setActivationTarget(
             currentApp: NSWorkspace.shared.frontmostApplication,
             switcherWindow: switcherWindow,
@@ -444,11 +436,9 @@ final class EditorStore {
         )
 
         if let editor = editors[editorID] {
-            log.debug("IPC register update existing editor: \(editorID)")
             editor.updateIPCWindowID(windowID)
             editor.recordAccess()
         } else {
-            log.debug("IPC register new editor: \(editorID)")
             editors[editorID] = Editor(
                 id: editorID,
                 name: editorName,
@@ -462,7 +452,6 @@ final class EditorStore {
     }
 
     private func updateIPCWindowID(editorID: EditorID, windowID: String) {
-        log.debug("IPC update window id: \(editorID) window_id=\(windowID)")
         if let editor = editors[editorID] {
             editor.updateIPCWindowID(windowID)
             persistActiveEditors()
@@ -495,9 +484,12 @@ final class EditorStore {
         }
 
         if shouldNotify {
+            let bodyKey: String.LocalizationValue = shouldClear
+                ? "Neovide IPC is not responding. Editor list has been reset."
+                : "Neovide IPC error. Please check logs."
             NotificationManager.sendInfo(
                 title: String(localized: "Neovide IPC unavailable"),
-                body: String(localized: "Neovide IPC is not responding. Editor list has been reset.")
+                body: String(localized: bodyKey)
             )
         }
     }
@@ -551,7 +543,7 @@ extension EditorStore {
 
     func pruneDeadEditorsWithIPC() async {
         do {
-            let ids = try await NeovideIPCClient.listWindows(timeout: 0.05)
+            let ids = try await NeovideIPCClient.listWindows()
             let activeIDs = Set(ids)
             let toRemove = editors.filter { _, editor in
                 guard let windowID = editor.ipcWindowID else { return false }

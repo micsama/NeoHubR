@@ -3,6 +3,12 @@
 ## Unreleased
 - Avoid activation errors when the previous activation target is no longer running/visible.
 
+## 0.4.0
+- Add Neovide IPC integration with List/Create/Activate flow and fallback process launch.
+- Add Advanced setting to enable/disable IPC mode.
+- Persist IPC window IDs for activation/restore and IPC-aware cleanup.
+- Add IPC latency benchmark script and refine timeouts.
+
 ## 0.3.6
 - Ensure CLI install creates `/usr/local/bin` if missing.
 - Optionally reset Switcher search/selection on open.

@@ -184,7 +184,7 @@ private final class ConnectionHandler: @unchecked Sendable {
 
     private func handleRunRequest(_ req: RunRequest) {
         Task { @MainActor [store] in
-            store.runEditor(request: req)
+            store.runRequest(req)
         }
     }
 
