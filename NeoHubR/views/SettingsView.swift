@@ -537,6 +537,8 @@ private struct AdvancedSettingsTab: View {
                 Toggle("Reset Switcher state on open", isOn: $appSettings.clearSwitcherStateOnOpen)
 
                 Toggle("Show CLI errors in app", isOn: $appSettings.forwardCLIErrors)
+
+                Toggle("Enable Neovide IPC", isOn: $appSettings.enableNeovideIPC)
             }
 
             Section {

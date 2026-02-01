@@ -169,7 +169,11 @@ final class SwitcherViewModel {
 
     private func activate(_ item: SwitcherItem) {
         onDismiss()
-        item.editor?.activate() ?? editorStore.openProject(item.entry)
+        if let editor = item.editor {
+            editorStore.activateEditor(editor)
+        } else {
+            editorStore.openProject(item.entry)
+        }
     }
 
     func quitSelected() {
@@ -296,8 +300,20 @@ extension SwitcherWindow {
 
 extension SwitcherWindow {
     private func handleToggleSwitcher() {
-        editorStore.pruneDeadEditors()
-        panel.isVisible ? hide() : show()
+        if panel.isVisible {
+            hide()
+            return
+        }
+
+        show()
+        if appSettings.enableNeovideIPC {
+            Task { @MainActor in
+                await editorStore.pruneDeadEditorsWithIPC()
+                viewModel.refreshData()
+            }
+        } else {
+            editorStore.pruneDeadEditors()
+        }
     }
 
     private func handleToggleLastActive() {
@@ -314,7 +330,7 @@ extension SwitcherWindow {
             if let app = frontApp {
                 activationManager.setActivationTarget(currentApp: app, switcherWindow: selfRef, editors: [editor])
             }
-            NSRunningApplication(processIdentifier: editor.processIdentifier)?.activate()
+            editorStore.activateEditor(editor)
         }
     }
 

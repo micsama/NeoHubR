@@ -15,7 +15,6 @@
 		FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */; };
 		FA2EAD932AEC4CCD000F8F7A /* SocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */; };
 		FA2EAD972AED0C8B000F8F7A /* EditorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */; };
-		FABC01002D2F000100000001 /* ActiveEditorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC01012D2F000100000002 /* ActiveEditorStore.swift */; };
 		FA2EAD9A2AED3906000F8F7A /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = FA2EAD992AED3906000F8F7A /* ArgumentParser */; };
 		FA2EADA62AED589F000F8F7A /* NeoHubRLib.docc in Sources */ = {isa = PBXBuildFile; fileRef = FA2EADA52AED589F000F8F7A /* NeoHubRLib.docc */; };
 		FA2EADA72AED589F000F8F7A /* NeoHubRLib.h in Headers */ = {isa = PBXBuildFile; fileRef = FA2EADA42AED589F000F8F7A /* NeoHubRLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -24,15 +23,17 @@
 		FA2EADB12AED65A6000F8F7A /* libNeoHubRLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA2EADA22AED589F000F8F7A /* libNeoHubRLib.a */; };
 		FA30F2282AEED1E7004EC6E9 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */; };
 		FA30F22A2AEF7A7F004EC6E9 /* SwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */; };
-		FABC02012D3A111100000011 /* SwitcherLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC02002D3A111100000010 /* SwitcherLogic.swift */; };
-		FABC00022D12300100000002 /* ProjectEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00052D12300100000005 /* ProjectEditorView.swift */; };
-		FABC00032D12300100000003 /* ProjectIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00062D12300100000006 /* ProjectIconView.swift */; };
 		FA30F22F2AEF828A004EC6E9 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FA30F22E2AEF828A004EC6E9 /* KeyboardShortcuts */; };
 		FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3937162AF291A5001D9105 /* SettingsView.swift */; };
 		FA54EB702AF4FD84001AE449 /* nh in Embed CLI */ = {isa = PBXBuildFile; fileRef = FA2AE45D2AEB9CA000D24008 /* nh */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		FA54EB722AF5033D001AE449 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB712AF5033D001AE449 /* CLI.swift */; };
 		FA54EB832AF7A381001AE449 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB822AF7A381001AE449 /* NotificationManager.swift */; };
 		FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54EB8C2AF7F689001AE449 /* BugReporter.swift */; };
+		FABC00022D12300100000002 /* ProjectEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00052D12300100000005 /* ProjectEditorView.swift */; };
+		FABC00032D12300100000003 /* ProjectIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC00062D12300100000006 /* ProjectIconView.swift */; };
+		FABC01002D2F000100000001 /* ActiveEditorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC01012D2F000100000002 /* ActiveEditorStore.swift */; };
+		FABC01032D2F000100000003 /* NeovideIPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC01022D2F000100000004 /* NeovideIPCClient.swift */; };
+		FABC02012D3A111100000011 /* SwitcherLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABC02002D3A111100000010 /* SwitcherLogic.swift */; };
 		FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0102C8F0A1A00000001 /* AppSettings.swift */; };
 		FAE1A0212C8F1A0000000002 /* EditorNamingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */; };
 		FAE1A0312C8F1B0000000004 /* ProjectRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */; };
@@ -105,14 +106,12 @@
 		FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketServer.swift; sourceTree = "<group>"; };
 		FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketClient.swift; sourceTree = "<group>"; };
 		FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorStore.swift; sourceTree = "<group>"; };
-		FABC01012D2F000100000002 /* ActiveEditorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveEditorStore.swift; sourceTree = "<group>"; };
 		FA2EADA22AED589F000F8F7A /* libNeoHubRLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libNeoHubRLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA2EADA42AED589F000F8F7A /* NeoHubRLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NeoHubRLib.h; sourceTree = "<group>"; };
 		FA2EADA52AED589F000F8F7A /* NeoHubRLib.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = NeoHubRLib.docc; sourceTree = "<group>"; };
 		FA2EADAF2AED58C6000F8F7A /* Shared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared.swift; sourceTree = "<group>"; };
 		FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitcherView.swift; sourceTree = "<group>"; };
-		FABC02002D3A111100000010 /* SwitcherLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitcherLogic.swift; sourceTree = "<group>"; };
 		FA3937162AF291A5001D9105 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		FA54EB712AF5033D001AE449 /* CLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLI.swift; sourceTree = "<group>"; };
 		FA54EB822AF7A381001AE449 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
@@ -120,6 +119,9 @@
 		FA728EF32AFF716E0013610E /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		FABC00052D12300100000005 /* ProjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectEditorView.swift; sourceTree = "<group>"; };
 		FABC00062D12300100000006 /* ProjectIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectIconView.swift; sourceTree = "<group>"; };
+		FABC01012D2F000100000002 /* ActiveEditorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveEditorStore.swift; sourceTree = "<group>"; };
+		FABC01022D2F000100000004 /* NeovideIPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeovideIPCClient.swift; sourceTree = "<group>"; };
+		FABC02002D3A111100000010 /* SwitcherLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitcherLogic.swift; sourceTree = "<group>"; };
 		FAE1A0102C8F0A1A00000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorNamingPolicy.swift; sourceTree = "<group>"; };
 		FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRegistry.swift; sourceTree = "<group>"; };
@@ -236,6 +238,18 @@
 			path = NeoHubRLib;
 			sourceTree = "<group>";
 		};
+		FA30F2262AEED1C5004EC6E9 /* views */ = {
+			isa = PBXGroup;
+			children = (
+				FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */,
+				FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */,
+				FA3937162AF291A5001D9105 /* SettingsView.swift */,
+				FABC00052D12300100000005 /* ProjectEditorView.swift */,
+				FABC00062D12300100000006 /* ProjectIconView.swift */,
+			);
+			path = views;
+			sourceTree = "<group>";
+		};
 		FABC03012D3A111100000020 /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -252,6 +266,7 @@
 			children = (
 				FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */,
 				FABC01012D2F000100000002 /* ActiveEditorStore.swift */,
+				FABC01022D2F000100000004 /* NeovideIPCClient.swift */,
 				FABC02002D3A111100000010 /* SwitcherLogic.swift */,
 			);
 			path = Core;
@@ -264,18 +279,6 @@
 				FA54EB8C2AF7F689001AE449 /* BugReporter.swift */,
 			);
 			path = Support;
-			sourceTree = "<group>";
-		};
-		FA30F2262AEED1C5004EC6E9 /* views */ = {
-			isa = PBXGroup;
-			children = (
-				FA30F2272AEED1E7004EC6E9 /* MenuBarView.swift */,
-				FA30F2292AEF7A7F004EC6E9 /* SwitcherView.swift */,
-				FA3937162AF291A5001D9105 /* SettingsView.swift */,
-				FABC00052D12300100000005 /* ProjectEditorView.swift */,
-				FABC00062D12300100000006 /* ProjectIconView.swift */,
-			);
-			path = views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -386,6 +389,7 @@
 				en,
 				Base,
 				"zh-Hans",
+				ja,
 			);
 			mainGroup = FA2AE43E2AEB980700D24008;
 			packageReferences = (
@@ -464,6 +468,7 @@
 				FAE1A0722D00000100000002 /* AppUtilities.swift in Sources */,
 				FA2EAD972AED0C8B000F8F7A /* EditorStore.swift in Sources */,
 				FABC01002D2F000100000001 /* ActiveEditorStore.swift in Sources */,
+				FABC01032D2F000100000003 /* NeovideIPCClient.swift in Sources */,
 				FA30F2282AEED1E7004EC6E9 /* MenuBarView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -741,12 +746,12 @@
 				ENABLE_CODE_COVERAGE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_ARCHS = "";
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
-				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@executable_path/../Frameworks",
 					/usr/local/lib,
@@ -775,9 +780,9 @@
 				ENABLE_CODE_COVERAGE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_ARCHS = "";
-				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
 				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@executable_path/../Frameworks",
 					/usr/local/lib,

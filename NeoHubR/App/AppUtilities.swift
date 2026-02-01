@@ -56,6 +56,13 @@ enum NeovideResolver {
         return nil
     }
 
+    static func resolveRunningApplication() -> NSRunningApplication? {
+        guard let bin = resolveBinary() else { return nil }
+        return NSWorkspace.shared.runningApplications.first { app in
+            app.executableURL == bin
+        }
+    }
+
     private static func resolveFromPath() -> URL? {
 
         let process = Process()
@@ -237,4 +244,3 @@ final class ActivationManager {
     }
 
 }
-

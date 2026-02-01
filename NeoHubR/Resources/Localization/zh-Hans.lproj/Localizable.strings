@@ -65,6 +65,7 @@
 "Keep Settings Window on Top" = "设置窗口置顶";
 "Reset Switcher state on open" = "打开切换器时重置状态";
 "Show CLI errors in app" = "在应用内显示 CLI 错误";
+"Enable Neovide IPC" = "启用 Neovide IPC";
 "Version" = "版本";
 "CLI Installed" = "CLI 已安装";
 "CLI Install Required" = "需要安装 CLI 工具";
@@ -88,6 +89,8 @@
 "Ephemeral" = "临时会话授权";
 "Unknown" = "未知";
 "Project not accessible" = "项目不可访问";
+"Neovide IPC unavailable" = "Neovide IPC 不可用";
+"Neovide IPC is not responding. Editor list has been reset." = "Neovide IPC 无响应，已清空编辑器列表。";
 "The project path is missing or not accessible." = "项目路径不存在或没有访问权限。";
 "Not available" = "不可用";
 "Add Project Failed" = "添加项目失败";

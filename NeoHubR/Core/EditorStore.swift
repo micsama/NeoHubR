@@ -13,17 +13,20 @@ final class EditorStore {
     let activationManager: ActivationManager
     let projectRegistry: ProjectRegistryStore
     private let activeEditorStore: ActiveEditorStore
+    private let appSettings: AppSettingsStore
 
     private var restartPoller: Timer?
 
     init(
         activationManager: ActivationManager,
         switcherWindow: SwitcherWindowRef,
-        projectRegistry: ProjectRegistryStore
+        projectRegistry: ProjectRegistryStore,
+        appSettings: AppSettingsStore
     ) {
         self.switcherWindow = switcherWindow
         self.activationManager = activationManager
         self.projectRegistry = projectRegistry
+        self.appSettings = appSettings
         self.activeEditorStore = ActiveEditorStore()
 
         KeyboardShortcuts.onKeyUp(for: .restartEditor) { [self] in
@@ -75,7 +78,7 @@ final class EditorStore {
 
         if let editor = editors[editorID] {
             log.info("Editor exists, activating: \(editorID)")
-            editor.activate()
+            activateEditor(editor)
             return
         }
 
@@ -107,15 +110,39 @@ final class EditorStore {
         }
     }
 
-    nonisolated private func makeEditorProcess(request: RunRequest, sessionPath: URL?, editorID: EditorID) throws
-        -> Process
-    {
+    func activateEditor(_ editor: Editor) {
+        if appSettings.enableNeovideIPC, let windowID = editor.ipcWindowID {
+            Task { @MainActor in
+                do {
+                    try await NeovideIPCClient.activateWindow(id: windowID, timeout: 1.0)
+                    editor.recordAccess()
+                } catch {
+                    handleIPCFailureIfNeeded(error)
+                    editor.activate()
+                }
+            }
+            return
+        }
+
+        editor.activate()
+    }
+
+    nonisolated private func makeEditorProcess(
+        request: RunRequest,
+        sessionPath: URL?,
+        editorID: EditorID,
+        useIPC: Bool = false
+    ) throws -> Process {
         let process = Process()
         process.executableURL = request.bin
 
         var args = request.opts
         if !args.contains("--no-fork") {
             args.append("--no-fork")
+        }
+        if useIPC && !args.contains("--neovide-ipc") {
+            args.append("--neovide-ipc")
+            args.append("unix:\(NeovideIPCClient.socketPath)")
         }
         if let sessionPath {
             if !args.contains("--") { args.append("--") }
@@ -147,7 +174,8 @@ final class EditorStore {
         request: RunRequest,
         editorID: EditorID,
         editorName: String,
-        currentApp: NSRunningApplication?
+        currentApp: NSRunningApplication?,
+        ipcWindowID: String? = nil
     ) {
         activationManager.setActivationTarget(
             currentApp: currentApp,
@@ -163,6 +191,7 @@ final class EditorStore {
                 name: editorName,
                 process: process,
                 request: request,
+                ipcWindowID: ipcWindowID,
                 onAccessed: { [weak self] in self?.persistActiveEditors() }
             )
             persistActiveEditors()
@@ -241,6 +270,7 @@ final class EditorStore {
                 name: snapshot.name,
                 processIdentifier: snapshot.pid,
                 request: snapshot.request,
+                ipcWindowID: snapshot.ipcWindowID,
                 lastAccessTime: Date(timeIntervalSince1970: snapshot.lastAccessTime),
                 onAccessed: { [weak self] in self?.persistActiveEditors() }
             )
@@ -280,7 +310,196 @@ final class EditorStore {
             opts: [],
             env: ProcessInfo.processInfo.environment
         )
-        runEditor(request: request)
+        if appSettings.enableNeovideIPC {
+            Task { @MainActor in
+                await runOrActivateEditorWithIPC(request: request)
+            }
+        } else {
+            runEditor(request: request)
+        }
+    }
+
+    private func runOrActivateEditorWithIPC(request: RunRequest) async {
+        let naming = EditorNamingPolicy.resolve(for: request)
+        let sessionPath = ProjectRegistry.resolveSessionPath(
+            workingDirectory: request.wd,
+            path: request.path
+        )
+        let editorID = EditorID(naming.location)
+        let editorName = naming.displayName
+        log.debug("IPC open start: \(editorID)")
+        updateProjectRegistry(location: naming.location, displayName: editorName, sessionPath: sessionPath)
+
+        if let editor = editors[editorID] {
+            log.debug("IPC open found cached editor: \(editorID)")
+            if await activateEditorWithIPC(editor) { return }
+            editors.removeValue(forKey: editorID)
+            persistActiveEditors()
+        }
+
+        let nvimArgs = resolveIPCArgs(sessionPath: sessionPath, path: request.path)
+        let existingWindowIDs = Set(editors.values.compactMap { $0.ipcWindowID })
+
+        var createError: Error?
+        do {
+            log.debug("IPC create window: \(editorID) args=\(nvimArgs)")
+            if let windowID = try await NeovideIPCClient.createWindow(nvimArgs: nvimArgs, timeout: 0.2) {
+                log.debug("IPC create window success: \(editorID) window_id=\(windowID)")
+                registerIPCEditor(
+                    editorID: editorID,
+                    editorName: editorName,
+                    request: request,
+                    windowID: windowID
+                )
+                return
+            }
+            log.debug("IPC create window returned nil: \(editorID)")
+        } catch {
+            log.warning("IPC create window error: \(editorID) error=\(error)")
+            createError = error
+        }
+
+        let currentApp = NSWorkspace.shared.frontmostApplication
+
+        do {
+            log.debug("IPC fallback run process: \(editorID)")
+            let process = try makeEditorProcess(
+                request: request,
+                sessionPath: sessionPath,
+                editorID: editorID,
+                useIPC: true
+            )
+            try process.run()
+            handleProcessLaunch(
+                process: process,
+                request: request,
+                editorID: editorID,
+                editorName: editorName,
+                currentApp: currentApp
+            )
+
+            guard process.isRunning else { return }
+        } catch {
+            let error = ReportableError("Failed to run editor process", error: error)
+            log.error("\(error)")
+            NotificationManager.send(kind: .failedToRunEditorProcess, error: error)
+            return
+        }
+
+        do {
+            log.debug("IPC fallback wait start: \(editorID)")
+            try await Task.sleep(nanoseconds: 500_000_000)
+            if let windowID = try await NeovideIPCClient.waitForNewWindowID(
+                existingIDs: existingWindowIDs,
+                timeout: 1.0,
+                pollInterval: 0.05
+            ) {
+                log.debug("IPC fallback wait success: \(editorID) window_id=\(windowID)")
+                updateIPCWindowID(editorID: editorID, windowID: windowID)
+                return
+            }
+            log.debug("IPC fallback wait timeout: \(editorID)")
+        } catch {
+            log.warning("IPC fallback wait error: \(editorID) error=\(error)")
+            handleIPCFailureIfNeeded(error)
+            return
+        }
+
+        log.warning("IPC fallback failed to obtain window id: \(editorID)")
+        handleIPCFailureIfNeeded(createError ?? NeovideIPCError.timeout)
+    }
+
+    private func activateEditorWithIPC(_ editor: Editor) async -> Bool {
+        guard let windowID = editor.ipcWindowID else { return false }
+        do {
+            try await NeovideIPCClient.activateWindow(id: windowID, timeout: 1.0)
+            editor.recordAccess()
+            return true
+        } catch {
+            handleIPCFailureIfNeeded(error)
+            return false
+        }
+    }
+
+    private func resolveIPCArgs(sessionPath: URL?, path: String?) -> [String] {
+        if let sessionPath {
+            return ["-S", sessionPath.path(percentEncoded: false)]
+        }
+        if let path { return [path] }
+        return []
+    }
+
+    private func registerIPCEditor(
+        editorID: EditorID,
+        editorName: String,
+        request: RunRequest,
+        windowID: String
+    ) {
+        let pid = NeovideResolver.resolveRunningApplication()?.processIdentifier ?? 0
+        log.debug("IPC register editor: \(editorID) window_id=\(windowID) pid=\(pid)")
+        activationManager.setActivationTarget(
+            currentApp: NSWorkspace.shared.frontmostApplication,
+            switcherWindow: switcherWindow,
+            editors: getEditors()
+        )
+
+        if let editor = editors[editorID] {
+            log.debug("IPC register update existing editor: \(editorID)")
+            editor.updateIPCWindowID(windowID)
+            editor.recordAccess()
+        } else {
+            log.debug("IPC register new editor: \(editorID)")
+            editors[editorID] = Editor(
+                id: editorID,
+                name: editorName,
+                processIdentifier: pid,
+                request: request,
+                ipcWindowID: windowID,
+                onAccessed: { [weak self] in self?.persistActiveEditors() }
+            )
+        }
+        persistActiveEditors()
+    }
+
+    private func updateIPCWindowID(editorID: EditorID, windowID: String) {
+        log.debug("IPC update window id: \(editorID) window_id=\(windowID)")
+        if let editor = editors[editorID] {
+            editor.updateIPCWindowID(windowID)
+            persistActiveEditors()
+        } else {
+            log.warning("IPC update window id skipped (editor missing): \(editorID)")
+        }
+    }
+
+    private func handleIPCFailureIfNeeded(_ error: Error) {
+        let shouldClear: Bool
+        let shouldNotify: Bool
+        if let ipcError = error as? NeovideIPCError {
+            switch ipcError {
+            case .timeout:
+                shouldClear = true
+                shouldNotify = false
+            case .invalidResponse, .serverError:
+                shouldClear = false
+                shouldNotify = true
+            }
+        } else {
+            let isPosix = (error as NSError).domain == NSPOSIXErrorDomain
+            shouldClear = isPosix
+            shouldNotify = !isPosix
+        }
+
+        if shouldClear {
+            editors.removeAll()
+            persistActiveEditors()
+        }
+
+        if shouldNotify {
+            NotificationManager.sendInfo(
+                title: String(localized: "Neovide IPC unavailable"),
+                body: String(localized: "Neovide IPC is not responding. Editor list has been reset.")
+            )
+        }
     }
 
     private func persistActiveEditors() {
@@ -290,7 +509,8 @@ final class EditorStore {
                 name: editor.name,
                 pid: editor.processIdentifier,
                 lastAccessTime: editor.lastAcceessTime.timeIntervalSince1970,
-                request: editor.request
+                request: editor.request,
+                ipcWindowID: editor.ipcWindowID
             )
         }
         activeEditorStore.saveSnapshots(snapshots)
@@ -304,6 +524,13 @@ final class EditorStore {
 
 extension EditorStore {
     func pruneDeadEditors() {
+        if appSettings.enableNeovideIPC {
+            Task { @MainActor in
+                await pruneDeadEditorsWithIPC()
+            }
+            return
+        }
+
         let toRemove = editors.filter { _, editor in
             guard let app = NSRunningApplication(processIdentifier: editor.processIdentifier) else { return true }
             return app.isTerminated
@@ -320,6 +547,26 @@ extension EditorStore {
     func removeEditor(id: EditorID) {
         editors.removeValue(forKey: id)
         persistActiveEditors()
+    }
+
+    func pruneDeadEditorsWithIPC() async {
+        do {
+            let ids = try await NeovideIPCClient.listWindows(timeout: 0.05)
+            let activeIDs = Set(ids)
+            let toRemove = editors.filter { _, editor in
+                guard let windowID = editor.ipcWindowID else { return false }
+                return !activeIDs.contains(windowID)
+            }
+
+            if !toRemove.isEmpty {
+                for (id, _) in toRemove {
+                    editors.removeValue(forKey: id)
+                }
+                persistActiveEditors()
+            }
+        } catch {
+            handleIPCFailureIfNeeded(error)
+        }
     }
 }
 
@@ -342,19 +589,33 @@ final class Editor: Identifiable {
     private let onAccessed: (() -> Void)?
     private(set) var lastAcceessTime: Date
     private(set) var request: RunRequest
+    private(set) var ipcWindowID: String?
 
-    init(id: EditorID, name: String, process: Process, request: RunRequest, onAccessed: (() -> Void)? = nil) {
+    init(
+        id: EditorID,
+        name: String,
+        process: Process,
+        request: RunRequest,
+        ipcWindowID: String? = nil,
+        onAccessed: (() -> Void)? = nil
+    ) {
         self.id = id
         self.name = name
         self.process = process
         self.processIdentifierValue = process.processIdentifier
         self.lastAcceessTime = Date()
         self.request = request
+        self.ipcWindowID = ipcWindowID
         self.onAccessed = onAccessed
     }
 
     init(
-        id: EditorID, name: String, processIdentifier: Int32, request: RunRequest, lastAccessTime: Date = Date(),
+        id: EditorID,
+        name: String,
+        processIdentifier: Int32,
+        request: RunRequest,
+        ipcWindowID: String? = nil,
+        lastAccessTime: Date = Date(),
         onAccessed: (() -> Void)? = nil
     ) {
         self.id = id
@@ -363,6 +624,7 @@ final class Editor: Identifiable {
         self.processIdentifierValue = processIdentifier
         self.lastAcceessTime = lastAccessTime
         self.request = request
+        self.ipcWindowID = ipcWindowID
         self.onAccessed = onAccessed
     }
 
@@ -387,9 +649,17 @@ final class Editor: Identifiable {
             log.error("\(error)")
             NotificationManager.send(kind: .failedToActivateEditorApp, error: error)
         } else {
-            self.lastAcceessTime = Date()
-            self.onAccessed?()
+            recordAccess()
         }
+    }
+
+    func recordAccess() {
+        self.lastAcceessTime = Date()
+        self.onAccessed?()
+    }
+
+    func updateIPCWindowID(_ id: String?) {
+        self.ipcWindowID = id
     }
 
     func quit() {

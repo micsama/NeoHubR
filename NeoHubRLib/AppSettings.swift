@@ -7,6 +7,7 @@ public enum AppSettings {
         public static let switcherMaxItems = "SwitcherMaxItems"
         public static let settingsAlwaysOnTop = "SettingsAlwaysOnTop"
         public static let clearSwitcherStateOnOpen = "ClearSwitcherStateOnOpen"
+        public static let enableNeovideIPC = "EnableNeovideIPC"
     }
 
     public static let minSwitcherItems = 4
@@ -19,6 +20,7 @@ public enum AppSettings {
             Key.switcherMaxItems: defaultSwitcherMaxItems,
             Key.settingsAlwaysOnTop: false,
             Key.clearSwitcherStateOnOpen: true,
+            Key.enableNeovideIPC: false,
         ])
     }
 
@@ -63,6 +65,12 @@ public final class AppSettingsStore {
         }
     }
 
+    public var enableNeovideIPC: Bool {
+        didSet {
+            UserDefaults.standard.set(enableNeovideIPC, forKey: AppSettings.Key.enableNeovideIPC)
+        }
+    }
+
     public init() {
         AppSettings.registerDefaults()
         self.forwardCLIErrors = UserDefaults.standard.bool(forKey: AppSettings.Key.forwardCLIErrors)
@@ -71,5 +79,6 @@ public final class AppSettingsStore {
         )
         self.settingsAlwaysOnTop = UserDefaults.standard.bool(forKey: AppSettings.Key.settingsAlwaysOnTop)
         self.clearSwitcherStateOnOpen = UserDefaults.standard.bool(forKey: AppSettings.Key.clearSwitcherStateOnOpen)
+        self.enableNeovideIPC = UserDefaults.standard.bool(forKey: AppSettings.Key.enableNeovideIPC)
     }
 }

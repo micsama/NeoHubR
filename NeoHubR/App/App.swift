@@ -81,7 +81,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let editorStore = EditorStore(
             activationManager: activationManager,
             switcherWindow: switcherWindowRef,
-            projectRegistry: projectRegistry
+            projectRegistry: projectRegistry,
+            appSettings: appSettings
         )
 
         self.cli = cli

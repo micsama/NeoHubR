@@ -65,6 +65,7 @@
 "Keep Settings Window on Top" = "Keep Settings Window on Top";
 "Reset Switcher state on open" = "Reset Switcher state on open";
 "Show CLI errors in app" = "Show CLI errors in app";
+"Enable Neovide IPC" = "Enable Neovide IPC";
 "Version" = "Version";
 "CLI Installed" = "CLI Installed";
 "CLI Install Required" = "CLI Install Required";
@@ -88,6 +89,8 @@
 "Ephemeral" = "Ephemeral";
 "Unknown" = "Unknown";
 "Project not accessible" = "Project not accessible";
+"Neovide IPC unavailable" = "Neovide IPC unavailable";
+"Neovide IPC is not responding. Editor list has been reset." = "Neovide IPC is not responding. Editor list has been reset.";
 "The project path is missing or not accessible." = "The project path is missing or not accessible.";
 "Not available" = "Not available";
 "Add Project Failed" = "Add Project Failed";

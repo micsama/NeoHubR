@@ -65,6 +65,7 @@
 "Keep Settings Window on Top" = "設定ウインドウを最前面に固定";
 "Reset Switcher state on open" = "スイッチャーを開くたびに状態をリセット";
 "Show CLI errors in app" = "アプリ内でCLIエラーを表示";
+"Enable Neovide IPC" = "Neovide IPCを有効化";
 "Version" = "バージョン";
 "CLI Installed" = "CLI インストール済み";
 "CLI Install Required" = "CLI のインストールが必要";
@@ -88,6 +89,8 @@
 "Ephemeral" = "一時的";
 "Unknown" = "不明";
 "Project not accessible" = "プロジェクトにアクセスできません";
+"Neovide IPC unavailable" = "Neovide IPC が利用できません";
+"Neovide IPC is not responding. Editor list has been reset." = "Neovide IPC が応答しないため、エディタ一覧をリセットしました。";
 "The project path is missing or not accessible." = "プロジェクトのパスが存在しないかアクセスできません。";
 "Not available" = "利用不可";
 "Add Project Failed" = "プロジェクトの追加に失敗しました";

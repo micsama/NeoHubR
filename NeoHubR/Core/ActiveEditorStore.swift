@@ -7,6 +7,7 @@ struct ActiveEditorSnapshot: Codable {
     let pid: Int32
     let lastAccessTime: TimeInterval
     let request: RunRequest
+    let ipcWindowID: String?
 }
 
 final class ActiveEditorStore {
