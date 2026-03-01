@@ -531,18 +531,6 @@ private struct AdvancedSettingsTab: View {
                 Toggle("Keep Settings Window on Top", isOn: $appSettings.settingsAlwaysOnTop)
 
                 Toggle("Reset Switcher state on open", isOn: $appSettings.clearSwitcherStateOnOpen)
-
-                Toggle("Use Neovide IPC", isOn: $appSettings.useNeovideIPC)
-
-                if appSettings.useNeovideIPC {
-                    LabeledContent("Neovide IPC Socket") {
-                        TextField("/tmp/neovide.sock", text: $appSettings.neovideIPCSocketPath)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 280)
-                    }
-                }
-
-                Toggle("Show CLI errors in app", isOn: $appSettings.forwardCLIErrors)
             }
 
             Section {

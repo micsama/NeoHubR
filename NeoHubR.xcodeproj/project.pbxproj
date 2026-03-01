@@ -8,13 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		482FB03AB5A81FC04E42F435 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = CDCEDF7BBE712A6A22A706F7 /* Localizable.strings */; settings = {ATTRIBUTES = (Localized, ); }; };
-		67D42AB19F8A47C390121CEE /* NeovideIPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE6993988984AE9A2ECAA4C /* NeovideIPCClient.swift */; };
 		FA2AE44B2AEB980700D24008 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2AE44A2AEB980700D24008 /* App.swift */; };
 		FA2AE44F2AEB980800D24008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA2AE44E2AEB980800D24008 /* Assets.xcassets */; };
 		FA2AE4522AEB980800D24008 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA2AE4512AEB980800D24008 /* Preview Assets.xcassets */; };
 		FA2AE4602AEB9CA000D24008 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2AE45F2AEB9CA000D24008 /* CLI.swift */; };
-		FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */; };
-		FA2EAD932AEC4CCD000F8F7A /* SocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */; };
 		FA2EAD972AED0C8B000F8F7A /* EditorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */; };
 		FA2EAD9A2AED3906000F8F7A /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = FA2EAD992AED3906000F8F7A /* ArgumentParser */; };
 		FA2EADA62AED589F000F8F7A /* NeoHubRLib.docc in Sources */ = {isa = PBXBuildFile; fileRef = FA2EADA52AED589F000F8F7A /* NeoHubRLib.docc */; };
@@ -37,7 +34,6 @@
 		FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0102C8F0A1A00000001 /* AppSettings.swift */; };
 		FAE1A0212C8F1A0000000002 /* EditorNamingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */; };
 		FAE1A0312C8F1B0000000004 /* ProjectRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */; };
-		FAE1A0412C8F1C0000000006 /* IPCTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0402C8F1C0000000005 /* IPCTools.swift */; };
 		FAE1A0612C90000100000002 /* LoggerBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0602C90000100000001 /* LoggerBootstrap.swift */; };
 		FAE1A0722D00000100000002 /* AppUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE1A0712D00000100000001 /* AppUtilities.swift */; };
 /* End PBXBuildFile section */
@@ -90,7 +86,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0FE6993988984AE9A2ECAA4C /* NeovideIPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeovideIPCClient.swift; sourceTree = "<group>"; };
 		3AFE7700C68AF82BB552689D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "NeoHubR/Resources/Localization/zh-Hans.lproj/Localizable.strings"; sourceTree = SOURCE_ROOT; };
 		46C0216DCEFC47AA95B4F9EE /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = NeoHubR/Resources/Localization/ja.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
 		AF868A6614B2E7D702836114 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = NeoHubR/Resources/Localization/en.lproj/Localizable.strings; sourceTree = SOURCE_ROOT; };
@@ -104,8 +99,6 @@
 		FA2AE45F2AEB9CA000D24008 /* CLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLI.swift; sourceTree = "<group>"; };
 		FA2AE4A92AEBDDB800D24008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FA2AE4AA2AEBDF7800D24008 /* NeoHubRCLI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NeoHubRCLI.entitlements; sourceTree = "<group>"; };
-		FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketServer.swift; sourceTree = "<group>"; };
-		FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketClient.swift; sourceTree = "<group>"; };
 		FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorStore.swift; sourceTree = "<group>"; };
 		FA2EADA22AED589F000F8F7A /* libNeoHubRLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libNeoHubRLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA2EADA42AED589F000F8F7A /* NeoHubRLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NeoHubRLib.h; sourceTree = "<group>"; };
@@ -125,7 +118,6 @@
 		FAE1A0102C8F0A1A00000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorNamingPolicy.swift; sourceTree = "<group>"; };
 		FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRegistry.swift; sourceTree = "<group>"; };
-		FAE1A0402C8F1C0000000005 /* IPCTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPCTools.swift; sourceTree = "<group>"; };
 		FAE1A0602C90000100000001 /* LoggerBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerBootstrap.swift; sourceTree = "<group>"; };
 		FAE1A0712D00000100000001 /* AppUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUtilities.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -211,7 +203,6 @@
 			children = (
 				FA2AE4AA2AEBDF7800D24008 /* NeoHubRCLI.entitlements */,
 				FA2AE45F2AEB9CA000D24008 /* CLI.swift */,
-				FA2EAD922AEC4CCD000F8F7A /* SocketClient.swift */,
 			);
 			path = NeoHubRCLI;
 			sourceTree = "<group>";
@@ -230,7 +221,6 @@
 				FA2EADA52AED589F000F8F7A /* NeoHubRLib.docc */,
 				FAE1A0102C8F0A1A00000001 /* AppSettings.swift */,
 				FAE1A0202C8F1A0000000001 /* EditorNamingPolicy.swift */,
-				FAE1A0402C8F1C0000000005 /* IPCTools.swift */,
 				FAE1A0302C8F1B0000000003 /* ProjectRegistry.swift */,
 				FA2EADAF2AED58C6000F8F7A /* Shared.swift */,
 				FAE1A0602C90000100000001 /* LoggerBootstrap.swift */,
@@ -255,7 +245,6 @@
 			children = (
 				FA2AE44A2AEB980700D24008 /* App.swift */,
 				FA54EB712AF5033D001AE449 /* CLI.swift */,
-				FA2EAD902AEC4C49000F8F7A /* SocketServer.swift */,
 				FAE1A0712D00000100000001 /* AppUtilities.swift */,
 			);
 			path = App;
@@ -266,7 +255,6 @@
 			children = (
 				FA2EAD962AED0C8B000F8F7A /* EditorStore.swift */,
 				FABC01012D2F000100000002 /* ActiveEditorStore.swift */,
-				0FE6993988984AE9A2ECAA4C /* NeovideIPCClient.swift */,
 				FABC02002D3A111100000010 /* SwitcherLogic.swift */,
 			);
 			path = Core;
@@ -458,7 +446,6 @@
 				FA3937172AF291A5001D9105 /* SettingsView.swift in Sources */,
 				FABC00022D12300100000002 /* ProjectEditorView.swift in Sources */,
 				FABC00032D12300100000003 /* ProjectIconView.swift in Sources */,
-				FA2EAD912AEC4C49000F8F7A /* SocketServer.swift in Sources */,
 				FA54EB8D2AF7F689001AE449 /* BugReporter.swift in Sources */,
 				FA2AE44B2AEB980700D24008 /* App.swift in Sources */,
 				FA54EB722AF5033D001AE449 /* CLI.swift in Sources */,
@@ -468,7 +455,6 @@
 				FAE1A0722D00000100000002 /* AppUtilities.swift in Sources */,
 				FA2EAD972AED0C8B000F8F7A /* EditorStore.swift in Sources */,
 				FABC01002D2F000100000001 /* ActiveEditorStore.swift in Sources */,
-				67D42AB19F8A47C390121CEE /* NeovideIPCClient.swift in Sources */,
 				FA30F2282AEED1E7004EC6E9 /* MenuBarView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -478,7 +464,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA2AE4602AEB9CA000D24008 /* CLI.swift in Sources */,
-				FA2EAD932AEC4CCD000F8F7A /* SocketClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -489,7 +474,6 @@
 				FA2EADA62AED589F000F8F7A /* NeoHubRLib.docc in Sources */,
 				FAE1A0122C8F0A1A00000003 /* AppSettings.swift in Sources */,
 				FAE1A0212C8F1A0000000002 /* EditorNamingPolicy.swift in Sources */,
-				FAE1A0412C8F1C0000000006 /* IPCTools.swift in Sources */,
 				FAE1A0312C8F1B0000000004 /* ProjectRegistry.swift in Sources */,
 				FA2EADB02AED58C6000F8F7A /* Shared.swift in Sources */,
 				FAE1A0612C90000100000002 /* LoggerBootstrap.swift in Sources */,
@@ -685,7 +669,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.3.6;
+				MARKETING_VERSION = 0.3.7;
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.micsama.NeoHubR;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -722,7 +706,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.3.6;
+				MARKETING_VERSION = 0.3.7;
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.micsama.NeoHubR;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -757,7 +741,7 @@
 					/usr/local/lib,
 					"@loader_path/",
 				);
-				MARKETING_VERSION = 0.3.6;
+				MARKETING_VERSION = 0.3.7;
 				OTHER_CODE_SIGN_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.micsama.NeoHubR.CLI;
 				PRODUCT_NAME = nh;
@@ -787,7 +771,7 @@
 					"@executable_path/../Frameworks",
 					/usr/local/lib,
 				);
-				MARKETING_VERSION = 0.3.6;
+				MARKETING_VERSION = 0.3.7;
 				OTHER_CODE_SIGN_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.micsama.NeoHubR.CLI;
 				PRODUCT_NAME = nh;

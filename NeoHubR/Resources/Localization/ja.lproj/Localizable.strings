@@ -13,8 +13,6 @@
 "Open your terminal and try to run `nh` command" = "ターミナルを開いて `nh` コマンドを実行してみてください";
 "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI." = "NeoHubRでNeovideインスタンスを管理するには、NeoHubR CLIが必要です。";
 "After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "インストール後、`nh` コマンドがシェルで利用可能になります。`neovide` の代わりに `nh` を使ってエディタを起動してください。インストールされるのはCLIバイナリのみです。";
-"Use Neovide IPC" = "Neovide IPC を使う";
-"Neovide IPC Socket" = "Neovide IPC ソケット";
 "Something went wrong" = "問題が発生しました";
 "Report" = "報告";
 "Install" = "インストール";
@@ -65,7 +63,6 @@
 "No recent projects" = "最近のプロジェクトはありません";
 "Keep Settings Window on Top" = "設定ウインドウを最前面に固定";
 "Reset Switcher state on open" = "スイッチャーを開くたびに状態をリセット";
-"Show CLI errors in app" = "アプリ内でCLIエラーを表示";
 "Version" = "バージョン";
 "CLI Installed" = "CLI インストール済み";
 "CLI Install Required" = "CLI のインストールが必要";

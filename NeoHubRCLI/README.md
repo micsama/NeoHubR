@@ -1,25 +1,19 @@
 # NeoHubRCLI
 
-该目录包含命令行工具 `nh` 的实现，用于启动或激活 Neovide 实例。
+该目录包含命令行工具 `nh` 的实现，用于直接启动 Neovide。
 
 ## 工作域
-- 解析 CLI 参数与选项，构造 `RunRequest`。
-- 通过 UNIX domain socket 与 NeoHubR App 通信。
+- 解析 CLI 参数与选项并传递给 Neovide。
 - 负责从 PATH 中定位 `neovide` 可执行文件。
- - IPC 结构与设置 key 来自 `NeoHubRLib`，确保 App/CLI 一致。
+- 使用 `NeoHubRLib.Logger` 统一日志能力。
 
 ## 关键文件
 - `CLI.swift`
   - 基于 `ArgumentParser` 解析参数。
-  - 构造 `RunRequest` 并调用 `SocketClient`。
+  - 直接启动 `neovide` 进程并等待退出状态。
   - 使用 `NeoHubRLib.Logger.bootstrap`，读取 `NEOHUBR_LOG` 设置日志级别。
-- `SocketClient.swift`
-  - 通过 Network.framework 连接 `/tmp/neohubr.sock`，发送长度前缀 + JSON 请求。
-  - 处理 App 的响应。
-- `Shell.swift`
-  - 用 `/bin/sh -c` 运行 `command -v neovide` 获取路径。
 
 ## 典型流程
 1. 用户在项目目录运行 `nh`。
-2. CLI 查找 `neovide` 路径并构造 `RunRequest`。
-3. 通过 socket 将请求发送给 NeoHubR App。
+2. CLI 查找 `neovide` 路径并拼装命令行参数。
+3. 直接启动 `neovide`。

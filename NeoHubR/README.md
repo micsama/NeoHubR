@@ -5,7 +5,7 @@
 ## 工作域
 - 以菜单栏 App 形式运行，提供 Neovide 实例管理能力（切换、激活、重启）。
 - 管理全局快捷键、窗口展示、通知、日志、CLI 安装状态与安装流程。
-- 通过 UNIX domain socket 接收 CLI 发来的启动请求，并创建/激活 Neovide 进程。
+- 管理并激活本地 Neovide 进程（默认进程模式）。
 
 ## 关键入口与模块
 - 入口：`App.swift`
@@ -18,8 +18,6 @@
 - 激活与主线程工具：`AppUtilities.swift`
   - `ActivationManager` 记录/恢复前台应用与窗口（用于切换器隐藏后的回切）。
   - `MainThread` 提供主线程断言与调度。
-- IPC：`SocketServer.swift`
-  - 使用 Network.framework 监听 `/tmp/neohubr.sock`，接收 CLI 请求并调用 `EditorStore.runEditor`。
 - CLI 安装管理：`CLI.swift`
   - 通过 AppleScript 复制二进制与框架到 `/usr/local`。
 - 窗口体系：`views/` + SwiftUI Scenes
@@ -34,8 +32,8 @@
   - 使用 `NeoHubRLib.Logger`（基于 `os.Logger`）。
 
 ## 典型运行流程
-1. App 启动后初始化 SocketServer 并注册通知代理。
-2. CLI 通过 socket 发送 `RunRequest`，App 解码并启动/激活 Neovide。
+1. App 启动后注册通知代理并恢复历史编辑器状态。
+2. App 在默认进程模式下启动/激活 Neovide。
 3. 用户使用快捷键显示切换器或激活上一次编辑器。
 
 ## 相关子模块

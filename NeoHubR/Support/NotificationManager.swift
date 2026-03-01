@@ -21,13 +21,6 @@ final class NotificationManager: NSObject {
         }
     }
 
-    nonisolated static func sendCLIError(_ report: CLIErrorReport) {
-        guard AppSettings.forwardCLIErrors else { return }
-        Task { @MainActor in
-            shared.scheduleCLIError(report)
-        }
-    }
-
     nonisolated static func sendInfo(title: String, body: String) {
         Task { @MainActor in
             shared.schedule(title: title, body: body)
@@ -41,22 +34,6 @@ final class NotificationManager: NSObject {
             title: kind.title,
             body: kind.body,
             userInfo: meta
-        )
-    }
-
-    private func scheduleCLIError(_ report: CLIErrorReport) {
-        var meta: [String: String] = ["source": "cli"]
-        if let detail = report.detail { meta["detail"] = detail }
-        if let code = report.code { meta["code"] = String(code) }
-
-        let reportable = ReportableError(report.message, meta: meta)
-        let actionMeta = ReportAction(error: reportable).meta
-
-        scheduleNotification(
-            categoryId: Kind.cliError.id,
-            title: Kind.cliError.title,
-            body: report.message,
-            userInfo: actionMeta
         )
     }
 
@@ -158,45 +135,33 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
 
 extension NotificationManager {
     enum Kind: CaseIterable {
-        case failedToLaunchServer
-        case failedToHandleRequestFromCLI
         case failedToRunEditorProcess
         case failedToGetRunningEditorApp
         case failedToActivateEditorApp
         case cliUnexpectedError
-        case cliError
 
         var id: String {
             switch self {
-            case .failedToLaunchServer: return "FAILED_TO_LAUNCH_SERVER"
-            case .failedToHandleRequestFromCLI: return "FAILED_TO_HANDLE_REQUEST_FROM_CLI"
             case .failedToRunEditorProcess: return "FAILED_TO_RUN_EDITOR_PROCESS"
             case .failedToGetRunningEditorApp: return "FAILED_TO_GET_RUNNING_EDITOR_APP"
             case .failedToActivateEditorApp: return "FAILED_TO_ACTIVATE_EDITOR_APP"
             case .cliUnexpectedError: return "CLI_UNEXPECTED_ERROR"
-            case .cliError: return "CLI_ERROR"
             }
         }
 
         var title: String {
             switch self {
-            case .failedToLaunchServer: return String(localized: "Failed to launch the NeoHubR server")
-            case .failedToHandleRequestFromCLI, .failedToRunEditorProcess:
+            case .failedToRunEditorProcess:
                 return String(localized: "Failed to open Neovide")
             case .failedToGetRunningEditorApp, .failedToActivateEditorApp:
                 return String(localized: "Failed to activate Neovide")
             case .cliUnexpectedError: return String(localized: "NeoHubR CLI error")
-            case .cliError: return String(localized: "CLI Error")
             }
         }
 
         var body: String {
             switch self {
-            case .failedToLaunchServer:
-                return String(
-                    localized: "NeoHubR won't be able to function properly. Please, create an issue in the GitHub repo."
-                )
-            case .failedToHandleRequestFromCLI, .failedToRunEditorProcess, .failedToActivateEditorApp, .cliError:
+            case .failedToRunEditorProcess, .failedToActivateEditorApp:
                 return String(localized: "Please create an issue in the GitHub repo.")
             case .failedToGetRunningEditorApp:
                 return String(localized: "Requested Neovide instance is not running.")

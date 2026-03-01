@@ -13,8 +13,6 @@
 "Open your terminal and try to run `nh` command" = "Open your terminal and try to run `nh` command";
 "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI." = "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI.";
 "After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed.";
-"Use Neovide IPC" = "Use Neovide IPC";
-"Neovide IPC Socket" = "Neovide IPC Socket";
 "Something went wrong" = "Something went wrong";
 "Report" = "Report";
 "Install" = "Install";
@@ -65,7 +63,6 @@
 "No recent projects" = "No recent projects";
 "Keep Settings Window on Top" = "Keep Settings Window on Top";
 "Reset Switcher state on open" = "Reset Switcher state on open";
-"Show CLI errors in app" = "Show CLI errors in app";
 "Version" = "Version";
 "CLI Installed" = "CLI Installed";
 "CLI Install Required" = "CLI Install Required";

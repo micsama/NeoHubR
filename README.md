@@ -113,13 +113,11 @@ xcodebuild -project NeoHubR.xcodeproj -scheme NeoHubRCLI -configuration Debug bu
 
 ## 🧭 Roadmap (Short)
 
-### Latest Release (v0.3.6)
-- **Session Defaults**: Session.vim name defaults to its parent folder.
-- **Instance Resurrection**: Restore running instances after restart from `/tmp/neohubr.instances.json`.
-- **Instance Attach**: Attach to running Neovide instances (hybrid strategy).
-- **Cleaner Switcher Flow**: Items cache + refreshData, remove refreshToken, use VStack for stability.
-- **CLI Modernization**: `nh` binary naming + install path sync; legacy `neohub` symlink on install.
-- **Structure Cleanup**: App/Core/Support grouping and file moves.
+### Latest Release (v0.3.7)
+- **IPC Removal**: Remove socket-based app/CLI IPC and all related settings.
+- **Default Mode Only**: Keep NeoHubR in process mode only.
+- **CLI Simplification**: `nh` now directly launches `neovide`.
+- **Codebase Cleanup**: Remove IPC-specific app/core/lib sources and project wiring.
 
 ### Next
 - **v0.4.x**: GUI environment inheritance; attach to non‑NeoHubR Neovide instances; Switcher polish.

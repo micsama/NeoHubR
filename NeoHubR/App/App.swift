@@ -59,7 +59,6 @@ struct NeoHubRApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     let cli: CLI
     let editorStore: EditorStore
-    let server: SocketServer
     let switcherWindow: SwitcherWindow
     let activationManager: ActivationManager
     let appSettings: AppSettingsStore
@@ -83,7 +82,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         self.cli = cli
-        self.server = SocketServer(store: editorStore)
         self.editorStore = editorStore
         self.switcherWindow = SwitcherWindow(
             editorStore: editorStore,
@@ -103,7 +101,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NotificationManager.shared.registerDelegate()
 
-        self.server.start()
         self.projectRegistry.refreshValidity()
         self.editorStore.restoreActiveEditors()
 
@@ -134,7 +131,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        server.stop()
     }
 
     // CLI error alert handled in MenuBarView using SwiftUI + openSettings.

@@ -3,6 +3,10 @@
 ## Unreleased
 - Avoid activation errors when the previous activation target is no longer running/visible.
 
+## 0.3.7
+- Remove all IPC-based communication and settings; keep process mode only.
+- Simplify `nh` to directly launch Neovide without app socket round-trip.
+
 ## 0.3.6
 - Ensure CLI install creates `/usr/local/bin` if missing.
 - Optionally reset Switcher search/selection on open.

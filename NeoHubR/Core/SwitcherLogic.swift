@@ -327,11 +327,6 @@ extension SwitcherWindow {
                 return
             }
 
-            if AppSettings.useNeovideIPC {
-                editor.activate()
-                return
-            }
-
             let frontApp = NSWorkspace.shared.frontmostApplication
             if frontApp?.processIdentifier == editor.processIdentifier {
                 NSRunningApplication(processIdentifier: editor.processIdentifier)?.hide()

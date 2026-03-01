@@ -13,28 +13,14 @@ let log = Logger.bootstrap(
 
 enum CLIError: Error, LocalizedError {
     case failedToGetBin
-    case failedToCommunicateWithNeoHubR(SendError)
     case manual(String)
 
     var errorDescription: String? {
         switch self {
         case .failedToGetBin:
             return "Failed to get a path to Neovide binary. Make sure it is available in your PATH."
-        case .failedToCommunicateWithNeoHubR(let error):
-            return "Failed to communicate with NeoHubR: \(error.localizedDescription)"
         case .manual(let message):
             return message
-        }
-    }
-
-    var report: CLIErrorReport {
-        switch self {
-        case .failedToGetBin:
-            return CLIErrorReport(message: "Failed to get a path to Neovide binary.")
-        case .failedToCommunicateWithNeoHubR(let error):
-            return CLIErrorReport(message: "Failed to communicate with NeoHubR.", detail: error.localizedDescription)
-        case .manual(let message):
-            return CLIErrorReport(message: message)
         }
     }
 }
@@ -43,56 +29,43 @@ enum CLIError: Error, LocalizedError {
 struct CLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "nh",
-        abstract: "A CLI interface to NeoHubR. Launch new or activate already running Neovide instance.",
-        version: "0.3.6"
+        abstract: "A CLI wrapper for launching Neovide.",
+        version: "0.3.7"
     )
 
     @Argument(help: "Optional path passed to Neovide.")
     var path: String?
 
-    @Option(help: "Optional editor name. Used for display only. If not provided, a file or directory name will be used.")
-    var name: String?
-
     @Option(parsing: .remaining, help: "Options passed to Neovide")
     var opts: [String] = []
 
-    @Option(help: "Send a CLI error message to the GUI for testing.")
-    var error: String?
-
     mutating func run() async throws {
         disableProfilingOutput()
-        if let error {
-            await Self.sendErrorReport(.manual(error))
-            throw CLIError.manual(error)
-        }
-
         guard let bin = findNeovide() else {
-            let error = CLIError.failedToGetBin
-            await Self.sendErrorReport(error)
-            throw error
+            throw CLIError.failedToGetBin
         }
 
-        let wd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-        let env = ProcessInfo.processInfo.environment
-        
-        let req = RunRequest(
-            wd: wd,
-            bin: bin,
-            name: self.name,
-            path: path.flatMap { $0.isEmpty ? nil : $0 },
-            opts: self.opts,
-            env: env
-        )
+        var args = opts
+        if let path, !path.isEmpty {
+            args.append(path)
+        }
 
-        let result = await SocketClient().send(IPCMessage.run(req))
+        let process = Process()
+        process.executableURL = bin
+        process.arguments = args
+        process.currentDirectoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 
-        switch result {
-        case .success:
-            return
-        case .failure(let error):
-            let cliError = CLIError.failedToCommunicateWithNeoHubR(error)
-            await Self.sendErrorReport(cliError)
-            throw cliError
+        do {
+            try process.run()
+            process.waitUntilExit()
+            if process.terminationStatus != 0 {
+                throw CLIError.manual("Neovide exited with status \(process.terminationStatus).")
+            }
+        } catch {
+            if let cliError = error as? CLIError {
+                throw cliError
+            }
+            throw CLIError.manual(error.localizedDescription)
         }
     }
 
@@ -106,10 +79,6 @@ struct CLI: AsyncParsableCommand {
             }
         }
         return nil
-    }
-
-    private static func sendErrorReport(_ error: CLIError) async {
-        let _ = await SocketClient().send(IPCMessage.cliError(error.report))
     }
 
     private func disableProfilingOutput() {

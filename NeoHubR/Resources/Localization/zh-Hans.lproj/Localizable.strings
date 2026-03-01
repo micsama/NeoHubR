@@ -13,8 +13,6 @@
 "Open your terminal and try to run `nh` command" = "打开终端并尝试运行 `nh` 命令";
 "In order to manage Neovide instances through NeoHubR, you will need the NeoHubR CLI." = "为了通过 NeoHubR 管理 Neovide 实例，你需要安装 NeoHubR CLI。";
 "After successful installation, the `nh` command should become available in your shell. Use it instead of `neovide` to launch editors. Only the CLI binary is installed." = "安装成功后，`nh` 命令应可在你的 shell 中使用。请用它替代 `neovide` 来启动编辑器。仅安装 CLI 可执行文件。";
-"Use Neovide IPC" = "使用 Neovide IPC";
-"Neovide IPC Socket" = "Neovide IPC 套接字";
 "Something went wrong" = "出了点问题";
 "Report" = "报告";
 "Install" = "安装";
@@ -65,7 +63,6 @@
 "No recent projects" = "没有最近项目";
 "Keep Settings Window on Top" = "设置窗口置顶";
 "Reset Switcher state on open" = "打开切换器时重置状态";
-"Show CLI errors in app" = "在应用内显示 CLI 错误";
 "Version" = "版本";
 "CLI Installed" = "CLI 已安装";
 "CLI Install Required" = "需要安装 CLI 工具";
